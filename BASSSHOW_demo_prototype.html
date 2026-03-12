@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BASS SHOW! Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --red: #E8001D;
+  --red-dark: #B00015;
+  --black: #080808;
+  --gray-dark: #161616;
+  --gray-mid: #1e1e1e;
+  --gray-light: #2e2e2e;
+  --text-primary: #F2F2F2;
+  --text-secondary: #888;
+  --gold: #FFB800;
+  --silver: #C0C0C0;
+  --bronze: #CD7F32;
+  --diamond: #7DF9FF;
+  --green: #22c55e;
+  --blue: #4DA6FF;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: #050505;
+  font-family: 'Noto Sans SC', sans-serif;
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== OUTER SHELL ===== */
+.device-wrapper {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100vh;
+  background: var(--black);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== STATUS BAR ===== */
+.status-bar {
+  height: 44px;
+  background: var(--gray-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  flex-shrink: 0;
+  position: relative;
+}
+.status-bar::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: rgba(255,255,255,0.05);
+}
+.status-time { font-weight: 700; }
+.status-icons { display: flex; gap: 5px; align-items: center; font-size: 12px; }
+
+/* ===== SCREEN CONTAINER ===== */
+.screens {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: none;
+  flex-direction: column;
+  background: var(--black);
+  padding-bottom: 58px;
+  -webkit-overflow-scrolling: touch;
+}
+.screen.active { display: flex; }
+.screen.no-bottom-nav { padding-bottom: 0; }
+
+/* ===== TRANSITIONS ===== */
+.screen.slide-in {
+  animation: slideInRight 0.25s cubic-bezier(0.25,0.46,0.45,0.94) both;
+}
+.screen.slide-back {
+  animation: slideInLeft 0.25s cubic-bezier(0.25,0.46,0.45,0.94) both;
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0.8; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideInLeft {
+  from { transform: translateX(-30%); opacity: 0.8; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ===== TOP BAR ===== */
+.top-bar {
+  height: 44px;
+  background: var(--gray-dark);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.top-bar-back {
+  font-size: 20px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.top-bar-back:active { color: var(--red); }
+.top-bar-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 16px;
+  letter-spacing: 2px;
+  flex: 1;
+  text-align: center;
+}
+.top-bar-action {
+  font-size: 12px;
+  color: var(--red);
+  font-weight: 700;
+  cursor: pointer;
+}
+.top-bar-icon { font-size: 18px; cursor: pointer; }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  display: flex;
+  background: var(--gray-dark);
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 8px 0 6px;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  z-index: 100;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 2px 0;
+}
+.nav-item.active { color: var(--red); }
+.nav-item:active { opacity: 0.7; }
+.nav-icon { font-size: 20px; line-height: 1; }
+.nav-badge {
+  position: absolute;
+  top: -2px; right: 6px;
+  background: var(--red);
+  color: white;
+  font-size: 8px;
+  font-family: 'Space Mono', monospace;
+  padding: 1px 4px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+.nav-item-wrap { position: relative; }
+
+/* ===== SHARED COMPONENTS ===== */
+.section-label {
+  font-size: 9px;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  padding: 10px 14px 5px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.section-label::before {
+  content: '';
+  display: block;
+  width: 2px;
+  height: 10px;
+  background: var(--red);
+  border-radius: 1px;
+}
+
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: var(--gray-dark);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  position: relative;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.tab.active {
+  color: var(--red);
+  font-weight: 700;
+}
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: var(--red);
+  border-radius: 1px;
+}
+
+/* ===== S-01 LOGIN ===== */
+.login-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 50px 24px 30px;
+  background: linear-gradient(180deg, #150005 0%, #080808 60%);
+}
+.login-logo {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 42px;
+  color: var(--red);
+  letter-spacing: 5px;
+  margin-bottom: 4px;
+}
+.login-tagline {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  letter-spacing: 1px;
+}
+.login-mascot {
+  font-size: 56px;
+  margin-bottom: 24px;
+  filter: drop-shadow(0 0 24px rgba(232,0,29,0.4));
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.login-perms {
+  width: 100%;
+  background: var(--gray-dark);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.login-perm-title { font-size: 10px; color: var(--text-secondary); margin-bottom: 10px; }
+.login-perm-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  padding: 5px 0;
+  color: var(--text-secondary);
+}
+.perm-icon { color: var(--green); font-size: 13px; }
+.login-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+.wechat-btn {
+  width: 100%;
+  background: #07C160;
+  border-radius: 28px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 8px 24px rgba(7,193,96,0.25);
+}
+.wechat-btn:active { transform: scale(0.97); }
+.login-terms {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.7;
+}
+.login-terms span { color: var(--red); }
+
+/* ===== S-03 HOME ===== */
+.home-hero {
+  background: linear-gradient(160deg, #1c0005 0%, #080808 60%);
+  padding: 16px 16px 12px;
+  position: relative;
+  overflow: hidden;
+}
+.home-hero::after {
+  content: 'BASS';
+  position: absolute;
+  right: -8px; top: -6px;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 72px;
+  color: rgba(232,0,29,0.05);
+  pointer-events: none;
+}
+.home-logo {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 24px;
+  color: var(--red);
+  letter-spacing: 4px;
+}
+.home-stats { display: flex; gap: 20px; margin-top: 8px; }
+.home-stat-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+}
+.home-stat-label { font-size: 9px; color: var(--text-secondary); margin-top: 1px; }
+
+.mission-banner {
+  margin: 10px 12px;
+  background: linear-gradient(135deg, #1a0d00, #0d0800);
+  border: 1px solid rgba(255,184,0,0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.mission-banner:active { border-color: rgba(255,184,0,0.5); }
+.mission-banner-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.mission-banner-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  background: var(--gold);
+  color: black;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+.mission-banner-title { font-size: 12px; font-weight: 700; flex: 1; }
+.mission-banner-pts {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--gold);
+  font-weight: 700;
+}
+.mission-mini-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  padding: 3px 0;
+}
+.mission-mini-check {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  flex-shrink: 0;
+}
+.mission-mini-check.done { background: var(--green); }
+.mission-mini-check.todo { background: var(--gray-light); color: var(--text-secondary); }
+.mission-mini-label { flex: 1; color: var(--text-secondary); }
+.mission-mini-label.done { text-decoration: line-through; color: #555; }
+.mission-mini-pts {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  color: var(--gold);
+}
+.mission-progress-bar {
+  height: 3px;
+  background: var(--gray-light);
+  border-radius: 2px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+.mission-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #ff9500);
+  border-radius: 2px;
+  width: 40%;
+}
+.mission-progress-text {
+  font-size: 9px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  text-align: right;
+}
+
+.post-card {
+  margin: 0 12px 8px;
+  background: var(--gray-dark);
+  border-radius: 10px;
+  padding: 12px 13px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.2s;
+}
+.post-card:active { transform: scale(0.99); }
+.post-card.hot { border-left-color: var(--red); }
+.post-card.follow-post { border-left-color: var(--green); }
+.post-card.region-post { border-left-color: var(--blue); }
+.post-header { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+.avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.post-name { font-size: 12px; font-weight: 700; }
+.lv-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  background: var(--red);
+  color: white;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-left: auto;
+}
+.post-text { font-size: 11px; color: var(--text-secondary); line-height: 1.6; }
+.post-footer {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* ===== S-04 COMMUNITY ===== */
+.search-bar-wrap {
+  display: flex;
+  align-items: center;
+  padding: 9px 12px;
+  background: var(--gray-dark);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.search-bar {
+  flex: 1;
+  background: var(--gray-mid);
+  border-radius: 18px;
+  padding: 7px 13px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== S-05 RANK ===== */
+.rank-card {
+  margin: 10px 12px 6px;
+  background: var(--gray-dark);
+  border-radius: 12px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.rank-card:active { transform: scale(0.99); }
+.rank-card.current {
+  border: 1px solid rgba(255,184,0,0.35);
+  background: linear-gradient(135deg, #1a1000, #161616);
+}
+.rank-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.rank-emoji { font-size: 24px; }
+.rank-name { font-size: 14px; font-weight: 900; }
+.rank-sub { font-size: 10px; color: var(--text-secondary); }
+.rank-lv {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  background: var(--red);
+  color: white;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+.rank-bar-bg {
+  height: 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.rank-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #ff9500);
+  border-radius: 3px;
+}
+.rank-apply-btn {
+  background: var(--red);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 8px;
+  margin-top: 10px;
+  text-align: center;
+  display: inline-block;
+  cursor: pointer;
+}
+
+/* ===== S-06 MY PAGE ===== */
+.my-header-section {
+  padding: 18px 16px 14px;
+  background: linear-gradient(160deg, #0d0005 0%, #080808 80%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.my-avatar {
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E8001D, #ff6b35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+  position: relative;
+}
+.my-lv-pin {
+  position: absolute;
+  bottom: -4px; right: -4px;
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  background: var(--gold);
+  color: black;
+  padding: 2px 5px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+.my-name { font-size: 18px; font-weight: 900; }
+.my-loc { font-size: 10px; color: var(--text-secondary); margin-top: 3px; }
+.my-rank-badge {
+  margin-left: auto;
+  text-align: center;
+}
+.rank-icon-big { font-size: 22px; }
+.rank-label { font-size: 9px; color: var(--gold); font-weight: 700; }
+
+.stat-row {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.stat-item {
+  flex: 1;
+  padding: 12px 0;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.stat-item:active { background: rgba(255,255,255,0.03); }
+.stat-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+}
+.stat-lbl { font-size: 9px; color: var(--text-secondary); margin-top: 2px; }
+
+.completion-card {
+  margin: 10px 12px;
+  background: var(--gray-dark);
+  border-radius: 12px;
+  padding: 13px 14px;
+}
+.completion-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.completion-label { font-size: 11px; font-weight: 700; }
+.completion-pct { font-family: 'Space Mono', monospace; font-size: 16px; color: var(--gold); font-weight: 700; }
+.completion-bar-bg {
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.completion-bar-fill {
+  width: 65%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #ff9500);
+  border-radius: 3px;
+}
+.completion-items { display: flex; flex-wrap: wrap; gap: 6px; }
+.comp-item { display: flex; align-items: center; gap: 5px; font-size: 10px; }
+.comp-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+.comp-dot.done { background: var(--green); }
+.comp-dot.todo { background: var(--gray-light); }
+
+.pt-card {
+  margin: 0 12px 8px;
+  background: linear-gradient(135deg, #1a1000, #161616);
+  border: 1px solid rgba(255,184,0,0.2);
+  border-radius: 12px;
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+.pt-card-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 26px;
+  color: var(--gold);
+  font-weight: 700;
+}
+.pt-card-label { font-size: 9px; color: var(--text-secondary); }
+.pt-card-right { flex: 1; }
+.pt-card-rank { font-size: 11px; font-weight: 700; margin-bottom: 5px; }
+.pt-card-bar-bg {
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.pt-card-bar-fill {
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #ff9500);
+  border-radius: 2px;
+}
+.pt-card-next { font-size: 9px; color: var(--text-secondary); }
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.menu-item:active { background: rgba(255,255,255,0.03); }
+.menu-icon { font-size: 18px; width: 22px; text-align: center; }
+.menu-text { flex: 1; font-size: 13px; font-weight: 700; }
+.menu-sub { font-size: 10px; color: var(--text-secondary); font-weight: 400; margin-top: 2px; }
+.menu-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  background: var(--red);
+  color: white;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-weight: 700;
+}
+.menu-arrow { font-size: 18px; color: var(--text-secondary); }
+
+/* ===== S-10 POINTS ===== */
+.pt-header-section {
+  padding: 18px 16px 14px;
+  background: linear-gradient(160deg, #120800 0%, #080808 65%);
+}
+.pt-balance { display: flex; align-items: baseline; gap: 7px; margin-bottom: 12px; }
+.pt-num {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 52px;
+  color: var(--gold);
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.pt-unit { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--text-secondary); }
+.rank-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+.rank-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,184,0,0.1);
+  border: 1px solid rgba(255,184,0,0.25);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--gold);
+}
+.pt-next-text { font-size: 10px; color: var(--text-secondary); }
+.pt-bar-bg {
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.pt-bar-fill {
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), #ff9500);
+  border-radius: 3px;
+}
+
+.mission-cat {
+  padding: 8px 14px 3px;
+  font-size: 9px;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.mission-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  gap: 12px;
+}
+.mission-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.mission-icon.daily { background: rgba(255,184,0,0.12); }
+.mission-icon.profile { background: rgba(34,197,94,0.12); }
+.mission-icon.social { background: rgba(77,166,255,0.12); }
+.mission-icon.level { background: rgba(232,0,29,0.12); }
+.mission-body { flex: 1; }
+.mission-name { font-size: 13px; font-weight: 700; }
+.mission-desc { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+.mission-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.mission-pt { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--gold); font-weight: 700; }
+.mission-btn {
+  font-size: 9px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mission-btn.done { background: var(--gray-light); color: var(--text-secondary); }
+.mission-btn.go { background: var(--red); color: white; }
+.mission-btn.claim { background: var(--gold); color: black; }
+
+/* ===== S-11 NOTIFICATIONS ===== */
+.notif-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  align-items: flex-start;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.notif-item:active { background: rgba(255,255,255,0.03); }
+.notif-item.unread { background: rgba(232,0,29,0.04); }
+.notif-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.notif-body { flex: 1; }
+.notif-title { font-size: 12px; font-weight: 700; margin-bottom: 3px; }
+.notif-text { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+.notif-time { font-size: 9px; color: #555; margin-top: 4px; }
+.notif-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+/* ===== S-12 POST DETAIL ===== */
+.post-detail-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.post-detail-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E8001D, #ff6b35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.post-detail-name { font-size: 14px; font-weight: 700; }
+.post-detail-meta { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+.post-detail-follow {
+  background: var(--red);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 10px;
+  margin-left: auto;
+  cursor: pointer;
+}
+.post-detail-content {
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.8;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.post-detail-images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 12px;
+}
+.post-detail-img {
+  height: 90px;
+  background: var(--gray-dark);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+.post-detail-actions {
+  display: flex;
+  gap: 20px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.post-detail-actions span { cursor: pointer; }
+.post-detail-actions .liked { color: var(--red); }
+.comment-item {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.comment-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.comment-name { font-size: 12px; font-weight: 700; }
+.comment-text { font-size: 11px; color: var(--text-secondary); margin-top: 3px; line-height: 1.5; }
+.comment-footer { font-size: 10px; color: #555; margin-top: 4px; }
+.comment-input-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--gray-dark);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 9px 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.comment-input {
+  flex: 1;
+  background: var(--gray-mid);
+  border-radius: 18px;
+  padding: 7px 13px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.comment-send {
+  background: var(--red);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+/* ===== S-09 PROFILE ===== */
+.profile-cover {
+  height: 80px;
+  background: linear-gradient(135deg, #1c0005, #0d0005);
+  position: relative;
+  overflow: hidden;
+}
+.profile-cover-bg {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(232,0,29,0.04) 20px, rgba(232,0,29,0.04) 21px);
+}
+.profile-cover-text {
+  position: absolute;
+  right: -5px; bottom: -15px;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 80px;
+  color: rgba(232,0,29,0.07);
+  letter-spacing: 5px;
+}
+.profile-main { padding: 0 16px 10px; }
+.profile-avatar-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: -24px;
+  margin-bottom: 10px;
+}
+.profile-avatar {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a3a6a, #0d47a1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  border: 3px solid var(--black);
+}
+.profile-follow-btn {
+  background: var(--red);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.profile-follow-btn:active { transform: scale(0.95); }
+.profile-name { font-size: 18px; font-weight: 900; }
+.profile-handle { font-size: 11px; color: var(--text-secondary); margin: 3px 0 8px; }
+.profile-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.badge {
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-weight: 700;
+}
+.badge-lv { background: var(--red); color: white; }
+.badge-rank { background: rgba(125,249,255,0.15); color: var(--diamond); border: 1px solid rgba(125,249,255,0.3); }
+.badge-city { background: var(--gray-dark); color: var(--text-secondary); }
+.profile-stats { display: flex; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px; margin-bottom: 0; }
+.profile-stat { flex: 1; text-align: center; }
+.profile-stat-num { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; }
+.profile-stat-label { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+.profile-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin: 0 -16px;
+}
+.profile-tab {
+  flex: 1;
+  text-align: center;
+  padding: 11px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  position: relative;
+}
+.profile-tab.active { color: var(--red); font-weight: 700; }
+.profile-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: var(--red);
+}
+.profile-post-mini {
+  margin: 0 0;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.profile-post-mini:active { background: rgba(255,255,255,0.03); }
+.profile-post-mini.featured { border-left: 2px solid var(--red); padding-left: 14px; }
+.profile-post-mini-text { font-size: 12px; line-height: 1.6; margin-bottom: 6px; }
+.profile-post-mini-footer { display: flex; gap: 14px; font-size: 10px; color: var(--text-secondary); }
+
+/* ===== S-05 RANK LIST ===== */
+.current-rank-banner {
+  margin: 12px 12px 8px;
+  background: linear-gradient(135deg, #1a1000, #0d0800);
+  border: 1px solid rgba(255,184,0,0.3);
+  border-radius: 14px;
+  padding: 16px;
+}
+.crb-label { font-size: 10px; color: var(--text-secondary); letter-spacing: 1px; margin-bottom: 6px; }
+.crb-rank { font-family: 'Bebas Neue', cursive; font-size: 28px; color: var(--gold); letter-spacing: 3px; }
+.crb-progress-text { font-size: 10px; color: var(--text-secondary); margin-top: 3px; }
+
+/* ===== S-07 LEVEL APPLY ===== */
+.apply-header {
+  padding: 16px;
+  background: linear-gradient(160deg, #0d0005, #080808);
+}
+.apply-lv-name { font-size: 16px; font-weight: 900; margin-bottom: 5px; }
+.apply-lv-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.7; }
+.criteria-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin: 12px 14px;
+}
+.criteria-item {
+  background: var(--gray-dark);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+}
+.criteria-score {
+  font-family: 'Space Mono', monospace;
+  font-size: 20px;
+  color: var(--gold);
+  font-weight: 700;
+}
+.criteria-label { font-size: 10px; color: var(--text-secondary); margin-top: 3px; }
+.form-section { padding: 0 14px; }
+.form-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  margin-top: 12px;
+}
+.form-field-input {
+  background: var(--gray-dark);
+  border: 1px solid rgba(232,0,29,0.4);
+  border-radius: 8px;
+  padding: 10px 13px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  width: 100%;
+}
+.form-field-filled {
+  background: var(--gray-dark);
+  border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 8px;
+  padding: 10px 13px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.submit-btn {
+  background: var(--red);
+  border-radius: 10px;
+  padding: 13px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 1px;
+  margin: 16px 14px 8px;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.submit-btn:active { transform: scale(0.98); }
+.submit-note { font-size: 10px; color: var(--text-secondary); text-align: center; }
+
+/* ===== S-13 FOLLOW LIST ===== */
+.follow-user-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  gap: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.follow-user-item:active { background: rgba(255,255,255,0.03); }
+.follow-avatar {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.follow-name { font-size: 14px; font-weight: 700; }
+.follow-meta { font-size: 10px; color: var(--text-secondary); margin-top: 3px; }
+.follow-btn {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 8px;
+}
+.follow-btn.following { background: var(--red); color: white; }
+.follow-btn.mutual { border: 1px solid var(--gray-light); color: var(--text-secondary); }
+
+/* ===== S-14 POINTS HISTORY ===== */
+.pts-summary {
+  display: flex;
+  padding: 12px 16px;
+  gap: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.pts-summary-item {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.pts-summary-item:last-child { border-right: none; }
+.pts-summary-num { font-family: 'Space Mono', monospace; font-size: 18px; color: var(--gold); font-weight: 700; }
+.pts-summary-label { font-size: 9px; color: var(--text-secondary); margin-top: 3px; }
+.pts-history-item {
+  display: flex;
+  align-items: center;
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.pts-history-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+.pts-history-title { font-size: 12px; font-weight: 700; }
+.pts-history-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+.pts-history-amount {
+  margin-left: auto;
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.pts-date-header {
+  padding: 10px 16px 4px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  background: rgba(255,255,255,0.02);
+}
+
+/* ===== S-02 PROFILE SETUP ===== */
+.profile-progress-header {
+  padding: 14px 16px;
+  background: linear-gradient(160deg, #051205 0%, #080808 65%);
+}
+.progress-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+.progress-bar-bg { height: 7px; background: var(--gray-light); border-radius: 4px; overflow: hidden; }
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--green), #16a34a);
+}
+.progress-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+.progress-stats .pt-earned { font-family: 'Space Mono', monospace; color: var(--green); font-weight: 700; }
+.form-group { padding: 0 12px; margin-bottom: 9px; }
+.form-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.form-required { font-size: 8px; background: var(--red); color: white; padding: 2px 5px; border-radius: 3px; }
+.form-optional { font-size: 8px; background: var(--gray-light); color: var(--text-secondary); padding: 2px 5px; border-radius: 3px; }
+.form-pt-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  background: rgba(255,184,0,0.1);
+  border: 1px solid rgba(255,184,0,0.25);
+  color: var(--gold);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+}
+.form-field-display {
+  background: var(--gray-mid);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 12px;
+  border: 1px solid rgba(34,197,94,0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.field-check { color: var(--green); margin-left: auto; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--gray-light);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.chip.selected {
+  background: rgba(232,0,29,0.12);
+  border-color: rgba(232,0,29,0.4);
+  color: var(--red);
+}
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30,30,30,0.95);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  white-space: nowrap;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.toast.show { opacity: 1; }
+
+/* ===== SCREEN INDICATORS ===== */
+.screen-id-badge {
+  position: fixed;
+  top: 50px;
+  right: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 8px;
+  background: rgba(232,0,29,0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 500;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div class="device-wrapper">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time" id="statusTime">9:41</span>
+    <div class="status-icons">
+      <span>●●●</span>
+      <span>WiFi</span>
+      <span>🔋</span>
+    </div>
+  </div>
+
+  <!-- Screen Container -->
+  <div class="screens" id="screens">
+
+    <!-- ==================== S-01: LOGIN ==================== -->
+    <div class="screen active no-bottom-nav" id="screen-s01">
+      <div class="login-screen">
+        <div class="login-logo">BASS SHOW!</div>
+        <div class="login-tagline">贝斯手专属社区平台</div>
+        <div class="login-mascot">🎸</div>
+        <div class="login-perms">
+          <div class="login-perm-title">登录后可获取：</div>
+          <div class="login-perm-item"><span class="perm-icon">✓</span> 微信昵称（显示名）</div>
+          <div class="login-perm-item"><span class="perm-icon">✓</span> 微信头像</div>
+          <div class="login-perm-item" style="color:#555"><span style="color:#555">○</span> 手机号（可选）</div>
+        </div>
+        <div class="login-desc">首次登录自动创建账号<br>完善资料可获得额外积分 🎉</div>
+        <div class="wechat-btn" onclick="navigateTo('screen-s02a')">
+          <span>💬</span> 微信一键登录
+        </div>
+        <div class="login-terms">登录即表示同意<span>《用户协议》</span>和<span>《隐私政策》</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== S-02A: PROFILE SETUP ==================== -->
+    <div class="screen" id="screen-s02a">
+      <div class="top-bar">
+        <div class="top-bar-back" onclick="navigateBack()">‹</div>
+        <div class="top-bar-title">完善个人资料</div>
+        <div class="top-bar-action" onclick="navigateTo('screen-s03')">保存</div>
+      </div>
+      <div class="profile-progress-header">
+        <div class="progress-title">资料完成度</div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:65%"></div></div>
+        <div class="progress-stats"><span>65% 完成</span><span class="pt-earned">已获得 +120pt</span></div>
+      </div>
+      <div class="section-label">必填项目</div>
+      <div class="form-group">
+        <div class="form-label-row"><span class="form-required">必须</span> 昵称</div>
+        <div class="form-field-display">MASATO<span class="field-check">✓</span></div>
+      </div>
+      <div class="form-group">
+        <div class="form-label-row"><span class="form-required">必须</span> 头像</div>
+        <div class="form-field-display">微信头像已同步<span class="field-check">✓</span></div>
+      </div>
+      <div class="section-label">选填项目（完成获积分）</div>
+      <div class="form-group">
+        <div class="form-label-row"><span class="form-optional">选填</span> 所在地区<span class="form-pt-badge">+20pt</span></div>
+        <div class="form-field-display">广东省 深圳市 龙岗区<span class="field-check">✓</span></div>
+      </div>
+      <div class="form-group">
+        <div class="form-label-row"><span class="form-optional">选填</span> 贝斯历<span class="form-pt-badge">+20pt</span></div>
+        <div class="form-field-display">2001年 4月 开始<span class="field-check">✓</span></div>
+      </div>
+      <div class="form-group">
+        <div class="form-label-row"><span class="form-optional">选填</span> 喜欢的风格<span class="form-pt-badge">+15pt</span></div>
+        <div class="chip-row">
+          <div class="chip selected">Funk</div><div class="chip selected">Jazz</div>
+          <div class="chip selected">Rock</div><div class="chip">R&B</div><div class="chip">融合</div>
+        </div>
+      </div>
+      <div style="padding:12px 14px;">
+        <div class="submit-btn" onclick="navigateTo('screen-s03')">下一步 →</div>
+      </div>
+    </div>
+
+    <!-- ==================== S-03: HOME ==================== -->
+    <div class="screen" id="screen-s03">
+      <div class="top-bar">
+        <div class="top-bar-icon" onclick="navigateTo('screen-s11')">🔔</div>
+        <div class="top-bar-title">BASS SHOW!</div>
+        <div class="top-bar-icon">🔍</div>
+      </div>
+      <div class="home-hero">
+        <div class="home-logo">BASS SHOW!</div>
+        <div class="home-stats">
+          <div><div class="home-stat-num">412</div><div class="home-stat-label">会员</div></div>
+          <div><div class="home-stat-num">87</div><div class="home-stat-label">活跃</div></div>
+        </div>
+      </div>
+      <div class="mission-banner" onclick="navigateTo('screen-s10')">
+        <div class="mission-banner-top">
+          <div class="mission-banner-tag">⚡ 今日任务</div>
+          <div class="mission-banner-title">每日任务</div>
+          <div class="mission-banner-pts">+80pt 可获</div>
+        </div>
+        <div>
+          <div class="mission-mini-item">
+            <div class="mission-mini-check done">✓</div>
+            <div class="mission-mini-label done">每日登录</div>
+            <div class="mission-mini-pts">+10pt ✓</div>
+          </div>
+          <div class="mission-mini-item">
+            <div class="mission-mini-check done">✓</div>
+            <div class="mission-mini-label done">发布一条帖子</div>
+            <div class="mission-mini-pts">+20pt ✓</div>
+          </div>
+          <div class="mission-mini-item">
+            <div class="mission-mini-check todo">○</div>
+            <div class="mission-mini-label">给3条帖子点赞</div>
+            <div class="mission-mini-pts">+15pt</div>
+          </div>
+        </div>
+        <div class="mission-progress-bar"><div class="mission-progress-fill"></div></div>
+        <div class="mission-progress-text">2/4 完成 → 查看全部任务</div>
+      </div>
+      <div class="section-label">最新动态</div>
+      <div class="post-card hot" onclick="navigateTo('screen-s12')">
+        <div class="post-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#E8001D,#ff6b35)">M</div>
+          <span class="post-name">MASATO</span><span class="lv-badge">Lv.9</span>
+        </div>
+        <div class="post-text">BASS28 制作中！大家最想学哪种技巧？Slap？指弹？还是两指奏法？💬</div>
+        <div class="post-footer"><span>❤️ 32</span><span>💬 14</span><span>↗ 分享</span></div>
+      </div>
+      <div class="post-card" onclick="navigateTo('screen-s12')">
+        <div class="post-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#4CAF50,#2E7D32)">小</div>
+          <span class="post-name">小磊</span><span class="lv-badge">Lv.2</span>
+        </div>
+        <div class="post-text">练了一周终于弹出来了！谢谢MASATO老师的教程 🙏</div>
+        <div class="post-footer"><span>❤️ 18</span><span>💬 7</span><span>↗ 分享</span></div>
+      </div>
+      <div class="post-card region-post" onclick="navigateTo('screen-s12')">
+        <div class="post-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#1a3a6a,#0d47a1)">深</div>
+          <span class="post-name">深圳贝友</span><span class="lv-badge">Lv.5</span>
+          <span style="font-size:9px;background:rgba(77,166,255,0.15);color:var(--blue);border:1px solid rgba(77,166,255,0.3);padding:2px 6px;border-radius:4px;margin-left:auto;">📍 附近</span>
+        </div>
+        <div class="post-text">深圳有没有人周末打算jam session？龙岗这边 🎸</div>
+        <div class="post-footer"><span>❤️ 9</span><span>💬 12</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== S-04: COMMUNITY ==================== -->
+    <div class="screen" id="screen-s04">
+      <div class="top-bar">
+        <div class="top-bar-title">贝斯社区</div>
+        <div class="top-bar-icon" onclick="navigateTo('screen-s08')">✏️</div>
+      </div>
+      <div class="search-bar-wrap">
+        <div class="search-bar">🔍 搜索帖子、用户、标签…</div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab">全部</div>
+        <div class="tab active">📍 同城</div>
+        <div class="tab">💚 关注</div>
+        <div class="tab">技术</div>
+        <div class="tab">日本器材</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:8px 14px 4px;font-size:10px;color:var(--text-secondary);">
+        <div style="width:7px;height:7px;border-radius:50%;background:var(--blue);"></div>
+        深圳的贝斯手 · 32人在附近
+      </div>
+      <div class="post-card region-post" onclick="navigateTo('screen-s12')">
+        <div class="post-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#1a3a6a,#0d47a1)">深</div>
+          <span class="post-name">深圳贝友</span><span class="lv-badge">Lv.5</span>
+          <span style="font-size:9px;background:rgba(77,166,255,0.15);color:var(--blue);border:1px solid rgba(77,166,255,0.3);padding:2px 6px;border-radius:4px;margin-left:auto;">📍 龙岗</span>
+        </div>
+        <div class="post-text">有没有人推荐深圳的排练室？价格合理的那种🎸</div>
+        <div class="post-footer"><span>❤️ 5</span><span>💬 8</span></div>
+      </div>
+      <div class="post-card follow-post" onclick="navigateTo('screen-s12')">
+        <div class="post-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#1a4a1a,#2e7d32)">王</div>
+          <span class="post-name">老王</span><span class="lv-badge">Lv.7</span>
+          <span style="font-size:9px;background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:2px 6px;border-radius:4px;margin-left:auto;">💚 关注</span>
+        </div>
+        <div class="post-text">Slap Bass入门视频第4集出了！这次讲Ghost Note🤙</div>
+        <div class="post-footer"><span>❤️ 24</span><span>💬 19</span></div>
+      </div>
+      <div class="post-card" onclick="navigateTo('screen-s12')">
+        <div class="post-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#E8001D,#ff6b35)">M</div>
+          <span class="post-name">MASATO</span><span class="lv-badge">Lv.9</span>
+        </div>
+        <div class="post-text">Fender Japan CTB-65 拿到手了！日本限定型号，太美了🥹</div>
+        <div class="post-footer"><span>❤️ 41</span><span>💬 16</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== S-05: RANK ==================== -->
+    <div class="screen" id="screen-s05">
+      <div class="top-bar">
+        <div class="top-bar-title">段位一览</div>
+      </div>
+      <div class="current-rank-banner">
+        <div class="crb-label">当前段位</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="crb-rank">🥇 黄金</div>
+          <div style="font-family:'Space Mono',monospace;font-size:11px;background:rgba(255,184,0,0.15);border:1px solid rgba(255,184,0,0.3);color:var(--gold);padding:4px 10px;border-radius:6px;">Lv.3</div>
+        </div>
+        <div class="crb-progress-text">→ 💎 钻石段位 还差 3,180pt</div>
+        <div class="rank-bar-bg" style="margin-top:8px;"><div class="rank-bar-fill" style="width:60%"></div></div>
+      </div>
+      <div class="section-label">全部段位</div>
+      <div class="rank-card" style="border:1px solid rgba(125,249,255,0.25);">
+        <div class="rank-card-header">
+          <div class="rank-emoji">💎</div>
+          <div><div class="rank-name">钻石段位</div><div class="rank-sub">Lv.8-10 · 专业级贝斯手</div></div>
+          <div class="rank-lv">8000pt+</div>
+        </div>
+        <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:0%;background:linear-gradient(90deg,#7DF9FF,#4DA6FF)"></div></div>
+      </div>
+      <div class="rank-card current">
+        <div class="rank-card-header">
+          <div class="rank-emoji">🥇</div>
+          <div><div class="rank-name">黄金段位 ← 当前</div><div class="rank-sub">Lv.5-7 · 中上级贝斯手</div></div>
+          <div class="rank-lv">4000pt+</div>
+        </div>
+        <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:60%"></div></div>
+        <div class="rank-apply-btn" onclick="navigateTo('screen-s07')">申请升级 →</div>
+      </div>
+      <div class="rank-card">
+        <div class="rank-card-header">
+          <div class="rank-emoji">🥈</div>
+          <div><div class="rank-name">白银段位</div><div class="rank-sub">Lv.3-4 · 中级贝斯手</div></div>
+          <div class="rank-lv">1500pt+</div>
+        </div>
+        <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:100%;background:linear-gradient(90deg,#C0C0C0,#888)"></div></div>
+      </div>
+      <div class="rank-card">
+        <div class="rank-card-header">
+          <div class="rank-emoji">🥉</div>
+          <div><div class="rank-name">铜牌段位</div><div class="rank-sub">Lv.1-2 · 初级贝斯手</div></div>
+          <div class="rank-lv">500pt+</div>
+        </div>
+        <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:100%;background:linear-gradient(90deg,#CD7F32,#8B4513)"></div></div>
+      </div>
+    </div>
+
+    <!-- ==================== S-06: MY PAGE ==================== -->
+    <div class="screen" id="screen-s06">
+      <div class="top-bar">
+        <div class="top-bar-title">我的主页</div>
+        <div class="top-bar-action" onclick="navigateTo('screen-s02a')">编辑</div>
+      </div>
+      <div class="my-header-section">
+        <div style="position:relative;">
+          <div class="my-avatar">🎸</div>
+          <div class="my-lv-pin">Lv.3</div>
+        </div>
+        <div>
+          <div class="my-name">MASATO</div>
+          <div class="my-loc">📍 深圳 龙岗 · 2001年〜</div>
+        </div>
+        <div class="my-rank-badge">
+          <div class="rank-icon-big">🥇</div>
+          <div class="rank-label">黄金</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-item" onclick="navigateTo('screen-s13')">
+          <div class="stat-num">34</div><div class="stat-lbl">关注</div>
+        </div>
+        <div class="stat-item" onclick="navigateTo('screen-s13')">
+          <div class="stat-num">86</div><div class="stat-lbl">粉丝</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">142</div><div class="stat-lbl">投稿</div>
+        </div>
+      </div>
+      <div class="completion-card">
+        <div class="completion-top">
+          <div class="completion-label">👤 个人资料完成度</div>
+          <div class="completion-pct">65%</div>
+        </div>
+        <div class="completion-bar-bg"><div class="completion-bar-fill"></div></div>
+        <div class="completion-items">
+          <div class="comp-item"><div class="comp-dot done"></div>昵称・头像</div>
+          <div class="comp-item"><div class="comp-dot done"></div>地区</div>
+          <div class="comp-item"><div class="comp-dot done"></div>贝斯历</div>
+          <div class="comp-item"><div class="comp-dot done"></div>持有乐器</div>
+          <div class="comp-item"><div class="comp-dot todo"></div>SNS账号</div>
+          <div class="comp-item"><div class="comp-dot todo"></div>喜欢的乐队</div>
+        </div>
+      </div>
+      <div class="pt-card" onclick="navigateTo('screen-s14')">
+        <div>
+          <div class="pt-card-val">4,820</div>
+          <div class="pt-card-label">累计积分</div>
+        </div>
+        <div class="pt-card-right">
+          <div class="pt-card-rank">🥇 黄金段位</div>
+          <div class="pt-card-bar-bg"><div class="pt-card-bar-fill"></div></div>
+          <div class="pt-card-next">→ 💎 钻石 还差 3,180pt</div>
+        </div>
+      </div>
+      <div class="menu-item" onclick="navigateTo('screen-s10')">
+        <div class="menu-icon">⚡</div>
+        <div class="menu-text">积分任务<div class="menu-sub">今日2/4完成</div></div>
+        <div class="menu-badge">+80pt</div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item" onclick="navigateTo('screen-s02a')">
+        <div class="menu-icon">✏️</div>
+        <div class="menu-text">完善个人资料</div>
+        <div class="menu-badge">NEW</div>
+        <div class="menu-arrow">›</div>
+      </div>
+      <div class="menu-item" onclick="navigateTo('screen-s05')">
+        <div class="menu-icon">🏆</div>
+        <div class="menu-text">我的段位 — Lv.3</div>
+        <div class="menu-arrow">›</div>
+      </div>
+    </div>
+
+    <!-- ==================== S-07: LEVEL APPLY ==================== -->
+    <div class="screen" id="screen-s07">
+      <div class="top-bar">
+        <div class="top-bar-back" onclick="navigateBack()">‹</div>
+        <div class="top-bar-title">Lv.4 升级申请</div>
+      </div>
+      <div class="apply-header">
+        <div class="apply-lv-name">中初级贝斯手 Lv.4</div>
+        <div class="apply-lv-desc">スケール演奏・安定したポジション移動・5フレット以上のカバー</div>
+      </div>
+      <div class="section-label">审核标准</div>
+      <div class="criteria-grid">
+        <div class="criteria-item">
+          <div class="criteria-score">30</div>
+          <div class="criteria-label">节奏</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-score">25</div>
+          <div class="criteria-label">音准</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-score">25</div>
+          <div class="criteria-label">表现</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-score">10</div>
+          <div class="criteria-label">完成度</div>
+        </div>
+        <div class="criteria-item">
+          <div class="criteria-score">10</div>
+          <div class="criteria-label">动画质量</div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-label">提交演奏视频链接</div>
+        <div class="form-field-input">https://www.bilibili.com/video/…</div>
+        <div class="form-label">使用乐器</div>
+        <div class="form-field-filled">Fender Jazz Bass <span style="color:var(--green)">✓</span></div>
+      </div>
+      <div class="submit-btn" onclick="showToast('✅ 申请已提交！3-5日審査')">提交申请 →</div>
+      <div class="submit-note">通常3〜5日で審査完了 · 合格で <span style="color:var(--gold);font-family:'Space Mono',monospace">+100pt</span></div>
+    </div>
+
+    <!-- ==================== S-08: COMPOSE ==================== -->
+    <div class="screen" id="screen-s08">
+      <div class="top-bar">
+        <div class="top-bar-back" onclick="navigateBack()" style="font-size:13px;color:var(--text-secondary)">取消</div>
+        <div class="top-bar-title">发布动态</div>
+        <div class="top-bar-action" onclick="navigateTo('screen-s04');showToast('✅ 发布成功！+20pt')">发布</div>
+      </div>
+      <div style="padding:12px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+          <div class="chip selected">技术交流</div>
+          <div class="chip">日本器材</div>
+          <div class="chip">乐队招募</div>
+          <div class="chip">晒琴</div>
+        </div>
+        <div style="font-size:13px;color:#555;line-height:1.8;min-height:100px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:12px;margin-bottom:12px;">
+          最近练习Slap Bass遇到了问题…拇指角度怎么调整？<span style="opacity:0.4;animation:blink 1s infinite">|</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;padding:0 12px 12px;overflow-x:auto;">
+        <div style="width:72px;height:72px;border-radius:10px;background:linear-gradient(135deg,#1a1a2a,#0d0d1a);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🎸</div>
+        <div style="width:72px;height:72px;border-radius:10px;background:linear-gradient(135deg,#1a2a1a,#0d1a0d);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🖼️</div>
+        <div style="width:72px;height:72px;border-radius:10px;border:1px dashed #333;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;color:var(--red);">＋</div>
+      </div>
+      <div style="margin:0 12px;background:var(--gray-dark);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;border-left:3px solid var(--red);">
+        <div style="font-size:20px;">🎥</div>
+        <div style="flex:1;">
+          <div style="font-size:11px;font-weight:700;">Slap Bass入门 第3回</div>
+          <div style="font-size:10px;color:var(--text-secondary);">● 视频号 · MASATO</div>
+        </div>
+        <div style="color:var(--text-secondary);font-size:16px;">×</div>
+      </div>
+      <div style="display:flex;align-items:center;padding:10px 14px;border-top:1px solid rgba(255,255,255,0.04);margin-top:10px;font-size:10px;color:var(--text-secondary);">
+        📍 深圳市龙岗区
+        <span style="margin-left:auto;font-size:9px;color:#555;">変更</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid rgba(255,255,255,0.04);font-size:18px;">
+        <span>🖼️</span><span>📺</span>
+        <div style="width:1px;height:18px;background:rgba(255,255,255,0.1);margin:0 4px;"></div>
+        <span>📍</span><span>🏆</span><span style="font-size:13px;font-weight:700;">＠</span><span style="font-size:13px;font-weight:700;">#</span>
+        <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:10px;color:var(--text-secondary);">45/500</span>
+      </div>
+    </div>
+
+    <!-- ==================== S-09: OTHER PROFILE ==================== -->
+    <div class="screen" id="screen-s09">
+      <div class="top-bar">
+        <div class="top-bar-back" onclick="navigateBack()">‹</div>
+        <div class="top-bar-title">贝斯手主页</div>
+        <div class="top-bar-action">⋯</div>
+      </div>
+      <div class="profile-cover">
+        <div class="profile-cover-bg"></div>
+        <div class="profile-cover-text">BASS</div>
+      </div>
+      <div class="profile-main">
+        <div class="profile-avatar-row">
+          <div class="profile-avatar">王</div>
+          <div class="profile-follow-btn" onclick="showToast('✅ 已关注 老王')">+ 关注</div>
+        </div>
+        <div class="profile-name">老王 / Lǎo Wáng</div>
+        <div class="profile-handle">@laowang_bass · 深圳龙岗</div>
+        <div class="profile-badges">
+          <span class="badge badge-lv">Lv.7</span>
+          <span class="badge badge-rank">💎 钻石</span>
+          <span class="badge badge-city">📍 深圳</span>
+          <span class="badge" style="background:rgba(255,184,0,0.12);color:var(--gold);border:1px solid rgba(255,184,0,0.3);">Slap专门</span>
+        </div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="profile-stat-num">142</div><div class="profile-stat-label">投稿</div></div>
+          <div class="profile-stat"><div class="profile-stat-num">86</div><div class="profile-stat-label">粉丝</div></div>
+          <div class="profile-stat"><div class="profile-stat-num">34</div><div class="profile-stat-label">关注</div></div>
+        </div>
+        <div class="profile-tabs">
+          <div class="profile-tab active">投稿</div>
+          <div class="profile-tab">动态</div>
+          <div class="profile-tab">关于</div>
+        </div>
+      </div>
+      <div class="profile-post-mini featured" onclick="navigateTo('screen-s12')">
+        <div class="profile-post-mini-text">Slap bassの親指角度について研究中。45度が最適です！</div>
+        <div class="profile-post-mini-footer"><span>❤️ 45</span><span>💬 23</span><span>3日前</span></div>
+      </div>
+      <div class="profile-post-mini" onclick="navigateTo('screen-s12')">
+        <div class="profile-post-mini-text">先週のセッションで色々教えてもらいました 🎸</div>
+        <div class="profile-post-mini-footer"><span>❤️ 28</span><span>💬 9</span><span>1週間前</span></div>
+      </div>
+    </div>
+
+    <!-- ==================== S-10: POINTS CENTER ==================== -->
+    <div class="screen" id="screen-s10">
+      <div class="top-bar">
+        <div class="top-bar-back" onclick="navigateBack()">‹</div>
+        <div class="top-bar-title">积分中心</div>
+        <div class="top-bar-action" onclick="navigateTo('screen-s14')">记录</div>
+      </div>
+      <div class="pt-header-section">
+        <div class="pt-balance"><div class="pt-num">4,820</div><div class="pt-unit">pt</div></div>
+        <div class="rank-row">
+          <div class="rank-pill">🥇 黄金段位</div>
+          <div class="pt-next-text">→ 💎 钻石 还差 3,180pt</div>
+        </div>
+        <div class="pt-bar-bg"><div class="pt-bar-fill"></div></div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab active">今日任务</div>
+        <div class="tab">所有任务</div>
+        <div class="tab">积分记录</div>
+      </div>
+      <div class="mission-cat">📅 每日任务</div>
+      <div class="mission-item">
+        <div class="mission-icon daily">📅</div>
+        <div class="mission-body"><div class="mission-name">每日登录</div><div class="mission-desc">毎日ログイン</div></div>
+        <div class="mission-right"><div class="mission-pt">+10pt</div><div class="mission-btn done">已完成</div></div>
+      </div>
+      <div class="mission-item">
+        <div class="mission-icon daily">✍️</div>
+        <div class="mission-body"><div class="mission-name">发布帖子</div><div class="mission-desc">コミュニティに投稿</div></div>
+        <div class="mission-right"><div class="mission-pt">+20pt</div><div class="mission-btn done">已完成</div></div>
+      </div>
+      <div class="mission-item">
+        <div class="mission-icon daily">❤️</div>
+        <div class="mission-body"><div class="mission-name">给帖子点赞 ×3</div><div class="mission-desc">今日进度：1/3</div></div>
+        <div class="mission-right"><div class="mission-pt">+15pt</div><div class="mission-btn go" onclick="showToast('🎉 +15pt 获得！')">去完成</div></div>
+      </div>
+      <div class="mission-cat">👤 资料任务（一次性）</div>
+      <div class="mission-item">
+        <div class="mission-icon profile">🎸</div>
+        <div class="mission-body"><div class="mission-name">登记持有贝斯</div><div class="mission-desc">プロフィールに楽器追加</div></div>
+        <div class="mission-right"><div class="mission-pt">+30pt</div><div class="mission-btn go" onclick="navigateTo('screen-s02a')">去完成</div></div>
+      </div>
+      <div class="mission-item">
+        <div class="mission-icon social">👥</div>
+        <div class="mission-body"><div class="mission-name">关注3位贝斯手</div><div class="mission-desc">フォロー3人達成</div></div>
+        <div class="mission-right"><div class="mission-pt">+20pt</div><div class="mission-btn claim" onclick="showToast('🎉 +20pt 获得！')">领取</div></div>
+      </div>
+      <div class="mission-item">
+        <div class="mission-icon level">🏆</div>
+        <div class="mission-body"><div class="mission-name">段位升级审核通过</div><div class="mission-desc">Lv.1〜5各+100pt</div></div>
+        <div class="mission-right"><div class="mission-pt">+100pt</div><div class="mission-btn go" onclick="navigateTo('screen-s07')">去申请</div></div>
+      </div>
+    </div>
+
+    <!-- ==================== S-11: NOTIFICATIONS ==================== -->
+    <div class="screen" id="screen-s11">
+      <div class="top-bar">
+        <div class="top-bar-back" onclick="navigateBack()">‹</div>
+        <div class="top-bar-title">通知中心</div>
+        <div class="top-bar-action" onclick="showToast('全部标为已读')">全读</div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab active">全部</div>
+        <div class="tab">互动</div>
+        <div class="tab">段位</div>
+        <div class="tab">系统</div>
+      </div>
+      <div class="notif-item unread" onclick="navigateTo('screen-s12')">
+        <div class="notif-avatar" style="background:rgba(232,0,29,0.12);">❤️</div>
+        <div class="notif-body">
+          <div class="notif-title">老王 点了赞</div>
+          <div class="notif-text">「Slap Bass练习：拇指角度研究」</div>
+          <div class="notif-time">3分钟前</div>
+        </div>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-item unread" onclick="navigateTo('screen-s12')">
+        <div class="notif-avatar" style="background:rgba(77,166,255,0.12);">💬</div>
+        <div class="notif-body">
+          <div class="notif-title">小磊 评论了你的帖子</div>
+          <div class="notif-text">「初心者です！これ見て練習します 🙏」</div>
+          <div class="notif-time">15分钟前</div>
+        </div>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="notif-item" onclick="navigateTo('screen-s05')">
+        <div class="notif-avatar" style="background:rgba(255,184,0,0.12);">🏆</div>
+        <div class="notif-body">
+          <div class="notif-title">段位审核通过！</div>
+          <div class="notif-text">恭喜！🎉 Lv.3 黄金段位認定 · +100pt</div>
+          <div class="notif-time">昨天</div>
+        </div>
+      </div>
+      <div class="notif-item" onclick="navigateTo('screen-s09')">
+        <div class="notif-avatar" style="background:rgba(34,197,94,0.12);">👤</div>
+        <div class="notif-body">
+          <div class="notif-title">深圳贝友 关注了你</div>
+          <div class="notif-text">📍 深圳 · Lv.5 白银段位</div>
+          <div class="notif-time">昨天</div>
+        </div>
+      </div>
+      <div class="notif-item" onclick="showToast('🎉 积分已到账')">
+        <div class="notif-avatar" style="background:rgba(255,184,0,0.12);">⚡</div>
+        <div class="notif-body">
+          <div class="notif-title">积分任务完成 +20pt</div>
+          <div class="notif-text">「每日发布帖子」任务完成</div>
+          <div class="notif-time">昨天</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== S-12: POST DETAIL ==================== -->
+    <div class="screen" id="screen-s12">
+      <div class="top-bar">
+        <div class="top-bar-back" onclick="navigateBack()">‹</div>
+        <div class="top-bar-title">帖子详情</div>
+        <div class="top-bar-action">⋯</div>
+      </div>
+      <div class="post-detail-author">
+        <div class="post-detail-avatar">M</div>
+        <div>
+          <div class="post-detail-name">MASATO</div>
+          <div class="post-detail-meta">📍 龙岗 · <span style="font-family:'Space Mono',monospace">Lv.9</span> · 3天前</div>
+        </div>
+        <div class="post-detail-follow" onclick="showToast('✅ 已关注 MASATO')">+ 关注</div>
+      </div>
+      <div class="post-detail-content">
+        Slap Bassの練習で拇指の角度をいろいろ試してみました。角度によって音のアタック感が全然違う！皆さんはどんな角度で弾いてますか？🎸
+        <div class="post-detail-images">
+          <div class="post-detail-img">🎸</div>
+          <div class="post-detail-img">🖼️</div>
+        </div>
+      </div>
+      <div class="post-detail-actions">
+        <span class="liked" onclick="showToast('❤️ いいね！+5pt')">❤️ 67</span>
+        <span>💬 31条评论</span>
+        <span>↗ 分享</span>
+      </div>
+      <div style="padding:8px 14px 4px;font-size:10px;color:var(--text-secondary);letter-spacing:1px;">── 评论</div>
+      <div class="comment-item">
+        <div class="comment-avatar" style="background:linear-gradient(135deg,#1a4a1a,#2e7d32)">王</div>
+        <div>
+          <div class="comment-name">老王 <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-secondary)">Lv.7</span></div>
+          <div class="comment-text">自分は45度くらいがちょうどいい感じ！動画参考になりました</div>
+          <div class="comment-footer">❤️ 12 · 回复</div>
+        </div>
+      </div>
+      <div class="comment-item">
+        <div class="comment-avatar" style="background:linear-gradient(135deg,#4CAF50,#2E7D32)">小</div>
+        <div>
+          <div class="comment-name">小磊 <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-secondary)">Lv.2</span></div>
+          <div class="comment-text">初心者です！これ見て練習します 🙏</div>
+          <div class="comment-footer">❤️ 5 · 回复</div>
+        </div>
+      </div>
+      <div class="comment-item">
+        <div class="comment-avatar" style="background:linear-gradient(135deg,#1a3a6a,#0d47a1)">深</div>
+        <div>
+          <div class="comment-name">深圳贝友 <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--text-secondary)">Lv.5</span></div>
+          <div class="comment-text">MASATOさんの教え方めっちゃわかりやすい！BASS29も楽しみ</div>
+          <div class="comment-footer">❤️ 8 · 回复</div>
+        </div>
+      </div>
+      <div class="comment-input-bar">
+        <div class="comment-input">写下你的评论…</div>
+        <div class="comment-send" onclick="showToast('💬 评论发送！+5pt')">发送</div>
+      </div>
+    </div>
+
+    <!-- ==================== S-13: FOLLOW LIST ==================== -->
+    <div class="screen" id="screen-s13">
+      <div class="top-bar">
+        <div class="top-bar-back" onclick="navigateBack()">‹</div>
+        <div class="top-bar-title">关注 / 粉丝</div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab active">关注中 <span style="color:var(--red);font-family:'Space Mono',monospace">34</span></div>
+        <div class="tab">粉丝 <span style="font-family:'Space Mono',monospace;color:var(--text-secondary)">86</span></div>
+      </div>
+      <div class="follow-user-item" onclick="navigateTo('screen-s09')">
+        <div class="follow-avatar" style="background:linear-gradient(135deg,#ff6b35,#E8001D)">🎸</div>
+        <div style="flex:1;">
+          <div class="follow-name">MASATO <span style="font-family:'Space Mono',monospace;font-size:9px;background:var(--red);color:white;padding:1px 5px;border-radius:3px;margin-left:4px;">Lv.9</span></div>
+          <div class="follow-meta">📍 深圳 · Jazz/Funk · 🥇 黄金</div>
+        </div>
+        <div class="follow-btn mutual">互相关注</div>
+      </div>
+      <div class="follow-user-item" onclick="navigateTo('screen-s09')">
+        <div class="follow-avatar" style="background:linear-gradient(135deg,#1a4a1a,#2e7d32)">王</div>
+        <div style="flex:1;">
+          <div class="follow-name">老王 <span style="font-family:'Space Mono',monospace;font-size:9px;background:var(--red);color:white;padding:1px 5px;border-radius:3px;margin-left:4px;">Lv.7</span></div>
+          <div class="follow-meta">📍 深圳 龙岗 · Slap专门 · 💎 钻石</div>
+        </div>
+        <div class="follow-btn following">已关注</div>
+      </div>
+      <div class="follow-user-item" onclick="navigateTo('screen-s09')">
+        <div class="follow-avatar" style="background:linear-gradient(135deg,#1a3a6a,#0d47a1)">深</div>
+        <div style="flex:1;">
+          <div class="follow-name">深圳贝友 <span style="font-family:'Space Mono',monospace;font-size:9px;background:var(--red);color:white;padding:1px 5px;border-radius:3px;margin-left:4px;">Lv.5</span></div>
+          <div class="follow-meta">📍 深圳 · Rock/Funk · 🥈 白银</div>
+        </div>
+        <div class="follow-btn following">已关注</div>
+      </div>
+      <div class="follow-user-item" onclick="navigateTo('screen-s09')">
+        <div class="follow-avatar" style="background:linear-gradient(135deg,#4CAF50,#2E7D32)">小</div>
+        <div style="flex:1;">
+          <div class="follow-name">小磊 <span style="font-family:'Space Mono',monospace;font-size:9px;background:var(--red);color:white;padding:1px 5px;border-radius:3px;margin-left:4px;">Lv.2</span></div>
+          <div class="follow-meta">📍 广州 · 初心者 · 🥉 铜牌</div>
+        </div>
+        <div class="follow-btn following">已关注</div>
+      </div>
+    </div>
+
+    <!-- ==================== S-14: POINTS HISTORY ==================== -->
+    <div class="screen" id="screen-s14">
+      <div class="top-bar">
+        <div class="top-bar-back" onclick="navigateBack()">‹</div>
+        <div class="top-bar-title">积分记录</div>
+      </div>
+      <div class="pts-summary">
+        <div class="pts-summary-item">
+          <div class="pts-summary-num">+45</div>
+          <div class="pts-summary-label">今日获得</div>
+        </div>
+        <div class="pts-summary-item">
+          <div class="pts-summary-num">4,820</div>
+          <div class="pts-summary-label">累计积分</div>
+        </div>
+        <div class="pts-summary-item">
+          <div class="pts-summary-num">380</div>
+          <div class="pts-summary-label">已使用</div>
+        </div>
+      </div>
+      <div class="pts-date-header">2026年3月12日</div>
+      <div class="pts-history-item">
+        <div class="pts-history-icon" style="background:rgba(255,184,0,0.12)">📅</div>
+        <div>
+          <div class="pts-history-title">每日登录</div>
+          <div class="pts-history-time">09:14</div>
+        </div>
+        <div class="pts-history-amount">+10pt</div>
+      </div>
+      <div class="pts-history-item">
+        <div class="pts-history-icon" style="background:rgba(77,166,255,0.12)">✍️</div>
+        <div>
+          <div class="pts-history-title">发布帖子</div>
+          <div class="pts-history-time">10:32</div>
+        </div>
+        <div class="pts-history-amount">+20pt</div>
+      </div>
+      <div class="pts-history-item">
+        <div class="pts-history-icon" style="background:rgba(34,197,94,0.12)">👥</div>
+        <div>
+          <div class="pts-history-title">任务：关注3位贝斯手</div>
+          <div class="pts-history-time">11:05</div>
+        </div>
+        <div class="pts-history-amount">+20pt</div>
+      </div>
+      <div class="pts-date-header">2026年3月11日</div>
+      <div class="pts-history-item">
+        <div class="pts-history-icon" style="background:rgba(232,0,29,0.12)">🏆</div>
+        <div>
+          <div class="pts-history-title">段位升级通过 Lv.3</div>
+          <div class="pts-history-time">15:20</div>
+        </div>
+        <div class="pts-history-amount">+100pt</div>
+      </div>
+      <div class="pts-history-item">
+        <div class="pts-history-icon" style="background:rgba(255,184,0,0.12)">📅</div>
+        <div>
+          <div class="pts-history-title">每日登录</div>
+          <div class="pts-history-time">09:07</div>
+        </div>
+        <div class="pts-history-amount">+10pt</div>
+      </div>
+    </div>
+
+  </div><!-- end .screens -->
+
+  <!-- Bottom Nav (shown on main screens) -->
+  <div class="bottom-nav" id="bottomNav">
+    <div class="nav-item" id="nav-home" onclick="switchTab('screen-s03','nav-home')">
+      <div class="nav-icon">🏠</div>首页
+    </div>
+    <div class="nav-item" id="nav-community" onclick="switchTab('screen-s04','nav-community')">
+      <div class="nav-icon">💬</div>社区
+    </div>
+    <div class="nav-item" id="nav-rank" onclick="switchTab('screen-s05','nav-rank')">
+      <div class="nav-icon">🏆</div>段位
+    </div>
+    <div class="nav-item active" id="nav-my" onclick="switchTab('screen-s06','nav-my')">
+      <div class="nav-icon">👤</div>我的
+    </div>
+  </div>
+
+</div><!-- end .device-wrapper -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Screen ID indicator -->
+<div class="screen-id-badge" id="screenBadge">S-01</div>
+
+<style>
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+</style>
+
+<script>
+const NAV_SCREENS = ['screen-s03','screen-s04','screen-s05','screen-s06'];
+const SCREEN_LABELS = {
+  'screen-s01':'S-01','screen-s02a':'S-02A','screen-s03':'S-03','screen-s04':'S-04',
+  'screen-s05':'S-05','screen-s06':'S-06','screen-s07':'S-07','screen-s08':'S-08',
+  'screen-s09':'S-09','screen-s10':'S-10','screen-s11':'S-11','screen-s12':'S-12',
+  'screen-s13':'S-13','screen-s14':'S-14'
+};
+const NO_BOTTOM_NAV = ['screen-s01','screen-s02a','screen-s07','screen-s08'];
+
+let history = ['screen-s01'];
+let currentScreen = 'screen-s01';
+
+function updateTime() {
+  const now = new Date();
+  document.getElementById('statusTime').textContent =
+    now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+}
+updateTime();
+setInterval(updateTime, 10000);
+
+function showScreen(id, animate) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active','slide-in','slide-back');
+  });
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  if (animate === 'forward') el.classList.add('slide-in');
+  if (animate === 'back') el.classList.add('slide-back');
+
+  // bottom nav visibility
+  const bn = document.getElementById('bottomNav');
+  bn.style.display = NO_BOTTOM_NAV.includes(id) ? 'none' : 'flex';
+
+  // update badge
+  document.getElementById('screenBadge').textContent = SCREEN_LABELS[id] || id;
+
+  currentScreen = id;
+}
+
+function navigateTo(id) {
+  history.push(id);
+  showScreen(id, 'forward');
+}
+
+function navigateBack() {
+  if (history.length > 1) {
+    history.pop();
+    const prev = history[history.length - 1];
+    showScreen(prev, 'back');
+  }
+}
+
+function switchTab(screenId, navId) {
+  // Update nav active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(navId).classList.add('active');
+
+  // If going to a main tab, reset history to that tab
+  history = [screenId];
+  showScreen(screenId, 'forward');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// Initial state
+showScreen('screen-s01');
+</script>
+</body>
+</html>
