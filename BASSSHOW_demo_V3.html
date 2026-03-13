@@ -285,36 +285,139 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
     <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--gray-dark);border-bottom:1px solid rgba(255,255,255,.04);flex-shrink:0;">
       <div style="flex:1;background:var(--gray-mid);border-radius:16px;padding:8px 12px;font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;">🔍 <span data-i18n="search_placeholder"></span></div>
     </div>
-    <div class="tab-bar">
-      <div class="tab active" onclick="setTab(this)" data-i18n="tab_all"></div>
-      <div class="tab" onclick="setTab(this)" data-i18n="tab_nearby"></div>
-      <div class="tab" onclick="setTab(this)" data-i18n="tab_following"></div>
-      <div class="tab" onclick="setTab(this)" data-i18n="tab_tech"></div>
-      <div class="tab" onclick="setTab(this)" data-i18n="tab_gear"></div>
+    <div class="tab-bar" id="comm-tab-bar">
+      <div class="tab active" onclick="switchCommTab(this,'comm-all')" data-i18n="tab_all"></div>
+      <div class="tab" onclick="switchCommTab(this,'comm-chat')" data-i18n="tab_chat"></div>
+      <div class="tab" onclick="switchCommTab(this,'comm-score')" data-i18n="tab_score"></div>
+      <div class="tab" onclick="switchCommTab(this,'comm-gear')" data-i18n="tab_gear_tab"></div>
+      <div class="tab" onclick="switchCommTab(this,'comm-tech')" data-i18n="tab_tech"></div>
+      <div class="tab" onclick="switchCommTab(this,'comm-nearby')" data-i18n="tab_nearby"></div>
     </div>
-    <div style="overflow-y:auto;flex:1;">
+
+    <!-- ALL -->
+    <div id="comm-all" style="overflow-y:auto;flex:1;">
+      <div class="post-card hot" onclick="goScreen('s-post-detail')">
+        <div class="post-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#E8001D,#ff6b35)">M</div>
+          <span class="post-name">MASATO</span><span class="lv-badge">Lv.9</span>
+          <span class="region-tag">🎵 技术</span>
+        </div>
+        <div class="post-text" data-i18n="post1_text"></div>
+        <div class="post-footer"><span>❤️ 32</span><span>💬 14</span><span data-i18n="time_now"></span></div>
+      </div>
+      <div class="post-card" onclick="goScreen('s-post-detail')" style="border-left-color:var(--blue);">
+        <div class="post-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#6a1a4a,#a1280d)">田</div>
+          <span class="post-name">田中ベース</span><span class="lv-badge">Lv.8</span>
+          <span class="region-tag" style="background:rgba(125,249,255,.12);color:var(--diamond);border-color:rgba(125,249,255,.3);">🎼 楽譜</span>
+        </div>
+        <div class="post-text" data-i18n="score_post1"></div>
+        <div style="background:var(--gray-mid);border-radius:8px;padding:10px 12px;margin-top:8px;display:flex;align-items:center;gap:10px;">
+          <div style="font-size:22px;">🎼</div>
+          <div><div style="font-size:12px;font-weight:700;">Fly Me To The Moon - Bass Line</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">PDF · 2页</div></div>
+          <div style="margin-left:auto;font-size:11px;color:var(--diamond);">↓ 下载</div>
+        </div>
+        <div class="post-footer"><span>❤️ 28</span><span>💬 6</span><span data-i18n="time_2h"></span></div>
+      </div>
+      <div class="post-card follow-post" onclick="goScreen('s-other-profile')">
+        <div class="post-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#1a4a1a,#2e7d32)">王</div>
+          <span class="post-name">老王</span><span class="lv-badge">Lv.7</span>
+          <span class="follow-tag">💚 <span data-i18n="following"></span></span>
+          <span class="region-tag" style="margin-left:4px;background:rgba(255,184,0,.12);color:var(--gold);border-color:rgba(255,184,0,.3);">🎛️ 机材</span>
+        </div>
+        <div class="post-text" data-i18n="gear_post1"></div>
+        <div style="background:var(--gray-light);border-radius:8px;height:60px;margin-top:8px;display:flex;align-items:center;justify-content:center;font-size:28px;">🎸</div>
+        <div class="post-footer"><span>❤️ 45</span><span>💬 23</span><span data-i18n="time_3h"></span></div>
+      </div>
+      <div class="post-card" onclick="goScreen('s-post-detail')" style="border-left-color:#888;">
+        <div class="post-header">
+          <div class="avatar" style="background:linear-gradient(135deg,#4CAF50,#2E7D32)">小</div>
+          <span class="post-name">小磊</span><span class="lv-badge">Lv.3</span>
+          <span class="region-tag" style="background:rgba(255,255,255,.07);color:#aaa;border-color:rgba(255,255,255,.15);">💬 雑談</span>
+        </div>
+        <div class="post-text" data-i18n="chat_post1"></div>
+        <div class="post-footer"><span>❤️ 18</span><span>💬 7</span><span data-i18n="time_1h"></span></div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+
+    <!-- CHAT -->
+    <div id="comm-chat" style="overflow-y:auto;flex:1;display:none;">
+      <div style="padding:8px 14px;font-size:10px;color:var(--text-secondary);letter-spacing:1px;" data-i18n="chat_label"></div>
+      <div class="post-card" onclick="goScreen('s-post-detail')" style="border-left-color:#888;">
+        <div class="post-header"><div class="avatar" style="background:linear-gradient(135deg,#4CAF50,#2E7D32)">小</div><span class="post-name">小磊</span><span class="lv-badge">Lv.3</span></div>
+        <div class="post-text" data-i18n="chat_post1"></div>
+        <div class="post-footer"><span>❤️ 18</span><span>💬 7</span><span data-i18n="time_1h"></span></div>
+      </div>
+      <div class="post-card" onclick="goScreen('s-post-detail')" style="border-left-color:#888;">
+        <div class="post-header"><div class="avatar" style="background:linear-gradient(135deg,#1a3a6a,#0d47a1)">深</div><span class="post-name">深圳贝友</span><span class="lv-badge">Lv.5</span><span class="region-tag">📍 龙岗</span></div>
+        <div class="post-text" data-i18n="chat_post2"></div>
+        <div class="post-footer"><span>❤️ 12</span><span>💬 8</span><span data-i18n="time_5h"></span></div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+
+    <!-- SCORE/SHEET MUSIC -->
+    <div id="comm-score" style="overflow-y:auto;flex:1;display:none;">
+      <div style="margin:10px 12px;background:rgba(125,249,255,.06);border:1px solid rgba(125,249,255,.2);border-radius:10px;padding:10px 14px;font-size:11px;color:var(--diamond);" data-i18n="score_notice"></div>
+      <div class="post-card" onclick="goScreen('s-post-detail')" style="border-left-color:var(--diamond);">
+        <div class="post-header"><div class="avatar" style="background:linear-gradient(135deg,#6a1a4a,#a1280d)">田</div><span class="post-name">田中ベース</span><span class="lv-badge">Lv.8</span></div>
+        <div class="post-text" data-i18n="score_post1"></div>
+        <div style="background:var(--gray-mid);border-radius:8px;padding:10px 12px;margin-top:8px;display:flex;align-items:center;gap:10px;"><div style="font-size:22px;">🎼</div><div><div style="font-size:12px;font-weight:700;">Fly Me To The Moon - Bass Line</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">PDF · 2页</div></div><div style="margin-left:auto;font-size:11px;color:var(--diamond);">↓ <span data-i18n="download_btn"></span></div></div>
+        <div class="post-footer"><span>❤️ 28</span><span>💬 6</span><span data-i18n="time_2h"></span></div>
+      </div>
+      <div class="post-card" onclick="goScreen('s-post-detail')" style="border-left-color:var(--diamond);">
+        <div class="post-header"><div class="avatar" style="background:linear-gradient(135deg,#1a4a1a,#2e7d32)">王</div><span class="post-name">老王</span><span class="lv-badge">Lv.7</span></div>
+        <div class="post-text" data-i18n="score_post2"></div>
+        <div style="background:var(--gray-mid);border-radius:8px;padding:10px 12px;margin-top:8px;display:flex;align-items:center;gap:10px;"><div style="font-size:22px;">🎼</div><div><div style="font-size:12px;font-weight:700;">Marcus Miller - Power - Bass Tab</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">TAB · 4页</div></div><div style="margin-left:auto;font-size:11px;color:var(--diamond);">↓ <span data-i18n="download_btn"></span></div></div>
+        <div class="post-footer"><span>❤️ 41</span><span>💬 11</span><span data-i18n="time_1h"></span></div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+
+    <!-- GEAR -->
+    <div id="comm-gear" style="overflow-y:auto;flex:1;display:none;">
+      <div style="padding:8px 14px;font-size:10px;color:var(--text-secondary);letter-spacing:1px;" data-i18n="gear_label"></div>
+      <div class="post-card" onclick="goScreen('s-post-detail')" style="border-left-color:var(--gold);">
+        <div class="post-header"><div class="avatar" style="background:linear-gradient(135deg,#1a4a1a,#2e7d32)">王</div><span class="post-name">老王</span><span class="lv-badge">Lv.7</span></div>
+        <div class="post-text" data-i18n="gear_post1"></div>
+        <div style="background:var(--gray-light);border-radius:8px;height:60px;margin-top:8px;display:flex;align-items:center;justify-content:center;font-size:28px;">🎸</div>
+        <div class="post-footer"><span>❤️ 45</span><span>💬 23</span><span data-i18n="time_3h"></span></div>
+      </div>
+      <div class="post-card" onclick="goScreen('s-other-profile')" style="border-left-color:var(--gold);">
+        <div class="post-header"><div class="avatar" style="background:linear-gradient(135deg,#6a1a4a,#a1280d)">田</div><span class="post-name">田中ベース</span><span class="lv-badge">Lv.8</span></div>
+        <div class="post-text" data-i18n="gear_post2"></div>
+        <div class="post-footer"><span>❤️ 22</span><span>💬 9</span><span data-i18n="time_5h"></span></div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+
+    <!-- TECH -->
+    <div id="comm-tech" style="overflow-y:auto;flex:1;display:none;">
+      <div class="post-card hot" onclick="goScreen('s-post-detail')">
+        <div class="post-header"><div class="avatar" style="background:linear-gradient(135deg,#E8001D,#ff6b35)">M</div><span class="post-name">MASATO</span><span class="lv-badge">Lv.9</span></div>
+        <div class="post-text" data-i18n="post1_text"></div>
+        <div class="post-footer"><span>❤️ 32</span><span>💬 14</span><span data-i18n="time_now"></span></div>
+      </div>
+      <div class="post-card" onclick="goScreen('s-post-detail')" style="border-left-color:var(--blue);">
+        <div class="post-header"><div class="avatar" style="background:linear-gradient(135deg,#4CAF50,#2E7D32)">小</div><span class="post-name">小磊</span><span class="lv-badge">Lv.3</span></div>
+        <div class="post-text" data-i18n="post2_text"></div>
+        <div class="post-footer"><span>❤️ 18</span><span>💬 7</span><span data-i18n="time_1h"></span></div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+
+    <!-- NEARBY -->
+    <div id="comm-nearby" style="overflow-y:auto;flex:1;display:none;">
       <div style="display:flex;align-items:center;gap:6px;padding:8px 14px;font-size:11px;color:var(--text-secondary);">
         <div style="width:7px;height:7px;border-radius:50%;background:var(--blue);"></div>
         <span data-i18n="nearby_label"></span>
       </div>
       <div class="post-card region-post" onclick="goScreen('s-post-detail')">
-        <div class="post-header">
-          <div class="avatar" style="background:linear-gradient(135deg,#1a3a6a,#0d47a1)">深</div>
-          <span class="post-name">深圳贝友</span><span class="lv-badge">Lv.5</span>
-          <span class="region-tag">📍 龙岗</span>
-        </div>
+        <div class="post-header"><div class="avatar" style="background:linear-gradient(135deg,#1a3a6a,#0d47a1)">深</div><span class="post-name">深圳贝友</span><span class="lv-badge">Lv.5</span><span class="region-tag">📍 龙岗</span></div>
         <div class="post-text" data-i18n="comm_post1"></div>
         <div class="post-footer"><span>❤️ 12</span><span>💬 8</span><span data-i18n="time_1h"></span></div>
-      </div>
-      <div class="post-card follow-post" onclick="goScreen('s-post-detail')">
-        <div class="post-header">
-          <div class="avatar" style="background:linear-gradient(135deg,#1a4a1a,#2e7d32)">王</div>
-          <span class="post-name">老王</span><span class="lv-badge">Lv.7</span>
-          <span class="follow-tag">💚 <span data-i18n="following"></span></span>
-        </div>
-        <div class="post-text" data-i18n="comm_post2"></div>
-        <div style="background:var(--gray-light);border-radius:8px;height:60px;margin-top:8px;display:flex;align-items:center;justify-content:center;font-size:28px;">🎸</div>
-        <div class="post-footer"><span>❤️ 45</span><span>💬 23</span><span data-i18n="time_3h"></span></div>
       </div>
       <div style="height:20px;"></div>
     </div>
@@ -467,7 +570,33 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
         </div>
       </div>
       <div class="section-label" data-i18n="my_menu"></div>
+      <!-- 楽器・機材セクション -->
+      <div class="section-label" data-i18n="my_gear_section"></div>
+      <div style="padding:0 12px 8px;" onclick="goScreen('s-gear-register')" >
+        <div style="background:var(--gray-dark);border:1px solid rgba(255,184,0,.2);border-radius:12px;padding:12px 14px;cursor:pointer;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--gold);font-weight:700;">🎸 <span data-i18n="my_instruments"></span></div>
+            <div style="font-size:11px;color:var(--text-secondary);" data-i18n="edit_btn"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;background:var(--gray-mid);border-radius:8px;padding:8px 10px;">
+              <div style="font-size:18px;">🎸</div>
+              <div style="flex:1;"><div style="font-size:12px;font-weight:700;">Fender Jazz Bass（4弦）</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">日本产 / 2019年购入</div></div>
+              <div style="font-size:14px;color:var(--green);">✓</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:var(--gray-mid);border-radius:8px;padding:8px 10px;">
+              <div style="font-size:18px;">🔊</div>
+              <div style="flex:1;"><div style="font-size:12px;font-weight:700;">Aguilar ToneHammer</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">前置放大器</div></div>
+              <div style="font-size:14px;color:var(--green);">✓</div>
+            </div>
+          </div>
+          <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.06);padding-top:8px;display:flex;justify-content:center;">
+            <div style="font-size:11px;color:var(--text-secondary);">+ <span data-i18n="add_more_gear"></span></div>
+          </div>
+        </div>
+      </div>
       <div class="menu-item" onclick="goScreen('s-points')"><span class="menu-icon">⚡</span><span class="menu-label" data-i18n="menu_missions"></span><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);">+80pt</span><span class="menu-arrow">›</span></div>
+      <div class="menu-item" onclick="goScreen('s-gear-register')"><span class="menu-icon">🎸</span><span class="menu-label" data-i18n="menu_gear"></span><span style="font-size:11px;color:var(--green);">+30pt</span><span class="menu-arrow">›</span></div>
       <div class="menu-item" onclick="goScreen('s-rank')"><span class="menu-icon">🏆</span><span class="menu-label" data-i18n="menu_rank_apply"></span><span style="font-size:11px;color:var(--red);" data-i18n="lv4_reviewing"></span><span class="menu-arrow">›</span></div>
       <div class="menu-item" onclick="goScreen('s-follow-list')"><span class="menu-icon">👥</span><span class="menu-label" data-i18n="menu_follow"></span><span class="menu-arrow">›</span></div>
       <div class="menu-item" onclick="goScreen('s-pt-history')"><span class="menu-icon">📊</span><span class="menu-label" data-i18n="menu_pt_history"></span><span class="menu-arrow">›</span></div>
@@ -550,6 +679,25 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
         <div style="flex:1;background:var(--gray-dark);border-radius:10px;padding:10px;text-align:center;"><div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--red);">Lv.7</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;" data-i18n="lv7_name"></div></div>
         <div style="flex:1;background:var(--gray-dark);border-radius:10px;padding:10px;text-align:center;"><div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gold);">8,540</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;" data-i18n="pt_label"></div></div>
         <div style="flex:1;background:var(--gray-dark);border-radius:10px;padding:10px;text-align:center;"><div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;">62</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;" data-i18n="posts_count"></div></div>
+      </div>
+      <div class="section-label" data-i18n="user_gear_section"></div>
+      <div style="padding:0 12px 8px;">
+        <div style="background:var(--gray-dark);border-radius:12px;padding:12px 14px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;background:var(--gray-mid);border-radius:8px;padding:8px 10px;">
+              <div style="font-size:18px;">🎸</div>
+              <div><div style="font-size:12px;font-weight:700;">Fender Jazz Bass（5弦）</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">日本产 / 2015年购入</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:var(--gray-mid);border-radius:8px;padding:8px 10px;">
+              <div style="font-size:18px;">🎛️</div>
+              <div><div style="font-size:12px;font-weight:700;">Source Audio C4 Synth</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">效果器</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;background:var(--gray-mid);border-radius:8px;padding:8px 10px;">
+              <div style="font-size:18px;">🔊</div>
+              <div><div style="font-size:12px;font-weight:700;">Eden WT800</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">音箱头</div></div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="section-label" data-i18n="latest_posts"></div>
       <div class="post-card" onclick="goScreen('s-post-detail')">
@@ -691,7 +839,288 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
     </div>
   </div>
 
-  <!-- ══ S-SETTINGS ══ -->
+  <!-- ══ S-GEAR-REGISTER 08-A: プロフィール編集 ══ -->
+  <div class="screen" id="s-gear-register">
+    <div class="top-bar">
+      <span class="tb-back" onclick="goBack()">‹</span>
+      <span class="tb-title" data-i18n="gear_reg_title"></span>
+      <span class="tb-action" onclick="goScreen('s-gear-register-b')" data-i18n="next_btn"></span>
+    </div>
+    <div style="overflow-y:auto;flex:1;">
+      <!-- 資料完成度バー -->
+      <div style="padding:14px 16px;background:var(--gray-dark);border-bottom:1px solid rgba(255,255,255,.06);">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;" data-i18n="profile_progress"></div>
+        <div style="height:6px;background:var(--gray-light);border-radius:3px;overflow:hidden;margin-bottom:6px;">
+          <div id="profile-bar" style="height:100%;width:65%;background:linear-gradient(90deg,var(--green),#16a34a);border-radius:3px;transition:width .4s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-secondary);">
+          <span id="profile-pct">65% <span data-i18n="complete"></span></span>
+          <span style="color:var(--green);" data-i18n="already_earned"></span>
+        </div>
+      </div>
+
+      <!-- 必須項目 -->
+      <div style="padding:6px 16px;font-size:10px;color:var(--text-secondary);letter-spacing:1px;margin-top:8px;" data-i18n="required_items"></div>
+
+      <div style="padding:0 12px;display:flex;flex-direction:column;gap:8px;">
+        <div style="background:var(--gray-dark);border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <div style="font-size:9px;background:var(--red);color:white;padding:1px 6px;border-radius:3px;font-weight:700;" data-i18n="required_badge"></div>
+            <div style="font-size:11px;color:var(--text-secondary);" data-i18n="field_nickname"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--gray-mid);border-radius:8px;padding:10px 12px;">
+            <div style="flex:1;font-size:13px;font-weight:700;">MASATO</div>
+            <div style="font-size:14px;color:var(--green);">✓</div>
+          </div>
+        </div>
+
+        <div style="background:var(--gray-dark);border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <div style="font-size:9px;background:var(--red);color:white;padding:1px 6px;border-radius:3px;font-weight:700;" data-i18n="required_badge"></div>
+            <div style="font-size:11px;color:var(--text-secondary);" data-i18n="field_avatar"></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--gray-mid);border-radius:8px;padding:10px 12px;">
+            <div style="flex:1;font-size:13px;color:var(--text-secondary);" data-i18n="wechat_avatar_sync"></div>
+            <div style="font-size:14px;color:var(--green);">✓</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 選択項目 -->
+      <div style="padding:6px 16px;font-size:10px;color:var(--text-secondary);letter-spacing:1px;margin-top:12px;" data-i18n="optional_items"></div>
+
+      <div style="padding:0 12px;display:flex;flex-direction:column;gap:8px;">
+        <!-- 地区 -->
+        <div style="background:var(--gray-dark);border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="font-size:9px;background:rgba(255,255,255,.12);color:var(--text-secondary);padding:1px 6px;border-radius:3px;font-weight:700;" data-i18n="optional_badge"></div>
+              <div style="font-size:11px;color:var(--text-secondary);" data-i18n="field_region"></div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--green);background:rgba(34,197,94,.12);padding:2px 7px;border-radius:4px;">+20PT</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--gray-mid);border-radius:8px;padding:10px 12px;">
+            <div style="flex:1;font-size:13px;">广东省 深圳市 龙岗区</div>
+            <div style="font-size:14px;color:var(--green);">✓</div>
+          </div>
+        </div>
+
+        <!-- ベース歴 -->
+        <div style="background:var(--gray-dark);border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="font-size:9px;background:rgba(255,255,255,.12);color:var(--text-secondary);padding:1px 6px;border-radius:3px;font-weight:700;" data-i18n="optional_badge"></div>
+              <div style="font-size:11px;color:var(--text-secondary);" data-i18n="field_bass_history"></div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--green);background:rgba(34,197,94,.12);padding:2px 7px;border-radius:4px;">+20PT</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--gray-mid);border-radius:8px;padding:10px 12px;">
+            <div style="flex:1;font-size:13px;" data-i18n="bass_since"></div>
+            <div style="font-size:14px;color:var(--green);">✓</div>
+          </div>
+        </div>
+
+        <!-- ジャンル -->
+        <div style="background:var(--gray-dark);border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="font-size:9px;background:rgba(255,255,255,.12);color:var(--text-secondary);padding:1px 6px;border-radius:3px;font-weight:700;" data-i18n="optional_badge"></div>
+              <div style="font-size:11px;color:var(--text-secondary);" data-i18n="field_genre"></div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--green);background:rgba(34,197,94,.12);padding:2px 7px;border-radius:4px;">+15PT</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <div style="background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:5px 12px;border-radius:16px;font-size:12px;font-weight:700;">Funk</div>
+            <div style="background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:5px 12px;border-radius:16px;font-size:12px;font-weight:700;">Jazz</div>
+            <div style="background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:5px 12px;border-radius:16px;font-size:12px;font-weight:700;">Rock</div>
+            <div style="background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:5px 12px;border-radius:16px;font-size:12px;font-weight:700;">R&B</div>
+            <div style="background:var(--gray-mid);color:var(--text-secondary);border:1px solid rgba(255,255,255,.1);padding:5px 12px;border-radius:16px;font-size:12px;" data-i18n="fusion_genre"></div>
+            <div style="background:var(--gray-mid);color:var(--text-secondary);border:1px solid rgba(255,255,255,.1);padding:5px 12px;border-radius:16px;font-size:12px;" data-i18n="metal_genre"></div>
+            <div style="background:var(--gray-mid);color:rgba(255,255,255,.3);border:1px dashed rgba(255,255,255,.2);padding:5px 12px;border-radius:16px;font-size:12px;">+ <span data-i18n="add_genre"></span></div>
+          </div>
+        </div>
+
+        <!-- 好きなバンド -->
+        <div style="background:var(--gray-dark);border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="font-size:9px;background:rgba(255,255,255,.12);color:var(--text-secondary);padding:1px 6px;border-radius:3px;font-weight:700;" data-i18n="optional_badge"></div>
+              <div style="font-size:11px;color:var(--text-secondary);" data-i18n="field_fav_band"></div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text-secondary);background:rgba(255,255,255,.06);padding:2px 7px;border-radius:4px;">+15PT</div>
+          </div>
+          <div style="background:var(--gray-mid);border-radius:8px;padding:10px 12px;display:flex;align-items:center;">
+            <div style="flex:1;font-size:13px;color:var(--text-secondary);" data-i18n="fav_band_placeholder"></div>
+            <div style="font-size:18px;color:var(--text-secondary);">+</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:16px 12px;">
+        <div onclick="goScreen('s-gear-register-b')" style="background:var(--red);border-radius:28px;padding:14px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;" data-i18n="next_gear_btn"></div>
+      </div>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+
+  <!-- ══ S-GEAR-REGISTER-B 08-B: 楽器・機材登録 ══ -->
+  <div class="screen" id="s-gear-register-b">
+    <div class="top-bar">
+      <span class="tb-back" onclick="goBack()">‹</span>
+      <span class="tb-title" data-i18n="gear_reg_b_title"></span>
+      <span class="tb-action" onclick="saveGearAndComplete()" data-i18n="save_btn"></span>
+    </div>
+    <div style="overflow-y:auto;flex:1;">
+
+      <!-- ベース -->
+      <div style="padding:8px 16px;margin-top:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;">🎸 <span data-i18n="section_bass"></span></div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--green);background:rgba(34,197,94,.12);padding:2px 8px;border-radius:4px;">+30PT</div>
+        </div>
+        <!-- 登録済み -->
+        <div id="bass-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
+          <div style="background:var(--gray-dark);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(34,197,94,.2);">
+            <div style="font-size:20px;">🎸</div>
+            <div style="flex:1;"><div style="font-size:12px;font-weight:700;">Fender Jazz Bass（4弦）</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">日本产 / 2019年购入</div></div>
+            <div style="font-size:14px;color:var(--green);">✓</div>
+          </div>
+        </div>
+        <!-- 追加ボタン -->
+        <div onclick="addInstrument('bass')" style="background:var(--gray-dark);border:1px dashed rgba(255,255,255,.2);border-radius:10px;padding:12px;text-align:center;font-size:13px;color:var(--text-secondary);cursor:pointer;">
+          + <span data-i18n="add_bass"></span>
+        </div>
+      </div>
+
+      <div style="height:1px;background:rgba(255,255,255,.06);margin:4px 0;"></div>
+
+      <!-- その他機材 -->
+      <div style="padding:8px 16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;">🎛️ <span data-i18n="section_gear"></span></div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--green);background:rgba(34,197,94,.12);padding:2px 8px;border-radius:4px;">+20PT</div>
+        </div>
+        <div id="gear-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
+          <div style="background:var(--gray-dark);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(34,197,94,.2);">
+            <div style="font-size:20px;">🔊</div>
+            <div style="flex:1;"><div style="font-size:12px;font-weight:700;">Aguilar ToneHammer</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">前置放大器</div></div>
+            <div style="font-size:14px;color:var(--green);">✓</div>
+          </div>
+        </div>
+        <div onclick="addInstrument('gear')" style="background:var(--gray-dark);border:1px dashed rgba(255,255,255,.2);border-radius:10px;padding:12px;text-align:center;font-size:13px;color:var(--text-secondary);cursor:pointer;">
+          + <span data-i18n="add_gear_item"></span>
+        </div>
+      </div>
+
+      <div style="height:1px;background:rgba(255,255,255,.06);margin:4px 0;"></div>
+
+      <!-- SNS連携 -->
+      <div style="padding:8px 16px;">
+        <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:8px;">🔗 <span data-i18n="section_sns"></span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="background:var(--gray-dark);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(34,197,94,.2);">
+            <div style="font-size:18px;">📺</div>
+            <div style="flex:1;font-size:12px;font-weight:700;" data-i18n="bilibili_name"></div>
+            <div style="font-size:11px;color:var(--green);" data-i18n="connected_label"></div>
+          </div>
+          <div style="background:var(--gray-dark);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+            <div style="font-size:18px;">🎵</div>
+            <div style="flex:1;font-size:12px;font-weight:700;" data-i18n="douyin_name"></div>
+            <div style="font-size:11px;color:var(--text-secondary);font-family:'Space Mono',monospace;">+15pt</div>
+            <div style="font-size:11px;color:var(--text-secondary);" data-i18n="input_id_placeholder"></div>
+          </div>
+          <div style="background:var(--gray-dark);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+            <div style="font-size:18px;">📕</div>
+            <div style="flex:1;font-size:12px;font-weight:700;" data-i18n="xiaohongshu_name"></div>
+            <div style="font-size:11px;color:var(--text-secondary);font-family:'Space Mono',monospace;">+15pt</div>
+            <div style="font-size:11px;color:var(--text-secondary);" data-i18n="input_id_placeholder"></div>
+          </div>
+          <div style="background:var(--gray-dark);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+            <div style="font-size:18px;">🌐</div>
+            <div style="flex:1;font-size:12px;font-weight:700;">YouTube</div>
+            <div style="font-size:11px;color:var(--text-secondary);font-family:'Space Mono',monospace;">+15pt</div>
+            <div style="font-size:11px;color:var(--text-secondary);" data-i18n="input_url_placeholder"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:16px 12px;">
+        <div onclick="saveGearAndComplete()" style="background:var(--red);border-radius:28px;padding:14px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;" data-i18n="save_complete_btn"></div>
+      </div>
+      <div style="height:10px;"></div>
+    </div>
+  </div>
+
+  <!-- ══ S-GEAR-COMPLETE 08-C: 登録完了 ══ -->
+  <div class="screen" id="s-gear-complete">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:linear-gradient(180deg,#001a00 0%,#080808 60%);">
+      <div style="font-size:64px;margin-bottom:16px;animation:pop .4s ease;">🎉</div>
+      <div style="font-family:'Bebas Neue',cursive;font-size:36px;color:var(--green);letter-spacing:4px;text-align:center;line-height:1.2;margin-bottom:8px;">PROFILE<br>COMPLETE!</div>
+      <div style="font-size:13px;color:var(--text-secondary);margin-bottom:28px;" data-i18n="profile_100"></div>
+
+      <!-- 獲得ポイント明細 -->
+      <div style="width:100%;background:var(--gray-dark);border-radius:14px;padding:16px;border:1px solid rgba(34,197,94,.2);margin-bottom:20px;">
+        <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px;letter-spacing:1px;" data-i18n="points_earned_detail"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span>📍 <span data-i18n="earn_region"></span></span><span style="color:var(--gold);font-family:'Space Mono',monospace;">+20pt</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span>🎸 <span data-i18n="earn_bass_history"></span></span><span style="color:var(--gold);font-family:'Space Mono',monospace;">+20pt</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span>🎵 <span data-i18n="earn_genre"></span></span><span style="color:var(--gold);font-family:'Space Mono',monospace;">+15pt</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span>🎸 <span data-i18n="earn_instrument"></span></span><span style="color:var(--gold);font-family:'Space Mono',monospace;">+30pt</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span>📺 <span data-i18n="earn_bilibili"></span></span><span style="color:var(--gold);font-family:'Space Mono',monospace;">+25pt</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;"><span>🌐 YouTube</span><span style="color:var(--gold);font-family:'Space Mono',monospace;">+15pt</span></div>
+          <div style="height:1px;background:rgba(255,255,255,.1);margin:4px 0;"></div>
+          <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:700;">
+            <span data-i18n="total_earned"></span>
+            <span style="color:var(--gold);font-family:'Space Mono',monospace;font-size:18px;">+125pt</span>
+          </div>
+        </div>
+      </div>
+
+      <div onclick="switchTab('s-mypage','nav-mypage')" style="width:100%;background:var(--red);border-radius:28px;padding:14px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;" data-i18n="back_to_home_btn"></div>
+      <div style="font-size:10px;color:var(--text-secondary);margin-top:12px;text-align:center;" data-i18n="profile_update_note"></div>
+    </div>
+  </div>
+
+  <!-- ══ S-ADD-INSTRUMENT: 楽器追加モーダル風画面 ══ -->
+  <div class="screen" id="s-add-instrument">
+    <div class="top-bar">
+      <span class="tb-back" onclick="goBack()">‹</span>
+      <span class="tb-title" id="add-inst-title" data-i18n="add_instrument_title"></span>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding:16px;">
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;" data-i18n="inst_name_label"></div>
+          <input id="inst-name" style="width:100%;background:var(--gray-dark);border:1px solid var(--gray-light);outline:none;color:var(--text-primary);font-size:14px;padding:12px;border-radius:10px;font-family:'Noto Sans SC',sans-serif;" />
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;" data-i18n="inst_maker_label"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;" id="maker-chips">
+            <div onclick="selectMaker(this,'Fender')" style="background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Fender</div>
+            <div onclick="selectMaker(this,'Gibson')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Gibson</div>
+            <div onclick="selectMaker(this,'Music Man')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Music Man</div>
+            <div onclick="selectMaker(this,'Warwick')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Warwick</div>
+            <div onclick="selectMaker(this,'Ken Smith')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Ken Smith</div>
+            <div onclick="selectMaker(this,'Sadowsky')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Sadowsky</div>
+            <div style="background:var(--gray-dark);color:var(--text-secondary);border:1px dashed rgba(255,255,255,.2);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;" data-i18n="other_maker"></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;" data-i18n="inst_strings_label"></div>
+          <div style="display:flex;gap:8px;">
+            <div onclick="selectStrings(this,'4')" style="flex:1;background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:10px;border-radius:10px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;" data-i18n="strings_4"></div>
+            <div onclick="selectStrings(this,'5')" style="flex:1;background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:10px;border-radius:10px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;" data-i18n="strings_5"></div>
+            <div onclick="selectStrings(this,'6')" style="flex:1;background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:10px;border-radius:10px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;" data-i18n="strings_6"></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;" data-i18n="inst_origin_label"></div>
+          <input id="inst-origin" style="width:100%;background:var(--gray-dark);border:1px solid var(--gray-light);outline:none;color:var(--text-primary);font-size:14px;padding:12px;border-radius:10px;font-family:'Noto Sans SC',sans-serif;" />
+        </div>
+        <div onclick="confirmAddInstrument()" style="background:var(--red);border-radius:28px;padding:14px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;" data-i18n="add_confirm_btn"></div>
+      </div>
+    </div>
+  </div>
   <div class="screen" id="s-settings">
     <div class="top-bar"><span class="tb-back" onclick="goBack()">‹</span><span class="tb-title" data-i18n="settings_title"></span></div>
     <div style="overflow-y:auto;flex:1;">
@@ -832,6 +1261,41 @@ const DICT = {
     settings_title:"设置",lang_section:"显示语言",
     lang_note:"切换语言后，所有界面文字将立即更新。\n内容（帖子・用户名等）保持原文。",
     nav_home:"首页",nav_community:"社区",nav_rank:"段位",nav_my:"我的",ok_btn:"OK！",
+    // Community tabs
+    tab_chat:"💬 雑談",tab_score:"🎼 楽譜",tab_gear_tab:"🎛️ 机材",
+    chat_label:"雑談カテゴリ",gear_label:"机材・设备",score_notice:"分享乐谱和贝斯谱！支持PDF・TAB格式。",
+    score_post1:"分享一个爵士乐的贝斯谱！",score_post2:"Marcus Miller经典曲谱分享",
+    gear_post1:"Fender Jazz Bass 换弦记录 · Elixir Nanoweb 45-105",
+    gear_post2:"Source Audio C4效果器使用心得",
+    chat_post1:"练了一周终于弹出来了！Slap bass太难了…",
+    chat_post2:"龙岗有没有周末一起jam的？Funk/Soul 欢迎",
+    download_btn:"下载",
+    // Gear register
+    my_gear_section:"我的乐器・设备",my_instruments:"持有乐器",edit_btn:"编辑 ›",add_more_gear:"添加更多",
+    menu_gear:"乐器・设备登记",
+    user_gear_section:"乐器・设备",
+    gear_reg_title:"完善个人资料",gear_reg_b_title:"乐器・设备登记",
+    next_btn:"下一步",save_btn:"保存",
+    profile_progress:"资料完成度",complete:"完成",already_earned:"已获得 +120pt",
+    required_items:"必填项目（登录自动获取）",optional_items:"选填项目（完成获积分）",
+    required_badge:"必须",optional_badge:"选填",
+    field_nickname:"昵称",field_avatar:"头像",field_region:"所在地区",
+    field_bass_history:"贝斯历（开始年月）",field_genre:"喜欢的风格・流派",field_fav_band:"喜欢的乐队",
+    wechat_avatar_sync:"微信头像已同步",bass_since:"2001年 4月 开始",
+    fusion_genre:"融合",metal_genre:"金属",add_genre:"添加",fav_band_placeholder:"输入喜欢的乐队名…",
+    next_gear_btn:"下一步：登记乐器 →",
+    section_bass:"持有贝斯（可添加多个）",section_gear:"其他设备・效果器",section_sns:"SNS・主页链接",
+    add_bass:"添加贝斯",add_gear_item:"添加设备",
+    bilibili_name:"哔哩哔哩",douyin_name:"抖音",xiaohongshu_name:"小红书",
+    connected_label:"已连接 ✓",input_id_placeholder:"输入账号ID…",input_url_placeholder:"输入频道链接…",
+    save_complete_btn:"保存并完成",
+    profile_100:"个人资料完成度达到100%！",points_earned_detail:"获得积分明细",
+    earn_region:"地区登记",earn_bass_history:"贝斯历",earn_genre:"风格选择",
+    earn_instrument:"乐器登记",earn_bilibili:"B站绑定",
+    total_earned:"合计获得",back_to_home_btn:"返回首页 →",profile_update_note:"资料随时可更新，增加斯乐器也会获得积分",
+    add_instrument_title:"添加乐器",inst_name_label:"乐器名称",inst_maker_label:"品牌",
+    inst_strings_label:"弦数",strings_4:"4弦",strings_5:"5弦",strings_6:"6弦",
+    inst_origin_label:"产地 / 购入年份",other_maker:"其他",add_confirm_btn:"添加",
   },
   en: {
     login_sub:"The Bassist's Exclusive Community",
@@ -914,6 +1378,39 @@ const DICT = {
     settings_title:"Settings",lang_section:"Display Language",
     lang_note:"After switching language, all UI text will update immediately.\nContent (posts, usernames, etc.) remains in original language.",
     nav_home:"Home",nav_community:"Community",nav_rank:"Rank",nav_my:"My Page",ok_btn:"OK!",
+    tab_chat:"💬 Chat",tab_score:"🎼 Scores",tab_gear_tab:"🎛️ Gear",
+    chat_label:"General Chat",gear_label:"Gear & Equipment",score_notice:"Share bass scores and tabs! PDF & TAB formats supported.",
+    score_post1:"Sharing a jazz bass score!",score_post2:"Marcus Miller classic sheet music",
+    gear_post1:"Fender Jazz Bass string change · Elixir Nanoweb 45-105",
+    gear_post2:"Source Audio C4 Synth pedal review",
+    chat_post1:"Finally got it after a week of practice! Slap bass is so hard…",
+    chat_post2:"Anyone want to jam in Longgang on weekends? Funk/Soul welcome",
+    download_btn:"Download",
+    my_gear_section:"My Instruments & Gear",my_instruments:"Instruments Owned",edit_btn:"Edit ›",add_more_gear:"Add More",
+    menu_gear:"Instrument & Gear Registration",
+    user_gear_section:"Instruments & Gear",
+    gear_reg_title:"Complete Your Profile",gear_reg_b_title:"Instrument & Gear Registration",
+    next_btn:"Next",save_btn:"Save",
+    profile_progress:"Profile Completion",complete:"Complete",already_earned:"Earned +120pt",
+    required_items:"Required Fields (auto-filled at login)",optional_items:"Optional Fields (earn points on completion)",
+    required_badge:"Required",optional_badge:"Optional",
+    field_nickname:"Nickname",field_avatar:"Avatar",field_region:"Region",
+    field_bass_history:"Bass History (start date)",field_genre:"Favorite Styles",field_fav_band:"Favorite Bands",
+    wechat_avatar_sync:"WeChat avatar synced",bass_since:"Since April 2001",
+    fusion_genre:"Fusion",metal_genre:"Metal",add_genre:"Add",fav_band_placeholder:"Enter your favorite band name…",
+    next_gear_btn:"Next: Register Instruments →",
+    section_bass:"Bass Guitars Owned (can add multiple)",section_gear:"Other Gear & Effects",section_sns:"SNS & Profile Links",
+    add_bass:"Add Bass",add_gear_item:"Add Gear",
+    bilibili_name:"Bilibili",douyin_name:"Douyin / TikTok",xiaohongshu_name:"Xiaohongshu",
+    connected_label:"Connected ✓",input_id_placeholder:"Enter account ID…",input_url_placeholder:"Enter channel URL…",
+    save_complete_btn:"Save & Complete",
+    profile_100:"Profile is now 100% complete!",points_earned_detail:"Points Earned Breakdown",
+    earn_region:"Region Registration",earn_bass_history:"Bass History",earn_genre:"Genre Selection",
+    earn_instrument:"Instrument Registration",earn_bilibili:"Bilibili Link",
+    total_earned:"Total Earned",back_to_home_btn:"Back to Home →",profile_update_note:"You can update your profile anytime. Adding instruments also earns points.",
+    add_instrument_title:"Add Instrument",inst_name_label:"Instrument Name",inst_maker_label:"Brand",
+    inst_strings_label:"Strings",strings_4:"4-string",strings_5:"5-string",strings_6:"6-string",
+    inst_origin_label:"Origin / Year Purchased",other_maker:"Other",add_confirm_btn:"Add",
   },
   ja: {
     login_sub:"ベーシスト専用コミュニティ",
@@ -996,6 +1493,39 @@ const DICT = {
     settings_title:"設定",lang_section:"表示言語",
     lang_note:"言語を切り替えると、すべての画面テキストが即座に更新されます。\nコンテンツ（投稿・ユーザー名など）は元の言語のまま表示されます。",
     nav_home:"ホーム",nav_community:"コミュニティ",nav_rank:"段位",nav_my:"マイページ",ok_btn:"OK！",
+    tab_chat:"💬 雑談",tab_score:"🎼 楽譜",tab_gear_tab:"🎛️ 機材",
+    chat_label:"雑談カテゴリ",gear_label:"機材・設備",score_notice:"楽譜・ベーススコアをシェアしよう！PDF・TAB形式に対応。",
+    score_post1:"ジャズの定番ベーススコアをシェアします！",score_post2:"Marcus Millerクラシック曲TABシェア",
+    gear_post1:"Fender Jazz Bass 弦交換記録 · Elixir Nanoweb 45-105",
+    gear_post2:"Source Audio C4シンセペダル使用レビュー",
+    chat_post1:"一週間練習してついに弾けた！Slap bassって難しすぎる…",
+    chat_post2:"龍崗で週末一緒にジャムれる人いますか？Funk/Soul 歓迎",
+    download_btn:"ダウンロード",
+    my_gear_section:"マイ楽器・機材",my_instruments:"保有楽器",edit_btn:"編集 ›",add_more_gear:"追加する",
+    menu_gear:"楽器・機材登録",
+    user_gear_section:"楽器・機材",
+    gear_reg_title:"プロフィールを完成させる",gear_reg_b_title:"楽器・機材登録",
+    next_btn:"次へ",save_btn:"保存",
+    profile_progress:"資料完成度",complete:"完成",already_earned:"獲得済み +120pt",
+    required_items:"必須項目（ログイン時自動取得）",optional_items:"選択項目（完了でポイント獲得）",
+    required_badge:"必須",optional_badge:"選択",
+    field_nickname:"ニックネーム",field_avatar:"アバター",field_region:"所在地区",
+    field_bass_history:"ベース歴（開始年月）",field_genre:"好きなジャンル・スタイル",field_fav_band:"好きなバンド",
+    wechat_avatar_sync:"WeChatアバターを同期済み",bass_since:"2001年4月 開始",
+    fusion_genre:"フュージョン",metal_genre:"メタル",add_genre:"追加",fav_band_placeholder:"好きなバンド名を入力…",
+    next_gear_btn:"次へ：楽器を登録する →",
+    section_bass:"保有ベース（複数登録可）",section_gear:"その他機材・エフェクター",section_sns:"SNS・プロフィールリンク",
+    add_bass:"ベースを追加",add_gear_item:"機材を追加",
+    bilibili_name:"哔哩哔哩（Bilibili）",douyin_name:"抖音（Douyin）",xiaohongshu_name:"小紅書",
+    connected_label:"連携済み ✓",input_id_placeholder:"アカウントIDを入力…",input_url_placeholder:"チャンネルURLを入力…",
+    save_complete_btn:"保存して完了",
+    profile_100:"プロフィール完成度が100%になりました！",points_earned_detail:"獲得ポイント明細",
+    earn_region:"地区登録",earn_bass_history:"ベース歴",earn_genre:"ジャンル選択",
+    earn_instrument:"楽器登録",earn_bilibili:"Bilibili連携",
+    total_earned:"合計獲得",back_to_home_btn:"ホームに戻る →",profile_update_note:"プロフィールはいつでも更新可能。楽器を追加してもポイントが貯まります。",
+    add_instrument_title:"楽器を追加",inst_name_label:"楽器名",inst_maker_label:"ブランド",
+    inst_strings_label:"弦数",strings_4:"4弦",strings_5:"5弦",strings_6:"6弦",
+    inst_origin_label:"産地 / 購入年",other_maker:"その他",add_confirm_btn:"追加する",
   }
 };
 
@@ -1140,6 +1670,62 @@ function submitComment() {
 document.getElementById('post-input').addEventListener('input',function(){
   document.getElementById('char-count').textContent=this.value.length+'/500';
 });
+
+function switchCommTab(el, panelId) {
+  document.querySelectorAll('#comm-tab-bar .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['comm-all','comm-chat','comm-score','comm-gear','comm-tech','comm-nearby'].forEach(id => {
+    const p = document.getElementById(id);
+    if(p) p.style.display = id === panelId ? 'block' : 'none';
+  });
+}
+
+let addingType = 'bass';
+function addInstrument(type) {
+  addingType = type;
+  goScreen('s-add-instrument');
+}
+
+function selectMaker(el, name) {
+  document.querySelectorAll('#maker-chips div').forEach(d => {
+    d.style.background = 'var(--gray-dark)';
+    d.style.color = 'var(--text-secondary)';
+    d.style.borderColor = 'rgba(255,255,255,.15)';
+  });
+  el.style.background = 'rgba(232,0,29,.2)';
+  el.style.color = 'var(--red)';
+  el.style.borderColor = 'rgba(232,0,29,.4)';
+}
+
+function selectStrings(el, n) {
+  el.parentElement.querySelectorAll('div').forEach(d => {
+    d.style.background = 'var(--gray-dark)';
+    d.style.color = 'var(--text-secondary)';
+    d.style.borderColor = 'rgba(255,255,255,.15)';
+  });
+  el.style.background = 'rgba(232,0,29,.2)';
+  el.style.color = 'var(--red)';
+  el.style.borderColor = 'rgba(232,0,29,.4)';
+}
+
+function confirmAddInstrument() {
+  const name = document.getElementById('inst-name').value || (addingType === 'bass' ? 'Fender Jazz Bass（4弦）' : 'New Gear');
+  const list = document.getElementById(addingType === 'bass' ? 'bass-list' : 'gear-list');
+  const item = document.createElement('div');
+  item.style.cssText = 'background:var(--gray-dark);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(34,197,94,.2);margin-bottom:0;';
+  item.innerHTML = `<div style="font-size:20px;">${addingType === 'bass' ? '🎸' : '🎛️'}</div><div style="flex:1;"><div style="font-size:12px;font-weight:700;">${name}</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${document.getElementById('inst-origin').value || ''}</div></div><div style="font-size:14px;color:var(--green);">✓</div>`;
+  list.appendChild(item);
+  document.getElementById('inst-name').value = '';
+  document.getElementById('inst-origin').value = '';
+  goBack();
+  showToast('+' + (addingType === 'bass' ? '30' : '20') + 'pt!');
+}
+
+function saveGearAndComplete() {
+  points += 125;
+  document.getElementById('pt-display').textContent = points.toLocaleString();
+  goScreen('s-gear-complete');
+}
 
 function showToast(msg) {
   const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
