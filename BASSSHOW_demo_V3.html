@@ -1151,7 +1151,7 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
             <div style="font-size:14px;color:var(--green);">✓</div>
           </div>
         </div>
-        <div onclick="addInstrument('gear')" style="background:var(--gray-dark);border:1px dashed rgba(255,255,255,.2);border-radius:10px;padding:12px;text-align:center;font-size:13px;color:var(--text-secondary);cursor:pointer;">
+        <div onclick="addGear()" style="background:var(--gray-dark);border:1px dashed rgba(255,255,255,.2);border-radius:10px;padding:12px;text-align:center;font-size:13px;color:var(--text-secondary);cursor:pointer;">
           + <span data-i18n="add_gear_item"></span>
         </div>
       </div>
@@ -1240,13 +1240,26 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
         <div>
           <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;" data-i18n="inst_maker_label"></div>
           <div style="display:flex;flex-wrap:wrap;gap:8px;" id="maker-chips">
-            <div onclick="selectMaker(this,'Fender')" style="background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Fender</div>
-            <div onclick="selectMaker(this,'Gibson')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Gibson</div>
+            <div onclick="selectMaker(this,'Fender')"    style="background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Fender</div>
+            <div onclick="selectMaker(this,'Gibson')"    style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Gibson</div>
+            <div onclick="selectMaker(this,'YAMAHA')"    style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">YAMAHA</div>
+            <div onclick="selectMaker(this,'Ibanez')"    style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Ibanez</div>
             <div onclick="selectMaker(this,'Music Man')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Music Man</div>
-            <div onclick="selectMaker(this,'Warwick')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Warwick</div>
+            <div onclick="selectMaker(this,'Warwick')"   style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Warwick</div>
             <div onclick="selectMaker(this,'Ken Smith')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Ken Smith</div>
-            <div onclick="selectMaker(this,'Sadowsky')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Sadowsky</div>
-            <div style="background:var(--gray-dark);color:var(--text-secondary);border:1px dashed rgba(255,255,255,.2);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;" data-i18n="other_maker"></div>
+            <div onclick="selectMaker(this,'Sadowsky')"  style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Sadowsky</div>
+            <div onclick="selectMaker(this,'Bacchus')"   style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Bacchus</div>
+            <div onclick="selectMaker(this,'ESP')"       style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">ESP</div>
+            <div onclick="selectMaker(this,'Atelier Z')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Atelier Z</div>
+            <div onclick="selectMaker(this,'Killer')"    style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Killer</div>
+            <div onclick="selectMaker(this,'Momose')"    style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;">Momose</div>
+            <div onclick="selectMaker(this,'__other__')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px dashed rgba(255,255,255,.2);padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;" data-i18n="other_maker"></div>
+          </div>
+          <!-- その他メーカー入力欄 -->
+          <div id="maker-other-wrap" style="display:none;margin-top:10px;">
+            <input id="maker-other-input"
+              style="width:100%;background:var(--gray-dark);border:1px solid rgba(232,0,29,.4);outline:none;color:var(--text-primary);font-size:14px;padding:10px 12px;border-radius:10px;font-family:'Noto Sans SC',sans-serif;"
+              oninput="currentMaker=this.value.trim()" />
           </div>
         </div>
         <div>
@@ -1285,6 +1298,113 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
       </div>
     </div>
   </div>
+  <!-- ══ S-ADD-GEAR: 機材追加専用画面 ══ -->
+  <div class="screen" id="s-add-gear">
+    <div class="top-bar">
+      <span class="tb-back" onclick="goBack()">‹</span>
+      <span class="tb-title" data-i18n="add_gear_title"></span>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding:16px;">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <!-- ① 機材カテゴリ選択 -->
+        <div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;" data-i18n="gear_category_label"></div>
+          <div style="display:flex;gap:8px;">
+            <div onclick="selectGearCat(this,'amp')"    id="gcat-amp"    style="flex:1;background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:10px 6px;border-radius:10px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;">🔊<br><span data-i18n="gcat_amp"></span></div>
+            <div onclick="selectGearCat(this,'fx')"     id="gcat-fx"     style="flex:1;background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:10px 6px;border-radius:10px;text-align:center;font-size:12px;cursor:pointer;">🎛️<br><span data-i18n="gcat_fx"></span></div>
+            <div onclick="selectGearCat(this,'other')"  id="gcat-other"  style="flex:1;background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:10px 6px;border-radius:10px;text-align:center;font-size:12px;cursor:pointer;">📦<br><span data-i18n="gcat_other"></span></div>
+          </div>
+        </div>
+
+        <!-- ② 機材名 -->
+        <div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;" data-i18n="gear_name_label"></div>
+          <input id="gear-name" style="width:100%;background:var(--gray-dark);border:1px solid var(--gray-light);outline:none;color:var(--text-primary);font-size:14px;padding:12px;border-radius:10px;font-family:'Noto Sans SC',sans-serif;" />
+        </div>
+
+        <!-- ③ ブランド選択（カテゴリ別に切り替わる） -->
+        <div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;" data-i18n="inst_maker_label"></div>
+
+          <!-- アンプ用チップ -->
+          <div id="gear-chips-amp" style="display:flex;flex-wrap:wrap;gap:7px;">
+            <div onclick="selectGearMaker(this,'Fender')"        style="background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Fender</div>
+            <div onclick="selectGearMaker(this,'Hartke')"        style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Hartke</div>
+            <div onclick="selectGearMaker(this,'YAMAHA')"        style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">YAMAHA</div>
+            <div onclick="selectGearMaker(this,'Ampeg')"         style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Ampeg</div>
+            <div onclick="selectGearMaker(this,'Markbass')"      style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Markbass</div>
+            <div onclick="selectGearMaker(this,'Aguilar')"       style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Aguilar</div>
+            <div onclick="selectGearMaker(this,'TC Electronic')" style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">TC Electronic</div>
+            <div onclick="selectGearMaker(this,'EBS')"           style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">EBS</div>
+            <div onclick="selectGearMaker(this,'Laney')"         style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Laney</div>
+            <div onclick="selectGearMaker(this,'Warwick')"       style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Warwick</div>
+            <div onclick="selectGearMaker(this,'__other__')"     style="background:var(--gray-dark);color:var(--text-secondary);border:1px dashed rgba(255,255,255,.2);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;" data-i18n="other_maker"></div>
+          </div>
+
+          <!-- エフェクター用チップ -->
+          <div id="gear-chips-fx" style="display:none;flex-wrap:wrap;gap:7px;">
+            <div onclick="selectGearMaker(this,'BOSS')"            style="background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">BOSS</div>
+            <div onclick="selectGearMaker(this,'Zoom')"            style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Zoom</div>
+            <div onclick="selectGearMaker(this,'Mooer')"           style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Mooer</div>
+            <div onclick="selectGearMaker(this,'Joyo')"            style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Joyo</div>
+            <div onclick="selectGearMaker(this,'Darkglass')"       style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Darkglass</div>
+            <div onclick="selectGearMaker(this,'Tech 21')"         style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Tech 21</div>
+            <div onclick="selectGearMaker(this,'EBS')"             style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">EBS</div>
+            <div onclick="selectGearMaker(this,'Aguilar')"         style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Aguilar</div>
+            <div onclick="selectGearMaker(this,'Origin Effects')"  style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Origin Effects</div>
+            <div onclick="selectGearMaker(this,'Line 6')"          style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">Line 6</div>
+            <div onclick="selectGearMaker(this,'TC Electronic')"   style="background:var(--gray-dark);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;">TC Electronic</div>
+            <div onclick="selectGearMaker(this,'__other__')"       style="background:var(--gray-dark);color:var(--text-secondary);border:1px dashed rgba(255,255,255,.2);padding:6px 13px;border-radius:20px;font-size:12px;cursor:pointer;" data-i18n="other_maker"></div>
+          </div>
+
+          <!-- その他機材：ブランドなし / 自由入力のみ -->
+          <div id="gear-chips-other" style="display:none;">
+            <input id="gear-maker-free"
+              style="width:100%;background:var(--gray-dark);border:1px solid var(--gray-light);outline:none;color:var(--text-primary);font-size:14px;padding:12px;border-radius:10px;font-family:'Noto Sans SC',sans-serif;"
+              data-i18n-placeholder="gear_maker_free_placeholder" />
+          </div>
+
+          <!-- その他ブランド自由入力（アンプ・エフェクター共通） -->
+          <div id="gear-maker-other-wrap" style="display:none;margin-top:10px;">
+            <input id="gear-maker-other-input"
+              style="width:100%;background:var(--gray-dark);border:1px solid rgba(232,0,29,.4);outline:none;color:var(--text-primary);font-size:14px;padding:10px 12px;border-radius:10px;font-family:'Noto Sans SC',sans-serif;"
+              oninput="currentGearMaker=this.value.trim()" />
+          </div>
+        </div>
+
+        <!-- ④ メモ（産地・購入年など） -->
+        <div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;" data-i18n="gear_memo_label"></div>
+          <input id="gear-memo" style="width:100%;background:var(--gray-dark);border:1px solid var(--gray-light);outline:none;color:var(--text-primary);font-size:14px;padding:12px;border-radius:10px;font-family:'Noto Sans SC',sans-serif;" />
+        </div>
+
+        <!-- ⑤ 写真（任意） -->
+        <div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;" data-i18n="inst_photo_label"></div>
+          <input type="file" id="gear-photo-input" accept="image/*" style="display:none;" onchange="handleGearPhoto(this)">
+          <div id="gear-photo-area" onclick="document.getElementById('gear-photo-input').click()"
+            style="background:var(--gray-dark);border:2px dashed rgba(255,255,255,.2);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;"
+            onmouseover="this.style.borderColor='rgba(232,0,29,.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,.2)'">
+            <div id="gear-photo-preview" style="display:none;position:relative;">
+              <img id="gear-photo-img" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;" />
+              <div onclick="event.stopPropagation();removeGearPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;">×</div>
+            </div>
+            <div id="gear-photo-placeholder">
+              <div style="font-size:32px;margin-bottom:8px;">📷</div>
+              <div style="font-size:12px;color:var(--text-secondary);" data-i18n="photo_tap_to_add"></div>
+              <div style="font-size:10px;color:#555;margin-top:4px;" data-i18n="photo_formats"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ⑥ 追加ボタン -->
+        <div onclick="confirmAddGear()" style="background:var(--red);border-radius:28px;padding:14px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;" data-i18n="add_confirm_btn"></div>
+        <div style="height:10px;"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="screen" id="s-settings">
     <div class="top-bar"><span class="tb-back" onclick="goBack()">‹</span><span class="tb-title" data-i18n="settings_title"></span></div>
     <div style="overflow-y:auto;flex:1;">
@@ -1450,6 +1570,10 @@ const DICT = {
     next_gear_btn:"下一步：登记乐器 →",
     section_bass:"持有贝斯（可添加多个）",section_gear:"其他设备・效果器",section_sns:"SNS・主页链接",
     add_bass:"添加贝斯",add_gear_item:"添加设备",
+    add_gear_title:"添加设备",gear_category_label:"设备类型",
+    gcat_amp:"音箱",gcat_fx:"效果器",gcat_other:"其他设备",
+    gear_name_label:"型号名称",gear_memo_label:"备注（产地・购入年等）",
+    gear_maker_free_placeholder:"请输入品牌名称…",
     bilibili_name:"哔哩哔哩",douyin_name:"抖音",xiaohongshu_name:"小红书",
     connected_label:"已连接 ✓",input_id_placeholder:"输入账号ID…",input_url_placeholder:"输入频道链接…",
     save_complete_btn:"保存并完成",
@@ -1460,6 +1584,7 @@ const DICT = {
     add_instrument_title:"添加乐器",inst_name_label:"乐器名称",inst_maker_label:"品牌",
     inst_strings_label:"弦数",strings_4:"4弦",strings_5:"5弦",strings_6:"6弦",
     inst_origin_label:"产地 / 购入年份",other_maker:"其他",add_confirm_btn:"添加",
+    maker_other_placeholder:"请输入品牌名称…",
     inst_photo_label:"📷 乐器照片（任选）",photo_tap_to_add:"点击添加照片",photo_formats:"JPG · PNG · HEIC",
     cat_general:"🎵 技术",cat_score:"🎼 乐谱",cat_gear:"🎛️ 机材",cat_chat:"💬 雑談",
     score_upload_title:"上传乐谱文件",score_format_label:"选择文件格式",
@@ -1577,6 +1702,10 @@ const DICT = {
     next_gear_btn:"Next: Register Instruments →",
     section_bass:"Bass Guitars Owned (can add multiple)",section_gear:"Other Gear & Effects",section_sns:"SNS & Profile Links",
     add_bass:"Add Bass",add_gear_item:"Add Gear",
+    add_gear_title:"Add Equipment",gear_category_label:"Equipment Type",
+    gcat_amp:"Amplifier",gcat_fx:"Effects",gcat_other:"Other Gear",
+    gear_name_label:"Model Name",gear_memo_label:"Notes (origin / year purchased, etc.)",
+    gear_maker_free_placeholder:"Enter brand name…",
     bilibili_name:"Bilibili",douyin_name:"Douyin / TikTok",xiaohongshu_name:"Xiaohongshu",
     connected_label:"Connected ✓",input_id_placeholder:"Enter account ID…",input_url_placeholder:"Enter channel URL…",
     save_complete_btn:"Save & Complete",
@@ -1587,6 +1716,7 @@ const DICT = {
     add_instrument_title:"Add Instrument",inst_name_label:"Instrument Name",inst_maker_label:"Brand",
     inst_strings_label:"Strings",strings_4:"4-string",strings_5:"5-string",strings_6:"6-string",
     inst_origin_label:"Origin / Year Purchased",other_maker:"Other",add_confirm_btn:"Add",
+    maker_other_placeholder:"Enter brand name…",
     inst_photo_label:"📷 Instrument Photo (optional)",photo_tap_to_add:"Tap to add photo",photo_formats:"JPG · PNG · HEIC",
     cat_general:"🎵 Technique",cat_score:"🎼 Score",cat_gear:"🎛️ Gear",cat_chat:"💬 Chat",
     score_upload_title:"Upload Score File",score_format_label:"Select File Format",
@@ -1704,6 +1834,10 @@ const DICT = {
     next_gear_btn:"次へ：楽器を登録する →",
     section_bass:"保有ベース（複数登録可）",section_gear:"その他機材・エフェクター",section_sns:"SNS・プロフィールリンク",
     add_bass:"ベースを追加",add_gear_item:"機材を追加",
+    add_gear_title:"機材を追加",gear_category_label:"機材の種類",
+    gcat_amp:"音箱・アンプ",gcat_fx:"效果器・エフェクター",gcat_other:"その他機材",
+    gear_name_label:"型番・モデル名",gear_memo_label:"メモ（産地・購入年など）",
+    gear_maker_free_placeholder:"ブランド名を入力…",
     bilibili_name:"哔哩哔哩（Bilibili）",douyin_name:"抖音（Douyin）",xiaohongshu_name:"小紅書",
     connected_label:"連携済み ✓",input_id_placeholder:"アカウントIDを入力…",input_url_placeholder:"チャンネルURLを入力…",
     save_complete_btn:"保存して完了",
@@ -1714,6 +1848,7 @@ const DICT = {
     add_instrument_title:"楽器を追加",inst_name_label:"楽器名",inst_maker_label:"ブランド",
     inst_strings_label:"弦数",strings_4:"4弦",strings_5:"5弦",strings_6:"6弦",
     inst_origin_label:"産地 / 購入年",other_maker:"その他",add_confirm_btn:"追加する",
+    maker_other_placeholder:"ブランド名を入力…",
     inst_photo_label:"📷 楽器の写真（任意）",photo_tap_to_add:"タップして写真を追加",photo_formats:"JPG · PNG · HEIC",
     cat_general:"🎵 テクニック",cat_score:"🎼 楽譜",cat_gear:"🎛️ 機材",cat_chat:"💬 雑談",
     score_upload_title:"楽譜ファイルをアップロード",score_format_label:"ファイル形式を選択",
@@ -1886,15 +2021,27 @@ function addInstrument(type) {
   goScreen('s-add-instrument');
 }
 
+let currentMaker = 'Fender';
 function selectMaker(el, name) {
+  currentMaker = name === '__other__' ? '' : name;
   document.querySelectorAll('#maker-chips div').forEach(d => {
     d.style.background = 'var(--gray-dark)';
     d.style.color = 'var(--text-secondary)';
-    d.style.borderColor = 'rgba(255,255,255,.15)';
+    d.style.border = '1px solid rgba(255,255,255,.15)';
   });
-  el.style.background = 'rgba(232,0,29,.2)';
-  el.style.color = 'var(--red)';
-  el.style.borderColor = 'rgba(232,0,29,.4)';
+  const isOther = name === '__other__';
+  el.style.background = isOther ? 'rgba(255,255,255,.08)' : 'rgba(232,0,29,.2)';
+  el.style.color = isOther ? 'var(--text-primary)' : 'var(--red)';
+  el.style.border = isOther ? '1px solid rgba(255,255,255,.4)' : '1px solid rgba(232,0,29,.4)';
+  // その他入力欄の表示切替
+  const wrap = document.getElementById('maker-other-wrap');
+  const input = document.getElementById('maker-other-input');
+  wrap.style.display = isOther ? 'block' : 'none';
+  if (isOther) {
+    input.placeholder = T('maker_other_placeholder');
+    input.value = '';
+    setTimeout(() => input.focus(), 100);
+  }
 }
 
 function selectStrings(el, n) {
@@ -1909,14 +2056,30 @@ function selectStrings(el, n) {
 }
 
 function confirmAddInstrument() {
-  const name = document.getElementById('inst-name').value || (addingType === 'bass' ? 'Fender Jazz Bass（4弦）' : 'New Gear');
+  // メーカー名：「その他」の場合は入力欄から取得
+  const makerDisplay = currentMaker === '' 
+    ? (document.getElementById('maker-other-input').value.trim() || T('other_maker'))
+    : currentMaker;
+  const instName = document.getElementById('inst-name').value.trim();
+  const displayName = instName ? `${makerDisplay} ${instName}` : makerDisplay;
+  const origin = document.getElementById('inst-origin').value.trim();
   const list = document.getElementById(addingType === 'bass' ? 'bass-list' : 'gear-list');
   const item = document.createElement('div');
-  item.style.cssText = 'background:var(--gray-dark);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(34,197,94,.2);margin-bottom:0;';
-  item.innerHTML = `<div style="font-size:20px;">${addingType === 'bass' ? '🎸' : '🎛️'}</div><div style="flex:1;"><div style="font-size:12px;font-weight:700;">${name}</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${document.getElementById('inst-origin').value || ''}</div></div><div style="font-size:14px;color:var(--green);">✓</div>`;
+  item.style.cssText = 'background:var(--gray-dark);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(34,197,94,.2);';
+  item.innerHTML = `<div style="font-size:20px;">${addingType === 'bass' ? '🎸' : '🎛️'}</div><div style="flex:1;"><div style="font-size:12px;font-weight:700;">${displayName}</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${origin}</div></div><div style="font-size:14px;color:var(--green);">✓</div>`;
   list.appendChild(item);
+  // リセット
   document.getElementById('inst-name').value = '';
   document.getElementById('inst-origin').value = '';
+  document.getElementById('maker-other-input').value = '';
+  document.getElementById('maker-other-wrap').style.display = 'none';
+  currentMaker = 'Fender';
+  // チップをFenderに戻す
+  document.querySelectorAll('#maker-chips div').forEach((d,i) => {
+    d.style.background = i===0 ? 'rgba(232,0,29,.2)' : 'var(--gray-dark)';
+    d.style.color = i===0 ? 'var(--red)' : 'var(--text-secondary)';
+    d.style.border = i===0 ? '1px solid rgba(232,0,29,.4)' : '1px solid rgba(255,255,255,.15)';
+  });
   goBack();
   showToast('+' + (addingType === 'bass' ? '30' : '20') + 'pt!');
 }
@@ -1942,7 +2105,125 @@ function showSuccess(icon,title,sub,pts) {
 
 function closeSuccess() { document.getElementById('success-overlay').classList.remove('show'); }
 
-// ══ PHOTO UPLOAD (楽器・機材) ══
+// ══ GEAR ADD (機材専用) ══
+let currentGearCat = 'amp';
+let currentGearMaker = 'Fender';
+const gearCatIcons = { amp:'🔊', fx:'🎛️', other:'📦' };
+
+function addGear() {
+  currentGearCat = 'amp';
+  currentGearMaker = 'Fender';
+  // チップ初期化
+  resetGearChips('amp');
+  document.getElementById('gear-name').value = '';
+  document.getElementById('gear-memo').value = '';
+  document.getElementById('gear-maker-free').value = '';
+  document.getElementById('gear-maker-other-input').value = '';
+  document.getElementById('gear-maker-other-wrap').style.display = 'none';
+  removeGearPhoto();
+  goScreen('s-add-gear');
+}
+
+function selectGearCat(el, cat) {
+  currentGearCat = cat;
+  ['amp','fx','other'].forEach(c => {
+    const btn = document.getElementById('gcat-' + c);
+    btn.style.background = 'var(--gray-dark)';
+    btn.style.color = 'var(--text-secondary)';
+    btn.style.border = '1px solid rgba(255,255,255,.15)';
+    btn.style.fontWeight = 'normal';
+  });
+  el.style.background = 'rgba(232,0,29,.2)';
+  el.style.color = 'var(--red)';
+  el.style.border = '1px solid rgba(232,0,29,.4)';
+  el.style.fontWeight = '700';
+  // チップパネル切替
+  document.getElementById('gear-chips-amp').style.display   = cat === 'amp'   ? 'flex' : 'none';
+  document.getElementById('gear-chips-fx').style.display    = cat === 'fx'    ? 'flex' : 'none';
+  document.getElementById('gear-chips-other').style.display = cat === 'other' ? 'block' : 'none';
+  document.getElementById('gear-maker-other-wrap').style.display = 'none';
+  // placeholderをT()で更新
+  const freeInput = document.getElementById('gear-maker-free');
+  if (freeInput) freeInput.placeholder = T('gear_maker_free_placeholder');
+  // その他カテゴリ以外はブランド選択を先頭にリセット
+  if (cat !== 'other') resetGearChips(cat);
+  currentGearMaker = cat === 'other' ? '' : (cat === 'amp' ? 'Fender' : 'BOSS');
+}
+
+function resetGearChips(cat) {
+  const chipsId = cat === 'amp' ? 'gear-chips-amp' : 'gear-chips-fx';
+  const el = document.getElementById(chipsId);
+  if (!el) return;
+  el.querySelectorAll('div').forEach((d, i) => {
+    d.style.background = i === 0 ? 'rgba(232,0,29,.2)' : 'var(--gray-dark)';
+    d.style.color      = i === 0 ? 'var(--red)'        : 'var(--text-secondary)';
+    d.style.border     = i === 0 ? '1px solid rgba(232,0,29,.4)' : '1px solid rgba(255,255,255,.15)';
+  });
+}
+
+function selectGearMaker(el, name) {
+  currentGearMaker = name === '__other__' ? '' : name;
+  // 現在表示中のチップを全リセット
+  const activeChips = document.getElementById(
+    currentGearCat === 'amp' ? 'gear-chips-amp' : 'gear-chips-fx'
+  );
+  activeChips.querySelectorAll('div').forEach(d => {
+    d.style.background = 'var(--gray-dark)';
+    d.style.color      = 'var(--text-secondary)';
+    d.style.border     = '1px solid rgba(255,255,255,.15)';
+  });
+  const isOther = name === '__other__';
+  el.style.background = isOther ? 'rgba(255,255,255,.08)' : 'rgba(232,0,29,.2)';
+  el.style.color      = isOther ? 'var(--text-primary)'   : 'var(--red)';
+  el.style.border     = isOther ? '1px solid rgba(255,255,255,.4)' : '1px solid rgba(232,0,29,.4)';
+  const wrap  = document.getElementById('gear-maker-other-wrap');
+  const input = document.getElementById('gear-maker-other-input');
+  wrap.style.display = isOther ? 'block' : 'none';
+  if (isOther) { input.placeholder = T('maker_other_placeholder'); input.value = ''; setTimeout(()=>input.focus(),100); }
+}
+
+function confirmAddGear() {
+  // メーカー名決定
+  let maker = '';
+  if (currentGearCat === 'other') {
+    maker = document.getElementById('gear-maker-free').value.trim();
+  } else if (currentGearMaker === '') {
+    maker = document.getElementById('gear-maker-other-input').value.trim() || T('other_maker');
+  } else {
+    maker = currentGearMaker;
+  }
+  const gname = document.getElementById('gear-name').value.trim();
+  const displayName = gname ? (maker ? `${maker} ${gname}` : gname) : (maker || T('add_gear_item'));
+  const memo = document.getElementById('gear-memo').value.trim();
+  const icon = gearCatIcons[currentGearCat] || '🎛️';
+  const list = document.getElementById('gear-list');
+  const item = document.createElement('div');
+  item.style.cssText = 'background:var(--gray-dark);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(34,197,94,.2);';
+  item.innerHTML = `<div style="font-size:20px;">${icon}</div><div style="flex:1;"><div style="font-size:12px;font-weight:700;">${displayName}</div><div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">${memo}</div></div><div style="font-size:14px;color:var(--green);">✓</div>`;
+  list.appendChild(item);
+  goBack();
+  showToast('+20pt!');
+}
+
+// ── 機材写真 ──
+function handleGearPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('gear-photo-img').src = e.target.result;
+    document.getElementById('gear-photo-preview').style.display = 'block';
+    document.getElementById('gear-photo-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+function removeGearPhoto() {
+  const inp = document.getElementById('gear-photo-input');
+  if (inp) inp.value = '';
+  const prev = document.getElementById('gear-photo-preview');
+  const ph   = document.getElementById('gear-photo-placeholder');
+  if (prev) prev.style.display = 'none';
+  if (ph)   ph.style.display   = 'block';
+}
 function handleInstPhoto(input) {
   if (!input.files || !input.files[0]) return;
   const file = input.files[0];
