@@ -24,6 +24,8 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
 @keyframes slideIn{from{transform:translateX(100%);opacity:.7}to{transform:translateX(0);opacity:1}}
 @keyframes slideBack{from{transform:translateX(-30%);opacity:.7}to{transform:translateX(0);opacity:1}}
 .home-bar{height:82px;background:var(--gray-dark);border-top:1px solid rgba(255,255,255,.06);display:flex;padding:6px 0 0;flex-shrink:0}
+.hide-scroll{scrollbar-width:none;-ms-overflow-style:none}
+.hide-scroll::-webkit-scrollbar{display:none}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;color:var(--text-secondary);cursor:pointer;padding:6px 0;transition:color .15s;user-select:none}
 .nav-item.active{color:var(--red)}
 .nav-item:active{opacity:.7}
@@ -645,24 +647,166 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
     <div class="top-bar">
       <span class="tb-back" onclick="goBack()">‹</span>
       <span class="tb-title" data-i18n="post_create_title"></span>
-      <button class="post-submit" onclick="submitPost()" style="background:var(--red);color:white;padding:7px 18px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;" data-i18n="post_publish"></button>
+      <button onclick="submitPost()" style="background:var(--red);color:white;padding:7px 18px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:none;" data-i18n="post_publish"></button>
     </div>
+
+    <!-- ユーザー行 -->
     <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;">
       <div class="avatar" style="background:linear-gradient(135deg,#E8001D,#ff6b35);width:36px;height:36px;font-size:16px;">M</div>
-      <div><div style="font-size:13px;font-weight:700;">MASATO</div><div style="font-size:10px;color:var(--text-secondary);">Lv.3 · 龙岗</div></div>
+      <div>
+        <div style="font-size:13px;font-weight:700;">MASATO</div>
+        <div style="font-size:10px;color:var(--text-secondary);">Lv.3 · 龙岗</div>
+      </div>
     </div>
-    <div style="flex:1;padding:16px;">
-      <textarea id="post-input" style="width:100%;background:transparent;border:none;outline:none;color:var(--text-primary);font-size:14px;font-family:'Noto Sans SC',sans-serif;resize:none;line-height:1.8;min-height:120px;" rows="6"></textarea>
+
+    <div style="overflow-y:auto;flex:1;">
+      <div style="padding:12px 16px;">
+
+        <!-- ① カテゴリ選択 -->
+        <div id="post-category-bar" style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+          <div onclick="selectPostCat(this,'general')" style="background:rgba(232,0,29,.2);color:var(--red);border:1px solid rgba(232,0,29,.4);padding:5px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;" data-i18n="cat_general"></div>
+          <div onclick="selectPostCat(this,'score')"   style="background:var(--gray-mid);color:var(--text-secondary);border:1px solid rgba(255,255,255,.1);padding:5px 12px;border-radius:14px;font-size:11px;cursor:pointer;" data-i18n="cat_score"></div>
+          <div onclick="selectPostCat(this,'gear')"    style="background:var(--gray-mid);color:var(--text-secondary);border:1px solid rgba(255,255,255,.1);padding:5px 12px;border-radius:14px;font-size:11px;cursor:pointer;" data-i18n="cat_gear"></div>
+          <div onclick="selectPostCat(this,'chat')"    style="background:var(--gray-mid);color:var(--text-secondary);border:1px solid rgba(255,255,255,.1);padding:5px 12px;border-radius:14px;font-size:11px;cursor:pointer;" data-i18n="cat_chat"></div>
+        </div>
+
+        <!-- ② テキスト入力 -->
+        <textarea id="post-input" style="width:100%;background:transparent;border:none;outline:none;color:var(--text-primary);font-size:14px;font-family:'Noto Sans SC',sans-serif;resize:none;line-height:1.8;min-height:80px;" rows="4"></textarea>
+
+        <!-- ③ 画像プレビューグリッド（共通） -->
+        <div id="post-img-grid" style="display:none;margin-top:8px;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;"></div>
+
+        <!-- ④ 動画パネル（技術・機材・雑談 共通） -->
+        <div id="video-panel" style="display:none;margin-top:10px;">
+          <!-- タブ切替：アップロード / 视频号リンク -->
+          <div style="display:flex;background:var(--gray-dark);border-radius:10px;padding:3px;margin-bottom:10px;gap:2px;">
+            <div id="vtab-upload" onclick="switchVideoTab('upload')" style="flex:1;text-align:center;padding:7px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:var(--gray-mid);color:var(--text-primary);transition:all .15s;" data-i18n="vtab_upload"></div>
+            <div id="vtab-shipin" onclick="switchVideoTab('shipin')" style="flex:1;text-align:center;padding:7px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;color:var(--text-secondary);transition:all .15s;" data-i18n="vtab_shipin"></div>
+          </div>
+
+          <!-- アップロードタブ -->
+          <div id="video-upload-tab">
+            <input type="file" id="post-video-input" accept="video/*" style="display:none;" onchange="handlePostVideo(this)">
+            <div id="video-upload-area" onclick="document.getElementById('post-video-input').click()"
+              style="background:var(--gray-dark);border:2px dashed rgba(255,100,0,.3);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s;"
+              onmouseover="this.style.borderColor='rgba(255,100,0,.7)'" onmouseout="this.style.borderColor='rgba(255,100,0,.3)'">
+              <div id="video-upload-placeholder">
+                <div style="font-size:30px;margin-bottom:6px;">🎬</div>
+                <div style="font-size:12px;color:var(--text-secondary);" data-i18n="video_tap_to_upload"></div>
+                <div style="font-size:10px;color:#555;margin-top:3px;">MP4 · MOV · AVI · max 500MB</div>
+              </div>
+              <div id="video-upload-info" style="display:none;">
+                <div style="display:flex;align-items:center;gap:10px;background:rgba(255,100,0,.08);border-radius:8px;padding:10px 12px;">
+                  <div style="font-size:26px;">🎬</div>
+                  <div style="flex:1;overflow:hidden;">
+                    <div style="font-size:12px;font-weight:700;color:#ff6400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="video-file-name"></div>
+                    <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;" id="video-file-size"></div>
+                  </div>
+                  <div onclick="event.stopPropagation();removePostVideo()" style="color:var(--text-secondary);font-size:18px;cursor:pointer;padding:4px;">×</div>
+                </div>
+                <div style="margin-top:8px;height:4px;background:var(--gray-light);border-radius:2px;overflow:hidden;">
+                  <div style="height:100%;width:0%;background:linear-gradient(90deg,#ff6400,var(--gold));border-radius:2px;transition:width 1s;" id="video-progress-bar"></div>
+                </div>
+                <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;" id="video-progress-text"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 视频号リンクタブ -->
+          <div id="video-shipin-tab" style="display:none;">
+            <div style="background:rgba(7,193,96,.05);border:1px solid rgba(7,193,96,.25);border-radius:10px;padding:14px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <div style="width:28px;height:28px;background:#07C160;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;">▶</div>
+                <div style="font-size:12px;font-weight:700;color:#07C160;" data-i18n="shipin_title"></div>
+              </div>
+              <div style="font-size:10px;color:var(--text-secondary);margin-bottom:8px;" data-i18n="shipin_how"></div>
+              <input id="shipin-url-input" style="width:100%;background:var(--gray-dark);border:1px solid rgba(7,193,96,.3);outline:none;color:var(--text-primary);font-size:13px;padding:10px 12px;border-radius:8px;font-family:'Noto Sans SC',sans-serif;" onpaste="handleShipinPaste(this)" oninput="handleShipinInput(this)">
+              <!-- プレビューカード -->
+              <div id="shipin-preview" style="display:none;margin-top:10px;background:var(--gray-dark);border-radius:10px;overflow:hidden;border:1px solid rgba(7,193,96,.2);">
+                <div style="height:100px;background:linear-gradient(135deg,#0a2010,#051008);display:flex;align-items:center;justify-content:center;position:relative;">
+                  <div style="font-size:40px;opacity:.4;">🎸</div>
+                  <div style="position:absolute;width:40px;height:40px;background:rgba(7,193,96,.85);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;">▶</div>
+                </div>
+                <div style="padding:8px 12px;">
+                  <div style="font-size:11px;font-weight:700;" id="shipin-preview-title"></div>
+                  <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;display:flex;align-items:center;gap:4px;"><span style="background:#07C160;color:white;padding:1px 5px;border-radius:3px;font-size:9px;">视频号</span><span id="shipin-preview-author"></span></div>
+                </div>
+              </div>
+              <div style="font-size:10px;color:#555;margin-top:8px;" data-i18n="shipin_note"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ⑤ 楽譜パネル（楽譜カテゴリのみ） -->
+        <div id="score-upload-panel" style="display:none;margin-top:10px;background:rgba(125,249,255,.05);border:1px solid rgba(125,249,255,.2);border-radius:12px;padding:14px;">
+          <div style="font-size:11px;color:var(--diamond);font-weight:700;margin-bottom:10px;">🎼 <span data-i18n="score_upload_title"></span></div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-bottom:8px;" data-i18n="score_format_label"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;" id="score-format-chips">
+            <div onclick="selectScoreFormat(this,'PDF')"      style="background:rgba(125,249,255,.15);color:var(--diamond);border:1px solid rgba(125,249,255,.4);padding:5px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;">PDF</div>
+            <div onclick="selectScoreFormat(this,'JPG')"      style="background:var(--gray-mid);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:5px 12px;border-radius:14px;font-size:11px;cursor:pointer;">JPG / PNG</div>
+            <div onclick="selectScoreFormat(this,'GTP')"      style="background:var(--gray-mid);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:5px 12px;border-radius:14px;font-size:11px;cursor:pointer;">GTP / GP5</div>
+            <div onclick="selectScoreFormat(this,'MusicXML')" style="background:var(--gray-mid);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:5px 12px;border-radius:14px;font-size:11px;cursor:pointer;">MusicXML</div>
+            <div onclick="selectScoreFormat(this,'TXT')"      style="background:var(--gray-mid);color:var(--text-secondary);border:1px solid rgba(255,255,255,.15);padding:5px 12px;border-radius:14px;font-size:11px;cursor:pointer;">TXT (TAB)</div>
+            <div onclick="selectScoreFormat(this,'Other')"    style="background:var(--gray-mid);color:var(--text-secondary);border:1px dashed rgba(255,255,255,.2);padding:5px 12px;border-radius:14px;font-size:11px;cursor:pointer;" data-i18n="score_format_other"></div>
+          </div>
+          <input type="file" id="score-file-input" style="display:none;" onchange="handleScoreFile(this)">
+          <div id="score-file-area" onclick="document.getElementById('score-file-input').click()"
+            style="background:var(--gray-dark);border:2px dashed rgba(125,249,255,.25);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border-color .2s;"
+            onmouseover="this.style.borderColor='rgba(125,249,255,.6)'" onmouseout="this.style.borderColor='rgba(125,249,255,.25)'">
+            <div id="score-file-placeholder">
+              <div style="font-size:28px;margin-bottom:6px;">📄</div>
+              <div style="font-size:12px;color:var(--text-secondary);" data-i18n="score_tap_to_upload"></div>
+              <div style="font-size:10px;color:#555;margin-top:3px;" id="score-accepted-formats">PDF / JPG / GTP / MusicXML / TXT</div>
+            </div>
+            <div id="score-file-info" style="display:none;text-align:left;">
+              <div style="display:flex;align-items:center;gap:10px;background:rgba(125,249,255,.08);border-radius:8px;padding:10px 12px;">
+                <div style="font-size:24px;" id="score-file-icon">📄</div>
+                <div style="flex:1;overflow:hidden;">
+                  <div style="font-size:12px;font-weight:700;color:var(--diamond);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="score-file-name"></div>
+                  <div style="font-size:10px;color:var(--text-secondary);margin-top:2px;" id="score-file-size"></div>
+                </div>
+                <div onclick="event.stopPropagation();removeScoreFile()" style="color:var(--text-secondary);font-size:18px;cursor:pointer;padding:4px;">×</div>
+              </div>
+            </div>
+          </div>
+          <div id="score-img-preview" style="display:none;margin-top:8px;">
+            <img id="score-preview-img" style="width:100%;max-height:200px;object-fit:contain;border-radius:8px;background:var(--gray-dark);" />
+          </div>
+          <div style="margin-top:10px;font-size:10px;color:var(--text-secondary);" data-i18n="score_upload_note"></div>
+        </div>
+
+      </div>
     </div>
-    <div style="display:flex;gap:8px;padding:8px 16px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;">
-      <div style="background:rgba(232,0,29,.15);color:var(--red);border:1px solid rgba(232,0,29,.3);padding:4px 10px;border-radius:14px;font-size:11px;">#贝斯</div>
-      <div style="background:rgba(232,0,29,.15);color:var(--red);border:1px solid rgba(232,0,29,.3);padding:4px 10px;border-radius:14px;font-size:11px;">#BASS</div>
-    </div>
-    <div style="padding:10px 16px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:14px;align-items:center;flex-shrink:0;">
-      <span style="font-size:20px;cursor:pointer;opacity:.6;">🖼️</span>
-      <span style="font-size:20px;cursor:pointer;opacity:.6;">📹</span>
-      <span style="font-size:20px;cursor:pointer;opacity:.6;">📍</span>
-      <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:11px;color:var(--text-secondary);" id="char-count">0/500</span>
+
+    <!-- ⑥ ボトムツールバー -->
+    <div style="border-top:1px solid rgba(255,255,255,.06);background:var(--gray-dark);flex-shrink:0;">
+      <!-- タグ行 -->
+      <div style="display:flex;gap:6px;padding:8px 14px;overflow-x:auto;" class="hide-scroll">
+        <div style="background:rgba(232,0,29,.15);color:var(--red);border:1px solid rgba(232,0,29,.3);padding:4px 10px;border-radius:14px;font-size:11px;white-space:nowrap;">#贝斯</div>
+        <div style="background:rgba(232,0,29,.15);color:var(--red);border:1px solid rgba(232,0,29,.3);padding:4px 10px;border-radius:14px;font-size:11px;white-space:nowrap;">#BASS</div>
+        <div style="background:var(--gray-mid);color:var(--text-secondary);border:1px dashed rgba(255,255,255,.15);padding:4px 10px;border-radius:14px;font-size:11px;white-space:nowrap;">+ Tag</div>
+      </div>
+      <!-- アクションボタン行 -->
+      <div style="display:flex;align-items:center;padding:6px 14px 10px;gap:4px;">
+        <!-- 画像 -->
+        <input type="file" id="post-img-input" accept="image/*" multiple style="display:none;" onchange="handlePostImages(this)">
+        <div onclick="document.getElementById('post-img-input').click()" id="btn-img"
+          style="display:flex;align-items:center;gap:5px;padding:8px 12px;border-radius:20px;background:var(--gray-mid);cursor:pointer;font-size:11px;color:var(--text-secondary);transition:all .15s;"
+          onmouseover="this.style.background='rgba(77,166,255,.2)';this.style.color='var(--blue)'" onmouseout="resetBtnStyle('btn-img')">
+          <span style="font-size:16px;">🖼️</span><span data-i18n="btn_photo"></span>
+        </div>
+        <!-- 動画 -->
+        <div onclick="toggleVideoPanel()" id="btn-video"
+          style="display:flex;align-items:center;gap:5px;padding:8px 12px;border-radius:20px;background:var(--gray-mid);cursor:pointer;font-size:11px;color:var(--text-secondary);transition:all .15s;"
+          onmouseover="this.style.background='rgba(255,100,0,.2)';this.style.color='#ff6400'" onmouseout="resetBtnStyle('btn-video')">
+          <span style="font-size:16px;">🎬</span><span data-i18n="btn_video"></span>
+        </div>
+        <!-- 位置 -->
+        <div style="display:flex;align-items:center;gap:5px;padding:8px 12px;border-radius:20px;background:var(--gray-mid);cursor:pointer;font-size:11px;color:var(--text-secondary);">
+          <span style="font-size:16px;">📍</span>
+        </div>
+        <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:10px;color:var(--text-secondary);" id="char-count">0/500</span>
+      </div>
     </div>
   </div>
 
@@ -1117,6 +1261,26 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
           <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;" data-i18n="inst_origin_label"></div>
           <input id="inst-origin" style="width:100%;background:var(--gray-dark);border:1px solid var(--gray-light);outline:none;color:var(--text-primary);font-size:14px;padding:12px;border-radius:10px;font-family:'Noto Sans SC',sans-serif;" />
         </div>
+
+        <!-- 写真アップロード -->
+        <div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;" data-i18n="inst_photo_label"></div>
+          <input type="file" id="inst-photo-input" accept="image/*" style="display:none;" onchange="handleInstPhoto(this)">
+          <div id="inst-photo-area" onclick="document.getElementById('inst-photo-input').click()"
+            style="background:var(--gray-dark);border:2px dashed rgba(255,255,255,.2);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s;"
+            onmouseover="this.style.borderColor='rgba(232,0,29,.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,.2)'">
+            <div id="inst-photo-preview" style="display:none;position:relative;">
+              <img id="inst-photo-img" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;" />
+              <div onclick="event.stopPropagation();removeInstPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);color:white;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;">×</div>
+            </div>
+            <div id="inst-photo-placeholder">
+              <div style="font-size:32px;margin-bottom:8px;">📷</div>
+              <div style="font-size:12px;color:var(--text-secondary);" data-i18n="photo_tap_to_add"></div>
+              <div style="font-size:10px;color:#555;margin-top:4px;" data-i18n="photo_formats"></div>
+            </div>
+          </div>
+        </div>
+
         <div onclick="confirmAddInstrument()" style="background:var(--red);border-radius:28px;padding:14px;text-align:center;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;" data-i18n="add_confirm_btn"></div>
       </div>
     </div>
@@ -1296,6 +1460,18 @@ const DICT = {
     add_instrument_title:"添加乐器",inst_name_label:"乐器名称",inst_maker_label:"品牌",
     inst_strings_label:"弦数",strings_4:"4弦",strings_5:"5弦",strings_6:"6弦",
     inst_origin_label:"产地 / 购入年份",other_maker:"其他",add_confirm_btn:"添加",
+    inst_photo_label:"📷 乐器照片（任选）",photo_tap_to_add:"点击添加照片",photo_formats:"JPG · PNG · HEIC",
+    cat_general:"🎵 技术",cat_score:"🎼 乐谱",cat_gear:"🎛️ 机材",cat_chat:"💬 雑談",
+    score_upload_title:"上传乐谱文件",score_format_label:"选择文件格式",
+    score_format_other:"其他",score_tap_to_upload:"点击选择文件",
+    score_upload_note:"支持格式：PDF · JPG/PNG · GTP/GP5 · MusicXML · TXT(TAB)",
+    btn_photo:"图片",btn_video:"视频",
+    vtab_upload:"📁 上传视频",vtab_shipin:"▶ 视频号",
+    video_tap_to_upload:"点击上传演奏视频",
+    shipin_title:"导入视频号演奏视频",
+    shipin_how:"在视频号找到演奏视频 → 点击分享 → 复制链接 → 粘贴到这里",
+    shipin_note:"※ 仅支持公开视频。视频版权归原创者所有。",
+    uploading:"上传中",upload_done:"上传完成",
   },
   en: {
     login_sub:"The Bassist's Exclusive Community",
@@ -1411,6 +1587,18 @@ const DICT = {
     add_instrument_title:"Add Instrument",inst_name_label:"Instrument Name",inst_maker_label:"Brand",
     inst_strings_label:"Strings",strings_4:"4-string",strings_5:"5-string",strings_6:"6-string",
     inst_origin_label:"Origin / Year Purchased",other_maker:"Other",add_confirm_btn:"Add",
+    inst_photo_label:"📷 Instrument Photo (optional)",photo_tap_to_add:"Tap to add photo",photo_formats:"JPG · PNG · HEIC",
+    cat_general:"🎵 Technique",cat_score:"🎼 Score",cat_gear:"🎛️ Gear",cat_chat:"💬 Chat",
+    score_upload_title:"Upload Score File",score_format_label:"Select File Format",
+    score_format_other:"Other",score_tap_to_upload:"Tap to select file",
+    score_upload_note:"Supported: PDF · JPG/PNG · GTP/GP5 · MusicXML · TXT(TAB)",
+    btn_photo:"Photo",btn_video:"Video",
+    vtab_upload:"📁 Upload",vtab_shipin:"▶ 视频号",
+    video_tap_to_upload:"Tap to upload performance video",
+    shipin_title:"Import from 视频号",
+    shipin_how:"Find video on 视频号 → Share → Copy Link → Paste here",
+    shipin_note:"※ Public videos only. Copyright belongs to original creator.",
+    uploading:"Uploading",upload_done:"Upload complete",
   },
   ja: {
     login_sub:"ベーシスト専用コミュニティ",
@@ -1526,6 +1714,18 @@ const DICT = {
     add_instrument_title:"楽器を追加",inst_name_label:"楽器名",inst_maker_label:"ブランド",
     inst_strings_label:"弦数",strings_4:"4弦",strings_5:"5弦",strings_6:"6弦",
     inst_origin_label:"産地 / 購入年",other_maker:"その他",add_confirm_btn:"追加する",
+    inst_photo_label:"📷 楽器の写真（任意）",photo_tap_to_add:"タップして写真を追加",photo_formats:"JPG · PNG · HEIC",
+    cat_general:"🎵 テクニック",cat_score:"🎼 楽譜",cat_gear:"🎛️ 機材",cat_chat:"💬 雑談",
+    score_upload_title:"楽譜ファイルをアップロード",score_format_label:"ファイル形式を選択",
+    score_format_other:"その他",score_tap_to_upload:"タップしてファイルを選択",
+    score_upload_note:"対応形式：PDF · JPG/PNG · GTP/GP5 · MusicXML · TXT(TAB)",
+    btn_photo:"写真",btn_video:"動画",
+    vtab_upload:"📁 アップロード",vtab_shipin:"▶ 视频号",
+    video_tap_to_upload:"演奏動画をアップロード",
+    shipin_title:"视频号から演奏動画を導入",
+    shipin_how:"视频号で動画を開く → シェア → リンクをコピー → ここに貼り付け",
+    shipin_note:"※ 公開動画のみ対応。著作権は元の投稿者に帰属します。",
+    uploading:"アップロード中",upload_done:"アップロード完了",
   }
 };
 
@@ -1741,6 +1941,225 @@ function showSuccess(icon,title,sub,pts) {
 }
 
 function closeSuccess() { document.getElementById('success-overlay').classList.remove('show'); }
+
+// ══ PHOTO UPLOAD (楽器・機材) ══
+function handleInstPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('inst-photo-img').src = e.target.result;
+    document.getElementById('inst-photo-preview').style.display = 'block';
+    document.getElementById('inst-photo-placeholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeInstPhoto() {
+  document.getElementById('inst-photo-input').value = '';
+  document.getElementById('inst-photo-preview').style.display = 'none';
+  document.getElementById('inst-photo-placeholder').style.display = 'block';
+}
+
+// ══ POST CATEGORY ══
+let currentPostCat = 'general';
+function selectPostCat(el, cat) {
+  currentPostCat = cat;
+  document.getElementById('post-category-bar').querySelectorAll('div').forEach(d => {
+    d.style.background = 'var(--gray-mid)';
+    d.style.color = 'var(--text-secondary)';
+    d.style.border = '1px solid rgba(255,255,255,.1)';
+    d.style.fontWeight = 'normal';
+  });
+  const isScore = cat === 'score';
+  el.style.background = isScore ? 'rgba(125,249,255,.2)' : 'rgba(232,0,29,.2)';
+  el.style.color = isScore ? 'var(--diamond)' : 'var(--red)';
+  el.style.border = isScore ? '1px solid rgba(125,249,255,.4)' : '1px solid rgba(232,0,29,.4)';
+  el.style.fontWeight = '700';
+  document.getElementById('score-upload-panel').style.display = isScore ? 'block' : 'none';
+  // 楽譜以外は画像・動画ボタンを有効化
+  document.getElementById('btn-img').style.opacity = isScore ? '.4' : '1';
+  document.getElementById('btn-img').style.pointerEvents = isScore ? 'none' : 'auto';
+  document.getElementById('btn-video').style.opacity = isScore ? '.4' : '1';
+  document.getElementById('btn-video').style.pointerEvents = isScore ? 'none' : 'auto';
+  if (isScore) {
+    document.getElementById('video-panel').style.display = 'none';
+    document.getElementById('post-img-grid').innerHTML = '';
+    document.getElementById('post-img-grid').style.display = 'none';
+  }
+}
+
+// ── 画像アップロード ──
+let postImages = [];
+function handlePostImages(input) {
+  if (!input.files) return;
+  const grid = document.getElementById('post-img-grid');
+  Array.from(input.files).slice(0, 9 - postImages.length).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      postImages.push(e.target.result);
+      renderImageGrid();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderImageGrid() {
+  const grid = document.getElementById('post-img-grid');
+  if (!postImages.length) { grid.style.display = 'none'; grid.innerHTML = ''; return; }
+  const cols = postImages.length === 1 ? 1 : postImages.length <= 4 ? 2 : 3;
+  grid.style.display = 'grid';
+  grid.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+  grid.innerHTML = postImages.map((src, i) => `
+    <div style="position:relative;padding-top:100%;border-radius:6px;overflow:hidden;background:var(--gray-mid);">
+      <img src="${src}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
+      <div onclick="removePostImage(${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">×</div>
+    </div>`).join('') +
+    (postImages.length < 9 ? `<div onclick="document.getElementById('post-img-input').click()" style="padding-top:100%;position:relative;border-radius:6px;border:2px dashed rgba(255,255,255,.2);cursor:pointer;"><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text-secondary);">+</div></div>` : '');
+}
+
+function removePostImage(idx) {
+  postImages.splice(idx, 1);
+  renderImageGrid();
+}
+
+// ── 動画パネル切替 ──
+let videoPanelOpen = false;
+function toggleVideoPanel() {
+  videoPanelOpen = !videoPanelOpen;
+  const panel = document.getElementById('video-panel');
+  const btn = document.getElementById('btn-video');
+  panel.style.display = videoPanelOpen ? 'block' : 'none';
+  btn.style.background = videoPanelOpen ? 'rgba(255,100,0,.2)' : 'var(--gray-mid)';
+  btn.style.color = videoPanelOpen ? '#ff6400' : 'var(--text-secondary)';
+}
+
+function switchVideoTab(tab) {
+  const isUpload = tab === 'upload';
+  document.getElementById('video-upload-tab').style.display = isUpload ? 'block' : 'none';
+  document.getElementById('video-shipin-tab').style.display = isUpload ? 'none' : 'block';
+  document.getElementById('vtab-upload').style.background = isUpload ? 'var(--gray-mid)' : 'transparent';
+  document.getElementById('vtab-upload').style.color = isUpload ? 'var(--text-primary)' : 'var(--text-secondary)';
+  document.getElementById('vtab-shipin').style.background = isUpload ? 'transparent' : 'var(--gray-mid)';
+  document.getElementById('vtab-shipin').style.color = isUpload ? 'var(--text-secondary)' : 'var(--text-primary)';
+}
+
+// ── 動画ファイルアップロード ──
+function handlePostVideo(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  document.getElementById('video-file-name').textContent = file.name;
+  const mb = (file.size / 1024 / 1024).toFixed(1);
+  document.getElementById('video-file-size').textContent = mb + ' MB';
+  document.getElementById('video-upload-placeholder').style.display = 'none';
+  document.getElementById('video-upload-info').style.display = 'block';
+  // アップロード進捗シミュレーション
+  let pct = 0;
+  const bar = document.getElementById('video-progress-bar');
+  const txt = document.getElementById('video-progress-text');
+  txt.textContent = T('uploading') + '...';
+  const iv = setInterval(() => {
+    pct = Math.min(pct + Math.random() * 18, 100);
+    bar.style.width = pct + '%';
+    if (pct >= 100) {
+      clearInterval(iv);
+      txt.textContent = '✓ ' + T('upload_done');
+      bar.style.background = 'var(--green)';
+    }
+  }, 200);
+}
+
+function removePostVideo() {
+  document.getElementById('post-video-input').value = '';
+  document.getElementById('video-upload-placeholder').style.display = 'block';
+  document.getElementById('video-upload-info').style.display = 'none';
+  document.getElementById('video-progress-bar').style.width = '0%';
+  document.getElementById('video-progress-bar').style.background = 'linear-gradient(90deg,#ff6400,var(--gold))';
+}
+
+// ── 视频号リンク ──
+function handleShipinPaste(input) {
+  setTimeout(() => handleShipinInput(input), 50);
+}
+function handleShipinInput(input) {
+  const val = input.value.trim();
+  const preview = document.getElementById('shipin-preview');
+  if (val.length > 5) {
+    preview.style.display = 'block';
+    document.getElementById('shipin-preview-title').textContent = 'BASS SHOW! × 演奏动画 - MASATO';
+    document.getElementById('shipin-preview-author').textContent = 'MASATO · 视频号';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function resetBtnStyle(id) {
+  const btn = document.getElementById(id);
+  if (!btn) return;
+  if (id === 'btn-video' && videoPanelOpen) return;
+  btn.style.background = 'var(--gray-mid)';
+  btn.style.color = 'var(--text-secondary)';
+}
+
+// ══ SCORE FILE UPLOAD ══
+let selectedScoreFormat = 'PDF';
+const scoreFormatIcons = { PDF:'📄', JPG:'🖼️', GTP:'🎸', MusicXML:'🎼', TXT:'📝', Other:'📎' };
+const scoreFormatAccepts = {
+  PDF: '.pdf', JPG: '.jpg,.jpeg,.png', GTP: '.gtp,.gp3,.gp4,.gp5,.gpx',
+  MusicXML: '.xml,.musicxml,.mxl', TXT: '.txt,.tab', Other: '*'
+};
+
+function selectScoreFormat(el, fmt) {
+  selectedScoreFormat = fmt;
+  document.getElementById('score-format-chips').querySelectorAll('div').forEach(d => {
+    d.style.background = 'var(--gray-mid)';
+    d.style.color = 'var(--text-secondary)';
+    d.style.border = '1px solid rgba(255,255,255,.15)';
+    d.style.fontWeight = 'normal';
+  });
+  el.style.background = 'rgba(125,249,255,.15)';
+  el.style.color = 'var(--diamond)';
+  el.style.border = '1px solid rgba(125,249,255,.4)';
+  el.style.fontWeight = '700';
+  // update accept attribute
+  document.getElementById('score-file-input').accept = scoreFormatAccepts[fmt] || '*';
+  document.getElementById('score-accepted-formats').textContent = fmt === 'Other' ? T('score_format_other') : (scoreFormatAccepts[fmt] || '').replace(/\./g,'').toUpperCase().replace(/,/g,' / ');
+  // reset file if format changed
+  removeScoreFile();
+}
+
+function handleScoreFile(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const fmt = selectedScoreFormat;
+  // show file info
+  document.getElementById('score-file-icon').textContent = scoreFormatIcons[fmt] || '📎';
+  document.getElementById('score-file-name').textContent = file.name;
+  const kb = (file.size / 1024).toFixed(0);
+  const mb = (file.size / 1024 / 1024).toFixed(1);
+  document.getElementById('score-file-size').textContent = file.size > 1024*1024 ? mb + ' MB' : kb + ' KB';
+  document.getElementById('score-file-placeholder').style.display = 'none';
+  document.getElementById('score-file-info').style.display = 'block';
+  // image preview
+  const isImg = fmt === 'JPG' || file.type.startsWith('image/');
+  if (isImg) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('score-preview-img').src = e.target.result;
+      document.getElementById('score-img-preview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  } else {
+    document.getElementById('score-img-preview').style.display = 'none';
+  }
+}
+
+function removeScoreFile() {
+  document.getElementById('score-file-input').value = '';
+  document.getElementById('score-file-placeholder').style.display = 'block';
+  document.getElementById('score-file-info').style.display = 'none';
+  document.getElementById('score-img-preview').style.display = 'none';
+}
 
 // ══ INIT ══
 applyLang();
