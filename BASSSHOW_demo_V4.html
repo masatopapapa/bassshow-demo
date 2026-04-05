@@ -308,6 +308,14 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
         </div>
         <div style="padding:0 12px;font-size:18px;color:rgba(232,0,29,.5);">›</div>
       </div>
+      <!-- ══ お知らせ欄 ══ -->
+      <div style="margin:0 12px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-left:3px solid var(--red);border-radius:10px;padding:10px 14px;display:flex;align-items:flex-start;gap:10px;">
+        <div style="font-size:18px;flex-shrink:0;margin-top:1px;">📢</div>
+        <div>
+          <div style="font-size:9px;color:var(--red);font-weight:700;letter-spacing:2px;margin-bottom:4px;" data-i18n="notice_label"></div>
+          <div style="font-size:11px;color:var(--text-secondary);line-height:1.7;" data-i18n="notice_home_text"></div>
+        </div>
+      </div>
       <div class="post-card hot" onclick="goScreen('s-post-detail')">
         <div class="post-header">
           <div class="avatar" style="background:linear-gradient(135deg,#E8001D,#ff6b35)">M</div>
@@ -1826,6 +1834,8 @@ const DICT = {
     pt_shortage_title:"✅ 积分不足时不用担心",
     pt_shortage_desc:"积分不足时，社区发帖・浏览・评论等基本功能均可正常使用。\n积分主要用于解锁特典内容・优先支持・段位特权，\n不影响日常交流体验。",
     // 広告バナー
+    notice_label:"📢 公告",
+    notice_home_text:"欢迎贝斯手交流平台BASS SHOW！目前正在努力开发APP中。希望一起创作我们的世界！贝斯手世界！敬请期待！",
     ad_label:"AD · 赞助",
     ad_home_title:"欢迎来到贝斯手世界",ad_home_sub:"日本中古贝斯 · 稀有器材 · BASS SHOW精选",
     ad_rank_title:"我要成为贝斯高手",ad_rank_sub:"专业段位认定 · 全国贝斯手排名",
@@ -1983,6 +1993,8 @@ const DICT = {
     teacher_advanced:"🎓🎓🎓 Advanced Teacher",teacher_advanced_desc:"All levels · Upload online courses · Large class rights",
     pt_shortage_title:"✅ Don't worry about low points",
     pt_shortage_desc:"Basic features like posting, browsing, and commenting are always available regardless of point balance.\nPoints are used for unlocking perks, priority support, and rank privileges — not daily interaction.",
+    notice_label:"📢 Notice",
+    notice_home_text:"Welcome to BASS SHOW — the bassist community platform! We're working hard on the app. Let's build our bassist world together! Stay tuned!",
     ad_label:"AD · Sponsored",
     ad_home_title:"Welcome to the Bassist's World",ad_home_sub:"Japanese vintage bass · Rare gear · BASS SHOW picks",
     ad_rank_title:"Become a Bass Master",ad_rank_sub:"Pro rank certification · National bassist ranking",
@@ -2139,6 +2151,8 @@ const DICT = {
     teacher_advanced:"🎓🎓🎓 上級教師",teacher_advanced_desc:"全レベル指導 · 動画授業アップロード権 · 大人数クラス担当",
     pt_shortage_title:"✅ 積分不足でも大丈夫",
     pt_shortage_desc:"積分が少なくても、コミュニティへの投稿・閲覧・コメントなどの基本機能はいつでも使えます。\n積分は特典コンテンツ・優先サポート・段位特権のために使うもので、日常の交流には影響しません。",
+    notice_label:"📢 お知らせ",
+    notice_home_text:"ベーシスト交流プラットフォーム BASS SHOW へようこそ！現在アプリを鋭意開発中です。一緒にベーシストの世界を作りましょう！乞うご期待！",
     ad_label:"AD · スポンサー",
     ad_home_title:"ベーシストの世界へようこそ",ad_home_sub:"日本中古ベース · 希少機材 · BASS SHOWセレクト",
     ad_rank_title:"ベースの達人を目指せ",ad_rank_sub:"プロ段位認定 · 全国ベーシストランキング",
