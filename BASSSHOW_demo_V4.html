@@ -220,6 +220,12 @@ body.fs-large .tb-title{font-size:16px}
 .theme-fab{position:fixed;bottom:106px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(30,30,30,.85);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;z-index:150;transition:all .2s;backdrop-filter:blur(4px)}
 body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.15)}
 .theme-fab:active{transform:scale(.9)}
+/* ══ TOGGLE SWITCH ══ */
+.toggle-wrap{cursor:pointer;flex-shrink:0}
+.toggle-track{width:44px;height:24px;border-radius:12px;background:var(--gray-light);position:relative;transition:background .2s}
+.toggle-track.on{background:var(--green)}
+.toggle-thumb{width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle-track.on .toggle-thumb{left:22px}
 /* ══ RANK SUMMARY (mypage compact) ══ */
 .rank-summary-bar{display:flex;align-items:center;gap:12px;padding:0 12px 10px}
 .rank-summary-card{flex:1;background:var(--gray-dark);border-radius:12px;padding:10px 12px;cursor:pointer}
@@ -292,6 +298,16 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
         <div class="mission-progress-text" data-i18n="mission_progress"></div>
       </div>
       <div class="section-label" data-i18n="latest_feed"></div>
+      <!-- ══ 广告バナー (Home) ══ -->
+      <div style="margin:0 12px 10px;background:linear-gradient(135deg,#1a0005,#0d000a);border:1px solid rgba(232,0,29,.3);border-radius:12px;overflow:hidden;cursor:pointer;display:flex;align-items:center;gap:0;" onclick="showToast(T('ad_tap_toast'))">
+        <div style="width:72px;height:64px;background:linear-gradient(135deg,#2a0008,#160004);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0;">🎸</div>
+        <div style="flex:1;padding:10px 12px;">
+          <div style="font-size:9px;color:rgba(232,0,29,.7);letter-spacing:2px;margin-bottom:3px;" data-i18n="ad_label"></div>
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary);line-height:1.3;" data-i18n="ad_home_title"></div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:3px;" data-i18n="ad_home_sub"></div>
+        </div>
+        <div style="padding:0 12px;font-size:18px;color:rgba(232,0,29,.5);">›</div>
+      </div>
       <div class="post-card hot" onclick="goScreen('s-post-detail')">
         <div class="post-header">
           <div class="avatar" style="background:linear-gradient(135deg,#E8001D,#ff6b35)">M</div>
@@ -542,6 +558,16 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
             <div style="text-align:right;"><div style="font-size:10px;color:var(--text-secondary);" data-i18n="benefit"></div><div style="font-size:10px;color:#CD7F32;margin-top:2px;" data-i18n="bronze_benefit"></div></div>
           </div>
         </div>
+        <!-- ══ 広告バナー (Rank) ══ -->
+        <div style="background:linear-gradient(135deg,#0d001a,#050010);border:1px solid rgba(125,249,255,.2);border-radius:12px;padding:0;overflow:hidden;cursor:pointer;display:flex;align-items:center;" onclick="showToast(T('ad_tap_toast'))">
+          <div style="width:68px;height:60px;background:linear-gradient(135deg,#150025,#0a0015);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;">🏆</div>
+          <div style="flex:1;padding:10px 12px;">
+            <div style="font-size:9px;color:rgba(125,249,255,.7);letter-spacing:2px;margin-bottom:3px;" data-i18n="ad_label"></div>
+            <div style="font-size:13px;font-weight:700;color:var(--text-primary);line-height:1.3;" data-i18n="ad_rank_title"></div>
+            <div style="font-size:10px;color:var(--text-secondary);margin-top:3px;" data-i18n="ad_rank_sub"></div>
+          </div>
+          <div style="padding:0 12px;font-size:18px;color:rgba(125,249,255,.4);">›</div>
+        </div>
       </div>
     </div>
     <!-- Panel B: Tech Rank -->
@@ -713,6 +739,16 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
       <div class="menu-item" onclick="goScreen('s-follow-list')"><span class="menu-icon">👥</span><span class="menu-label" data-i18n="menu_follow"></span><span class="menu-arrow">›</span></div>
       <div class="menu-item" onclick="goScreen('s-pt-history')"><span class="menu-icon">📊</span><span class="menu-label" data-i18n="menu_pt_history"></span><span class="menu-arrow">›</span></div>
       <div class="menu-item"><span class="menu-icon">📣</span><span class="menu-label" data-i18n="menu_invite"></span><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);">+50pt/<span data-i18n="per_person"></span></span><span class="menu-arrow">›</span></div>
+      <!-- ══ 広告バナー (MyPage) ══ -->
+      <div style="margin:10px 12px 4px;background:linear-gradient(135deg,#0a1a00,#051000);border:1px solid rgba(34,197,94,.25);border-radius:12px;overflow:hidden;cursor:pointer;display:flex;align-items:center;" onclick="showToast(T('ad_tap_toast'))">
+        <div style="width:68px;height:60px;background:linear-gradient(135deg,#102000,#081500);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;">🎸</div>
+        <div style="flex:1;padding:10px 12px;">
+          <div style="font-size:9px;color:rgba(34,197,94,.7);letter-spacing:2px;margin-bottom:3px;" data-i18n="ad_label"></div>
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary);line-height:1.3;" data-i18n="ad_mypage_title"></div>
+          <div style="font-size:10px;color:var(--text-secondary);margin-top:3px;" data-i18n="ad_mypage_sub"></div>
+        </div>
+        <div style="padding:0 12px;font-size:18px;color:rgba(34,197,94,.4);">›</div>
+      </div>
       <div style="height:20px;"></div>
     </div>
   </div>
@@ -1563,6 +1599,46 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
       <div style="margin:20px 16px;background:var(--gray-dark);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,.06);">
         <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;" data-i18n="lang_note"></div>
       </div>
+      <!-- プロフィール公開設定 -->
+      <div class="settings-section" data-i18n="privacy_section"></div>
+      <div style="padding:0 12px 8px;font-size:10px;color:var(--text-secondary);line-height:1.6;padding-bottom:4px;" data-i18n="privacy_desc"></div>
+      <div id="privacy-list">
+        <div class="menu-item" style="justify-content:space-between;">
+          <span class="menu-icon">🏆</span>
+          <span class="menu-label" data-i18n="privacy_rank"></span>
+          <div class="toggle-wrap" onclick="togglePrivacy(this,'rank')" id="priv-rank" data-on="true">
+            <div class="toggle-track on"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+        <div class="menu-item" style="justify-content:space-between;">
+          <span class="menu-icon">🎸</span>
+          <span class="menu-label" data-i18n="privacy_bass_history"></span>
+          <div class="toggle-wrap" onclick="togglePrivacy(this,'bass_history')" id="priv-bass_history" data-on="true">
+            <div class="toggle-track on"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+        <div class="menu-item" style="justify-content:space-between;">
+          <span class="menu-icon">📍</span>
+          <span class="menu-label" data-i18n="privacy_region"></span>
+          <div class="toggle-wrap" onclick="togglePrivacy(this,'region')" id="priv-region" data-on="true">
+            <div class="toggle-track on"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+        <div class="menu-item" style="justify-content:space-between;">
+          <span class="menu-icon">🎵</span>
+          <span class="menu-label" data-i18n="privacy_instrument"></span>
+          <div class="toggle-wrap" onclick="togglePrivacy(this,'instrument')" id="priv-instrument" data-on="true">
+            <div class="toggle-track on"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+        <div class="menu-item" style="justify-content:space-between;">
+          <span class="menu-icon">🎛️</span>
+          <span class="menu-label" data-i18n="privacy_equipment"></span>
+          <div class="toggle-wrap" onclick="togglePrivacy(this,'equipment')" id="priv-equipment" data-on="false">
+            <div class="toggle-track"><div class="toggle-thumb"></div></div>
+          </div>
+        </div>
+      </div>
       <div style="height:20px;"></div>
     </div>
   </div>
@@ -1749,6 +1825,17 @@ const DICT = {
     teacher_advanced:"🎓🎓🎓 高级教师",teacher_advanced_desc:"全级别指导 · 网课上传权限 · 大班授课",
     pt_shortage_title:"✅ 积分不足时不用担心",
     pt_shortage_desc:"积分不足时，社区发帖・浏览・评论等基本功能均可正常使用。\n积分主要用于解锁特典内容・优先支持・段位特权，\n不影响日常交流体验。",
+    // 広告バナー
+    ad_label:"AD · 赞助",
+    ad_home_title:"欢迎来到贝斯手世界",ad_home_sub:"日本中古贝斯 · 稀有器材 · BASS SHOW精选",
+    ad_rank_title:"我要成为贝斯高手",ad_rank_sub:"专业段位认定 · 全国贝斯手排名",
+    ad_mypage_title:"我要成为贝斯高手",ad_mypage_sub:"完善你的档案，展示你的实力",
+    ad_tap_toast:"广告已记录，感谢支持！",
+    // プライバシー設定
+    privacy_section:"隐私・公开设置",privacy_desc:"选择哪些信息对其他会员可见（绿色=公开）",
+    privacy_rank:"段位公开",privacy_bass_history:"贝斯历公开",
+    privacy_region:"地区公开",privacy_instrument:"持有乐器公开",privacy_equipment:"设备公开",
+    privacy_on:"公开",privacy_off:"非公开",
   },
   en: {
     login_sub:"The Bassist's Exclusive Community",
@@ -1896,6 +1983,15 @@ const DICT = {
     teacher_advanced:"🎓🎓🎓 Advanced Teacher",teacher_advanced_desc:"All levels · Upload online courses · Large class rights",
     pt_shortage_title:"✅ Don't worry about low points",
     pt_shortage_desc:"Basic features like posting, browsing, and commenting are always available regardless of point balance.\nPoints are used for unlocking perks, priority support, and rank privileges — not daily interaction.",
+    ad_label:"AD · Sponsored",
+    ad_home_title:"Welcome to the Bassist's World",ad_home_sub:"Japanese vintage bass · Rare gear · BASS SHOW picks",
+    ad_rank_title:"Become a Bass Master",ad_rank_sub:"Pro rank certification · National bassist ranking",
+    ad_mypage_title:"Become a Bass Master",ad_mypage_sub:"Complete your profile and show your skills",
+    ad_tap_toast:"Ad noted — thanks for your support!",
+    privacy_section:"Privacy Settings",privacy_desc:"Choose which info is visible to other members (green = public)",
+    privacy_rank:"Rank visible",privacy_bass_history:"Bass history visible",
+    privacy_region:"Region visible",privacy_instrument:"Instruments visible",privacy_equipment:"Equipment visible",
+    privacy_on:"Public",privacy_off:"Private",
   },
   ja: {
     login_sub:"ベーシスト専用コミュニティ",
@@ -2043,6 +2139,15 @@ const DICT = {
     teacher_advanced:"🎓🎓🎓 上級教師",teacher_advanced_desc:"全レベル指導 · 動画授業アップロード権 · 大人数クラス担当",
     pt_shortage_title:"✅ 積分不足でも大丈夫",
     pt_shortage_desc:"積分が少なくても、コミュニティへの投稿・閲覧・コメントなどの基本機能はいつでも使えます。\n積分は特典コンテンツ・優先サポート・段位特権のために使うもので、日常の交流には影響しません。",
+    ad_label:"AD · スポンサー",
+    ad_home_title:"ベーシストの世界へようこそ",ad_home_sub:"日本中古ベース · 希少機材 · BASS SHOWセレクト",
+    ad_rank_title:"ベースの達人を目指せ",ad_rank_sub:"プロ段位認定 · 全国ベーシストランキング",
+    ad_mypage_title:"ベースの達人を目指せ",ad_mypage_sub:"プロフィールを完成させて実力をアピール",
+    ad_tap_toast:"広告を記録しました。ご支援ありがとうございます！",
+    privacy_section:"プライバシー・公開設定",privacy_desc:"他の会員に表示する情報を選択（緑=公開）",
+    privacy_rank:"段位を公開",privacy_bass_history:"ベース歴を公開",
+    privacy_region:"地域を公開",privacy_instrument:"保有楽器を公開",privacy_equipment:"機材を公開",
+    privacy_on:"公開",privacy_off:"非公開",
   }
 };
 
@@ -2622,6 +2727,20 @@ function removeScoreFile() {
   document.getElementById('score-file-placeholder').style.display = 'block';
   document.getElementById('score-file-info').style.display = 'none';
   document.getElementById('score-img-preview').style.display = 'none';
+}
+
+// ══ PRIVACY TOGGLES ══
+const privacyState = { rank:true, bass_history:true, region:true, instrument:true, equipment:false };
+
+function togglePrivacy(el, key) {
+  privacyState[key] = !privacyState[key];
+  const track = el.querySelector('.toggle-track');
+  if (privacyState[key]) {
+    track.classList.add('on');
+  } else {
+    track.classList.remove('on');
+  }
+  showToast(T('privacy_' + key) + '：' + (privacyState[key] ? T('privacy_on') : T('privacy_off')));
 }
 
 // ══ THEME TOGGLE ══
