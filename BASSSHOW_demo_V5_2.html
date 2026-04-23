@@ -171,6 +171,11 @@ body{background:#0a0a0a;display:flex;align-items:center;justify-content:center;m
 .lang-name{font-size:14px;font-weight:700;flex:1}
 .lang-native{font-size:11px;color:var(--text-secondary)}
 .lang-check{font-size:16px;color:var(--green)}
+
+/* QR CODE */
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;background:white;border-radius:12px;margin:0 auto;}
+.qr-canvas{width:160px;height:160px;border-radius:6px;}
+.qr-label{font-size:11px;color:#888;text-align:center;margin-top:4px;}
 /* TOAST */
 .toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,30,30,.95);border:1px solid rgba(255,255,255,.1);color:var(--text-primary);font-size:13px;padding:10px 20px;border-radius:24px;opacity:0;pointer-events:none;transition:all .25s;white-space:nowrap;z-index:100}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -407,6 +412,7 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
 .rank-summary-bar{display:flex;align-items:center;gap:12px;padding:0 12px 10px}
 .rank-summary-card{flex:1;background:var(--gray-dark);border-radius:12px;padding:10px 12px;cursor:pointer}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <div class="device-frame">
@@ -426,7 +432,19 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
       <div class="login-perm-item"><span class="perm-icon">✓</span> <span data-i18n="perm3"></span></div>
       <div class="login-perm-item"><span class="perm-icon">✓</span> <span data-i18n="perm4"></span></div>
     </div>
-    <button class="wechat-btn" onclick="goScreen('s-home',false)">
+    <!-- 招待コード入力欄 -->
+    <div id="invite-code-section" style="width:100%;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--text-secondary);margin-bottom:6px;" data-i18n="invite_code_input_label"></div>
+      <div style="display:flex;gap:8px;">
+        <input id="invite-code-input" type="text" maxlength="10" oninput="triggerInviteVerify()"
+          style="flex:1;background:var(--gray-dark);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;font-family:'Space Mono',monospace;font-size:14px;font-weight:700;letter-spacing:3px;color:var(--text-primary);outline:none;text-transform:uppercase;"
+          data-i18n-placeholder="invite_code_placeholder" placeholder="XXXXXX">
+        <button onclick="clearInviteCode()" id="invite-code-clear"
+          style="display:none;background:var(--gray-light);color:var(--text-secondary);border:none;border-radius:10px;padding:10px 12px;font-size:12px;cursor:pointer;">✕</button>
+      </div>
+      <div id="invite-code-verified" style="display:none;margin-top:6px;font-size:11px;color:var(--green);" data-i18n="invite_code_verified"></div>
+    </div>
+    <button class="wechat-btn" onclick="doLogin()">
       <span>💬</span> <span data-i18n="wechat_login"></span>
     </button>
     <div class="login-terms">
@@ -2420,82 +2438,69 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
   <div class="screen" id="s-invite">
     <div class="top-bar"><span class="tb-back" onclick="goBack()">‹</span><span class="tb-title" data-i18n="invite_title"></span></div>
     <div style="overflow-y:auto;flex:1;">
-      <!-- ヒーローバナー -->
-      <div style="background:linear-gradient(160deg,#1a0005,#080808);padding:22px 16px 18px;text-align:center;border-bottom:1px solid rgba(232,0,29,.15);">
-        <div style="font-size:40px;margin-bottom:10px;">🎸</div>
-        <div style="font-family:'Bebas Neue',cursive;font-size:22px;color:var(--red);letter-spacing:3px;margin-bottom:6px;" data-i18n="invite_hero_title"></div>
-        <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;" data-i18n="invite_hero_sub"></div>
+      <!-- シンプルヘッダー -->
+      <div style="padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.06);">
+        <div style="font-size:13px;font-weight:700;" data-i18n="invite_hero_title"></div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;" data-i18n="invite_hero_sub"></div>
       </div>
-      <!-- 報酬カード -->
+      <!-- 報酬テーブル（シンプル版） -->
       <div style="margin:14px 12px 6px;">
         <div style="font-size:11px;font-weight:700;color:var(--text-secondary);letter-spacing:1px;margin-bottom:10px;" data-i18n="invite_reward_title"></div>
-        <!-- 無料登録 -->
-        <div style="background:var(--gray-dark);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid rgba(255,255,255,.08);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <div style="font-size:13px;font-weight:700;" data-i18n="invite_free_label"></div>
-            <div style="font-size:10px;background:rgba(255,255,255,.08);border-radius:12px;padding:3px 10px;color:var(--text-secondary);" data-i18n="invite_free_tag"></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="flex:1;background:rgba(125,249,255,.06);border:1px solid rgba(125,249,255,.15);border-radius:8px;padding:8px;text-align:center;">
-              <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--diamond);">+50</div>
-              <div style="font-size:9px;color:var(--diamond);margin-top:2px;">EXP</div>
+        <div style="background:var(--gray-dark);border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.07);">
+          <!-- 行1: 友達が無料登録 -->
+          <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06);">
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:700;" data-i18n="invite_free_label"></div>
+              <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;" data-i18n="invite_free_tag"></div>
             </div>
-            <div style="font-size:16px;color:var(--text-secondary);">+</div>
-            <div style="flex:1;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.15);border-radius:8px;padding:8px;text-align:center;">
-              <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--gold);">+50</div>
-              <div style="font-size:9px;color:var(--gold);margin-top:2px;">BSC</div>
+            <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;text-align:right;">
+              <span style="color:var(--diamond);">+50 EXP</span><br>
+              <span style="color:var(--gold);">+50 BSC</span>
+            </div>
+          </div>
+          <!-- 行2: 友達が1週間以内に有料転換 -->
+          <div style="display:flex;align-items:center;padding:12px 14px;background:rgba(255,184,0,.04);">
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:700;color:var(--gold);">友达升级付费会员</div>
+              <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">有料制度开始后7天内升级·邀请者&amp;新会员各+200</div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;text-align:right;">
+              <span style="color:var(--diamond);">+200 EXP</span><br>
+              <span style="color:var(--gold);">+200 BSC</span>
             </div>
           </div>
         </div>
-        <!-- 有料登録（×1.3） -->
-        <div style="background:rgba(232,0,29,.06);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid rgba(232,0,29,.25);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <div style="font-size:13px;font-weight:700;" data-i18n="invite_paid_label"></div>
-            <div style="font-size:10px;background:rgba(232,0,29,.15);border-radius:12px;padding:3px 10px;color:var(--red);">×1.3</div>
+        <!-- 合計イメージ -->
+        <div style="margin-top:8px;padding:10px 14px;background:rgba(125,249,255,.04);border:1px solid rgba(125,249,255,.12);border-radius:10px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:11px;color:var(--text-secondary);">最多可获得（付费转化时）</div>
+          <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;">
+            <span style="color:var(--diamond);">+250 EXP</span> <span style="color:rgba(255,255,255,.25);">|</span> <span style="color:var(--gold);">+250 BSC</span>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="flex:1;background:rgba(125,249,255,.06);border:1px solid rgba(125,249,255,.15);border-radius:8px;padding:8px;text-align:center;">
-              <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--diamond);">+65</div>
-              <div style="font-size:9px;color:var(--diamond);margin-top:2px;">EXP</div>
-            </div>
-            <div style="font-size:16px;color:var(--text-secondary);">+</div>
-            <div style="flex:1;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.15);border-radius:8px;padding:8px;text-align:center;">
-              <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--gold);">+65</div>
-              <div style="font-size:9px;color:var(--gold);margin-top:2px;">BSC</div>
-            </div>
-          </div>
-          <div style="font-size:10px;color:var(--text-secondary);margin-top:8px;" data-i18n="invite_paid_note"></div>
-        </div>
-        <!-- 高級登録（×1.5） -->
-        <div style="background:rgba(255,184,0,.06);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid rgba(255,184,0,.3);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <div style="font-size:13px;font-weight:700;" data-i18n="invite_premium_label"></div>
-            <div style="font-size:10px;background:rgba(255,184,0,.2);border-radius:12px;padding:3px 10px;color:var(--gold);">×1.5</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="flex:1;background:rgba(125,249,255,.06);border:1px solid rgba(125,249,255,.15);border-radius:8px;padding:8px;text-align:center;">
-              <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--diamond);">+75</div>
-              <div style="font-size:9px;color:var(--diamond);margin-top:2px;">EXP</div>
-            </div>
-            <div style="font-size:16px;color:var(--text-secondary);">+</div>
-            <div style="flex:1;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.15);border-radius:8px;padding:8px;text-align:center;">
-              <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--gold);">+75</div>
-              <div style="font-size:9px;color:var(--gold);margin-top:2px;">BSC</div>
-            </div>
-          </div>
-          <div style="font-size:10px;color:var(--text-secondary);margin-top:8px;" data-i18n="invite_premium_note"></div>
         </div>
       </div>
       <!-- 上限なし注記 -->
-      <div style="margin:0 12px 14px;padding:10px 14px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;font-size:11px;color:var(--text-secondary);line-height:1.7;">
+      <div style="margin:8px 12px 14px;padding:10px 14px;background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;font-size:11px;color:var(--text-secondary);line-height:1.7;">
         ✅ <span data-i18n="invite_no_cap_note"></span>
       </div>
-      <!-- 招待コード -->
+      <!-- 招待コード + QR -->
       <div style="margin:0 12px 14px;background:var(--gray-dark);border-radius:12px;padding:14px;">
         <div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;" data-i18n="invite_code_label"></div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
           <div style="flex:1;background:var(--gray-mid);border-radius:8px;padding:10px 14px;font-family:'Space Mono',monospace;font-size:16px;font-weight:700;letter-spacing:4px;color:var(--text-primary);">MASATO88</div>
-          <button onclick="showToast(T('copied_toast'))" style="background:var(--red);color:white;border:none;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;" data-i18n="copy_btn"></button>
+          <button onclick="copyInviteCode()" style="background:var(--red);color:white;border:none;border-radius:8px;padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;" data-i18n="copy_btn"></button>
+        </div>
+        <!-- QRコード切替 -->
+        <div style="border-top:1px solid rgba(255,255,255,.06);padding-top:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--text-secondary);" data-i18n="qr_code_label"></div>
+            <button onclick="toggleQR()" id="qr-toggle-btn" style="font-size:11px;color:var(--red);background:none;border:1px solid rgba(232,0,29,.3);border-radius:6px;padding:4px 10px;cursor:pointer;" data-i18n="qr_show_btn"></button>
+          </div>
+          <div id="qr-area" style="display:none;text-align:center;padding:4px 0 8px;">
+            <div style="background:white;border-radius:10px;padding:12px;display:inline-block;">
+              <canvas id="qr-canvas" width="160" height="160"></canvas>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:8px;" data-i18n="qr_scan_hint"></div>
+          </div>
         </div>
       </div>
       <!-- シェアボタン -->
@@ -2510,12 +2515,12 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
           <div style="display:flex;align-items:center;padding:12px;border-bottom:1px solid rgba(255,255,255,.06);">
             <div class="avatar" style="width:36px;height:36px;font-size:14px;background:linear-gradient(135deg,#1a4a1a,#2e7d32);flex-shrink:0;">王</div>
             <div style="flex:1;margin-left:10px;"><div style="font-size:12px;font-weight:700;">老王</div><div style="font-size:10px;color:var(--text-secondary);margin-top:1px;" data-i18n="invite_free_tag"></div></div>
-            <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--gold);">+50 EXP+BSC</div>
+            <div style="font-family:'Space Mono',monospace;font-size:12px;"><div style="color:var(--diamond);">+50 EXP</div><div style="color:var(--gold);">+50 BSC</div></div>
           </div>
           <div style="display:flex;align-items:center;padding:12px;">
             <div class="avatar" style="width:36px;height:36px;font-size:14px;background:#5555aa;flex-shrink:0;">田</div>
-            <div style="flex:1;margin-left:10px;"><div style="font-size:12px;font-weight:700;">田中</div><div style="font-size:10px;color:var(--red);margin-top:1px;" data-i18n="invite_paid_label"></div></div>
-            <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--gold);">+65 EXP+BSC</div>
+            <div style="flex:1;margin-left:10px;"><div style="font-size:12px;font-weight:700;">田中</div><div style="font-size:11px;color:var(--red);margin-top:1px;" data-i18n="invite_paid_label"></div></div>
+            <div style="font-family:'Space Mono',monospace;font-size:12px;"><div style="color:var(--diamond);">+250 EXP</div><div style="color:var(--gold);">+250 BSC</div></div>
           </div>
         </div>
       </div>
@@ -2739,11 +2744,13 @@ const DICT = {
     my_menu:"我的菜单",
     menu_missions:"EXP・BSC 任务",menu_rank_apply:"段位申请",menu_follow:"关注 / 粉丝",menu_pt_history:"EXP・BSC 记录",menu_invite:"邀请好友",per_person:"人",
     menu_bsc_use:"贝币使用",
-    invite_title:"邀请好友",invite_hero_title:"一起玩贝斯！",invite_hero_sub:"邀请朋友加入 BASS SHOW!\n双方都能获得 EXP 和贝币奖励",
+    invite_title:"邀请好友",
+    qr_code_label:"二维码邀请",qr_show_btn:"显示二维码",qr_hide_btn:"隐藏二维码",qr_scan_hint:"扫描二维码直接加入 BASS SHOW!（招待码自动填入）",invite_hero_title:"一起玩贝斯！",invite_hero_sub:"邀请朋友加入 BASS SHOW!\n双方都能获得 EXP 和贝币奖励",
     invite_reward_title:"📦 奖励说明",invite_free_label:"🆓 免费注册",invite_free_tag:"免费会员",
     invite_paid_label:"💳 付费注册（99〜299元/年）",invite_paid_note:"受邀者升级为付费会员时追加奖励（×1.3倍）",
     invite_premium_label:"⭐ 高级注册（699元/年）",invite_premium_note:"受邀者升级为高级会员时追加奖励（×1.5倍）",
     invite_no_cap_note:"邀请人数无上限，持续累积 EXP 和贝币！",
+    invite_code_input_label:"邀请码（选填）",invite_code_placeholder:"输入邀请码",invite_code_verified:"✓ 邀请码有效！注册后双方各获得 +50 EXP & BSC",
     invite_code_label:"你的专属邀请码",copy_btn:"复制",copy_link_btn:"复制链接",
     share_wechat_toast:"已复制邀请链接，请粘贴到微信分享！",share_link_toast:"邀请链接已复制！",copied_toast:"已复制！",
     invite_history_title:"邀请记录",
@@ -2998,11 +3005,13 @@ const DICT = {
     my_menu:"My Menu",
     menu_missions:"Point Missions",menu_rank_apply:"Rank Application",menu_follow:"Following / Followers",menu_pt_history:"Point History",menu_invite:"Invite Friends",per_person:"person",
     menu_bsc_use:"Use BSC",
-    invite_title:"Invite Friends",invite_hero_title:"Play Bass Together!",invite_hero_sub:"Invite friends to join BASS SHOW!\nBoth of you earn EXP and BSC rewards",
+    invite_title:"Invite Friends",
+    qr_code_label:"QR Code Invite",qr_show_btn:"Show QR",qr_hide_btn:"Hide QR",qr_scan_hint:"Scan to join BASS SHOW! (invite code auto-filled)",invite_hero_title:"Play Bass Together!",invite_hero_sub:"Invite friends to join BASS SHOW!\nBoth of you earn EXP and BSC rewards",
     invite_reward_title:"📦 Reward Details",invite_free_label:"🆓 Free Registration",invite_free_tag:"Free Member",
-    invite_paid_label:"💳 Paid Registration (99〜299¥/yr)",invite_paid_note:"Bonus when invitee upgrades to paid (×1.3)",
+    invite_paid_label:"💳 Paid Registration (99〜299¥/yr)",invite_paid_note:"Both get +200 if invitee upgrades within 7 days of paid plan launch",
     invite_premium_label:"⭐ Premium Registration (699¥/yr)",invite_premium_note:"Bonus when invitee upgrades to premium (×1.5)",
     invite_no_cap_note:"No limit on invites — keep earning EXP and BSC!",
+    invite_code_input_label:"Invite Code (optional)",invite_code_placeholder:"Enter code",invite_code_verified:"✓ Valid code! Both you and your referrer get +50 EXP & BSC",
     invite_code_label:"Your Invite Code",copy_btn:"Copy",copy_link_btn:"Copy Link",
     share_wechat_toast:"Link copied! Paste to WeChat.",share_link_toast:"Invite link copied!",copied_toast:"Copied!",
     invite_history_title:"Invite History",
@@ -3246,11 +3255,13 @@ const DICT = {
     my_menu:"マイメニュー",
     menu_missions:"積分ミッション",menu_rank_apply:"段位申請",menu_follow:"フォロー / フォロワー",menu_pt_history:"積分履歴",menu_invite:"友達を招待",per_person:"人",
     menu_bsc_use:"BSC利用",
-    invite_title:"友達を招待",invite_hero_title:"一緒にベースを弾こう！",invite_hero_sub:"友達をBASS SHOW!に招待しよう\nふたりでEXPとBSCがもらえる",
+    invite_title:"友達を招待",
+    qr_code_label:"QRコードで招待",qr_show_btn:"QRを表示",qr_hide_btn:"QRを隠す",qr_scan_hint:"QRをスキャンするとBASS SHOW!に直接参加（招待コード自動入力）",invite_hero_title:"一緒にベースを弾こう！",invite_hero_sub:"友達をBASS SHOW!に招待しよう\nふたりでEXPとBSCがもらえる",
     invite_reward_title:"📦 報酬の内訳",invite_free_label:"🆓 無料登録",invite_free_tag:"無料会員",
-    invite_paid_label:"💳 有料登録（99〜299元/年）",invite_paid_note:"招待した方が有料会員になったときに追加報酬（×1.3倍）",
+    invite_paid_label:"💳 有料登録（99〜299元/年）",invite_paid_note:"有料制度開始から7日以内に有料化で招待者・新会員ともに+200",
     invite_premium_label:"⭐ 高級登録（699元/年）",invite_premium_note:"招待した方が高級会員になったときに追加報酬（×1.5倍）",
     invite_no_cap_note:"招待人数の上限なし！招待するたびにEXPとBSCが貯まる",
+    invite_code_input_label:"招待コード（任意）",invite_code_placeholder:"コードを入力",invite_code_verified:"✓ 有効な招待コードです！登録後に双方へ +50 EXP & BSC",
     invite_code_label:"あなたの招待コード",copy_btn:"コピー",copy_link_btn:"リンクをコピー",
     share_wechat_toast:"リンクをコピーしました。WeChatで共有してください！",share_link_toast:"招待リンクをコピーしました！",copied_toast:"コピーしました！",
     invite_history_title:"招待履歴",
@@ -4364,6 +4375,121 @@ initAdCarousel();
 setTimeout(() => {
   if(currentScreen === 's-home') resetCarouselTimer();
 }, 100);
+
+// ===== 招待コード & QR =====
+const MY_INVITE_CODE = 'MASATO88';
+const INVITE_BASE_URL = 'https://masatopapapa.github.io/bassshow-demo/BASSSHOW_demo_V5_2.html';
+
+// URLパラメータから招待コードを自動入力
+(function(){
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('ref') || params.get('invite');
+    if(code){
+      const inp = document.getElementById('invite-code-input');
+      if(inp){ inp.value = code.toUpperCase(); triggerInviteVerify(); }
+    }
+  } catch(e){}
+})();
+
+function triggerInviteVerify(){
+  const inp = document.getElementById('invite-code-input');
+  const clearBtn = document.getElementById('invite-code-clear');
+  const verified = document.getElementById('invite-code-verified');
+  if(!inp) return;
+  const val = inp.value.trim().toUpperCase();
+  inp.value = val;
+  if(clearBtn) clearBtn.style.display = val ? 'block' : 'none';
+  if(verified){
+    // デモ: MASATO88またはTEST01など6文字以上で有効扱い
+    const valid = val.length >= 6;
+    verified.style.display = valid ? 'block' : 'none';
+  }
+}
+
+function clearInviteCode(){
+  const inp = document.getElementById('invite-code-input');
+  const clearBtn = document.getElementById('invite-code-clear');
+  const verified = document.getElementById('invite-code-verified');
+  if(inp) inp.value = '';
+  if(clearBtn) clearBtn.style.display = 'none';
+  if(verified) verified.style.display = 'none';
+}
+
+function doLogin(){
+  const inp = document.getElementById('invite-code-input');
+  const code = inp ? inp.value.trim() : '';
+  if(code) showToast(T('invite_code_verified').replace('✓ ','').split('！')[0] + '！');
+  goScreen('s-home', false);
+}
+
+function copyInviteCode(){
+  try{
+    navigator.clipboard.writeText(MY_INVITE_CODE);
+  } catch(e){}
+  showToast(T('copied_toast'));
+}
+
+// QRコード表示トグル
+let qrGenerated = false;
+function toggleQR(){
+  const area = document.getElementById('qr-area');
+  const btn = document.getElementById('qr-toggle-btn');
+  if(!area) return;
+  const isHidden = area.style.display === 'none';
+  area.style.display = isHidden ? 'block' : 'none';
+  if(btn) btn.textContent = isHidden ? T('qr_hide_btn') : T('qr_show_btn');
+  if(isHidden && !qrGenerated){
+    generateQR();
+    qrGenerated = true;
+  }
+}
+
+function generateQR(){
+  const canvas = document.getElementById('qr-canvas');
+  if(!canvas) return;
+  const url = INVITE_BASE_URL + '?ref=' + MY_INVITE_CODE;
+  // QRCodeライブラリ使用
+  try {
+    new QRCode(canvas.parentElement, {
+      text: url,
+      width: 160,
+      height: 160,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    canvas.remove(); // ライブラリが自前でcanvas/imgを生成
+  } catch(e){
+    // フォールバック: canvas手描きQR風（ライブラリ読込失敗時）
+    drawFallbackQR(canvas, url);
+  }
+}
+
+function drawFallbackQR(canvas, text){
+  const ctx = canvas.getContext('2d');
+  const size = 160;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0,0,size,size);
+  ctx.fillStyle = '#000000';
+  // ファインダーパターン（左上）
+  [[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[1,0],[1,6],[2,0],[2,2],[2,3],[2,4],[2,6],[3,0],[3,2],[3,3],[3,4],[3,6],[4,0],[4,2],[4,3],[4,4],[4,6],[5,0],[5,6],[6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[6,6]].forEach(([r,c])=>{
+    ctx.fillRect(c*20+8,r*20+8,18,18);
+  });
+  // ファインダーパターン（右上）
+  [[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[1,0],[1,6],[2,0],[2,6],[3,0],[3,6],[4,0],[4,6],[5,0],[5,6],[6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[6,6]].forEach(([r,c])=>{
+    ctx.fillRect((c+10)*14+4,r*14+4,12,12);
+  });
+  // ランダムデータビット風
+  const seed = text.length;
+  for(let r=8;r<12;r++){for(let c=2;c<10;c++){
+    if((r*c+seed)%3===0) ctx.fillRect(c*14+4,r*14+4,12,12);
+  }}
+  // URL テキスト（小さく）
+  ctx.fillStyle='#555'; ctx.font='8px monospace';
+  ctx.fillText('BASS SHOW',12,154);
+}
+
 </script>
 </body>
 </html>
