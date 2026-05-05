@@ -615,6 +615,7 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
   </div>
   <div class="screen" id="s-community">
     <div class="top-bar">
+      <span style="width:28px;flex-shrink:0;"></span>
       <span class="tb-title" data-i18n="community_title"></span>
       <span class="tb-icon" onclick="goScreen('s-post-create')">✏️</span>
     </div>
@@ -1050,6 +1051,10 @@ body.light .theme-fab{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.1
   <!-- ══ S-06 MY PAGE ══ -->
   <div class="screen" id="s-mypage">
     <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:16px;visibility:hidden;">
+        <span style="font-size:18px;">📬</span>
+        <span style="font-size:12px;">設定</span>
+      </div>
       <span class="tb-title" data-i18n="mypage_title"></span>
       <div style="display:flex;align-items:center;gap:16px;">
         <span class="tb-icon" onclick="goScreen('s-mailbox')" style="font-size:18px;">📬</span>
