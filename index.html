@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BASS SHOW!! — 贝斯手专属平台</title>
+
+<!-- =====================================================
+     BASS SHOW GitHub Pages — 自動最新版リダイレクト
+     
+     新バージョンをアップしたら、下の LATEST_VERSION の
+     ファイル名だけ変更すればOK。
+     例: "BASSSHOW_demo_V5_3.html" → "BASSSHOW_demo_V6.html"
+     ===================================================== -->
+
+<script>
+  // ★ 新バージョンをアップしたらここだけ変更する ★
+  var LATEST_VERSION = "BASSSHOW_demo_V5_3.html";
+  
+  // 自動リダイレクト（0秒）
+  window.location.replace(LATEST_VERSION);
+</script>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Sans SC", "PingFang SC", sans-serif;
+    background: #0A0A0F;
+    color: #F0EFF8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+  }
+  .wrap { padding: 40px 20px; }
+  .logo {
+    font-family: "Space Grotesk", monospace;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+  }
+  .sub {
+    font-size: 12px;
+    color: #5A5870;
+    letter-spacing: 6px;
+    margin-bottom: 32px;
+  }
+  .msg { font-size: 14px; color: #9896B0; margin-bottom: 20px; }
+  a {
+    color: #1D9E75;
+    font-size: 13px;
+    text-decoration: none;
+  }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">BASS SHOW!!</div>
+  <div class="sub">贝斯手专属平台</div>
+  <div class="msg">正在跳转到最新版本…</div>
+  <a id="link" href="BASSSHOW_demo_V5_3.html">点击这里手动跳转</a>
+</div>
+
+<script>
+  // noscript対応: リンクも最新版に
+  document.getElementById('link').href = LATEST_VERSION;
+</script>
+</body>
+</html>
