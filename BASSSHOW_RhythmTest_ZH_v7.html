@@ -404,13 +404,20 @@ function handleTap() {
   if (beatTimes.length === 0) return;
   var now = performance.now();
   playBeep(200, 0.06, 0.15);
+
+  // 未使用のbeatTimeのみ対象にする（使用済みはnullにしてある）
   var minDiff = Infinity, minIdx = -1;
   beatTimes.forEach(function(t, i) {
+    if (t === null) return; // 使用済みはスキップ
     var d = Math.abs(now - t);
     if (d < minDiff) { minDiff = d; minIdx = i; }
   });
-  if (minDiff > MAX_D) return;
+  if (minIdx === -1 || minDiff > MAX_D) return;
+
+  // signed: 負=早い、正=遅い（正確に判定）
   var signed = now - beatTimes[minIdx];
+  beatTimes[minIdx] = null; // 使用済みにする
+
   taps.push({diff: minDiff, signed: signed});
   if (minDiff < bestMs) bestMs = minDiff;
   var total = taps.reduce(function(s, t) { return s + t.diff; }, 0);
@@ -422,11 +429,22 @@ function handleTap() {
 function updateFeedback(signed, abs) {
   var el = document.getElementById('fb-text');
   var txt, cls;
-  if (abs <= 20) { txt='完美！'; cls='perfect'; }
-  else if (abs <= 50) { txt='很棒！'; cls='great'; }
-  else if (abs <= 100) { txt='不错！'; cls='good'; }
-  else { txt='偏了一点…'; cls='off'; }
+  // 精度判定
+  if (abs <= 20) {
+    txt = '完美！'; cls = 'perfect';
+  } else if (abs <= 50) {
+    // 早い/遅いを区別
+    txt = signed < 0 ? '很棒！（早了一点）' : '很棒！（晚了一点）';
+    cls = 'great';
+  } else if (abs <= 100) {
+    txt = signed < 0 ? '不错！（偏早）' : '不错！（偏晚）';
+    cls = 'good';
+  } else {
+    txt = signed < 0 ? '太早了！' : '太晚了！';
+    cls = 'off';
+  }
   el.textContent = txt; el.className = 'fb-text ' + cls;
+  // 針の位置：signed 負=左（早）、正=右（遅）
   var pct = Math.max(0, Math.min(1, (signed + MAX_D) / (MAX_D * 2)));
   document.getElementById('deviation-needle').style.left = (pct * 100) + '%';
   document.getElementById('avg-ms').textContent = avgMs + ' ms';
@@ -442,7 +460,14 @@ function finishGame() {
   clearInterval(beatTimer);
   document.getElementById('tap-btn').disabled = true;
   if (taps.length === 0) { showScreen('start'); return; }
-  var fAvg = Math.round(taps.reduce(function(s,t){return s+t.diff;},0)/taps.length);
+
+  // タップ数ペナルティ：16回に満たない分は MAX_D(450ms) として算入
+  var REQUIRED = MEAS; // 16
+  var totalDiff = taps.reduce(function(s, t) { return s + t.diff; }, 0);
+  var missCount = Math.max(0, REQUIRED - taps.length);
+  totalDiff += missCount * MAX_D; // 未タップ分をペナルティ加算
+  var fAvg = Math.round(totalDiff / REQUIRED); // 常に16で割る
+
   var fBest = Math.round(bestMs);
   var rank = getRank(fAvg);
   gameResult = {rank:rank, finalAvg:fAvg, finalBest:fBest, tapCount:taps.length};
