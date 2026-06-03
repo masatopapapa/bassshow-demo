@@ -446,8 +446,8 @@ function handleTap() {
   // 最も近い整数拍にスナップ（早くても遅くても確実に最近傍が見つかる）
   var nearestBeat = Math.round(beatPosition);
 
-  // 負の拍は0拍目に丸める
-  if (nearestBeat < 0) nearestBeat = 0;
+  // 半拍以上前（nearestBeat < 0）のタップは無視
+  if (nearestBeat < 0) return;
 
   // その拍の理論時刻
   var beatTime = measureStartTime + nearestBeat * beatInterval;
@@ -455,10 +455,11 @@ function handleTap() {
   var signed = now - beatTime;
   var absDiff = Math.abs(signed);
 
-  var prevIdx = tappedBeats[nearestBeat]; // 登録済みなら taps のインデックス(0以上)、未登録なら undefined
+  var prevIdx = tappedBeats[nearestBeat];
   if (prevIdx !== undefined) {
-    // 同拍への2回目タップ：より精度が高ければ上書き、そうでなければ無視
-    if (absDiff < taps[prevIdx].diff) {
+    if (nearestBeat === 0 || absDiff < taps[prevIdx].diff) {
+      // 0拍目は常に上書き（早タップ仮登録を正タップで必ず更新できるようにする）
+      // それ以外の拍は精度が高い場合のみ上書き
       taps[prevIdx] = {diff: absDiff, signed: signed};
     } else {
       var fbEl = document.getElementById('fb-text');
@@ -467,7 +468,7 @@ function handleTap() {
       return;
     }
   } else {
-    tappedBeats[nearestBeat] = taps.length; // tapsの次のインデックスを保存
+    tappedBeats[nearestBeat] = taps.length;
     taps.push({diff: absDiff, signed: signed});
   }
 
