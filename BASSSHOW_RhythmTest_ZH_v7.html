@@ -389,6 +389,12 @@ function beatLoop() {
       document.getElementById('phase-label').className = 'phase-label phase-prep';
       document.getElementById('countdown-num').textContent = PREP - beatIdx;
       playBeep(isAccent ? 660 : 440, 0.07, isAccent ? 0.35 : 0.2);
+      // 準備最後のビートでボタンを有効化（1拍早める）
+      if (beatIdx === PREP - 1) {
+        var btn = document.getElementById('tap-btn');
+        btn.disabled = false;
+        btn.classList.add('enabled');
+      }
     } else {
       // 音が実際に耳に届く時刻（出力レイテンシ加算）
       var audibleTime = now + getAudioLatency();
@@ -401,9 +407,6 @@ function beatLoop() {
         document.getElementById('phase-label').textContent = '测量中！';
         document.getElementById('phase-label').className = 'phase-label phase-meas';
         document.getElementById('countdown-num').textContent = '';
-        var btn = document.getElementById('tap-btn');
-        btn.disabled = false;
-        btn.classList.add('enabled');
       }
       document.getElementById('tap-count-label').textContent = Math.min(taps.length, 16) + ' / 16 拍';
       playBeep(isAccent ? 880 : 550, 0.07, isAccent ? 0.4 : 0.25);
@@ -446,8 +449,8 @@ function handleTap() {
   // 最も近い整数拍にスナップ（早くても遅くても確実に最近傍が見つかる）
   var nearestBeat = Math.round(beatPosition);
 
-  // 半拍以上前（nearestBeat < 0）のタップは無視
-  if (nearestBeat < 0) return;
+  // 半拍以上前（nearestBeat < 0）は0拍目に丸める
+  if (nearestBeat < 0) nearestBeat = 0;
 
   // その拍の理論時刻
   var beatTime = measureStartTime + nearestBeat * beatInterval;
