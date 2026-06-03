@@ -446,27 +446,34 @@ function handleTap() {
   // 最も近い整数拍にスナップ（早くても遅くても確実に最近傍が見つかる）
   var nearestBeat = Math.round(beatPosition);
 
-  // 負の拍（基準点より前=早すぎ）は0拍目に丸める
+  // 負の拍は0拍目に丸める
   if (nearestBeat < 0) nearestBeat = 0;
 
   // その拍の理論時刻
   var beatTime = measureStartTime + nearestBeat * beatInterval;
   // signed: 負=早い、正=遅い
   var signed = now - beatTime;
-
-  // 同じ拍に二重タップした場合：1拍1回ルールなので無視するが、
-  // ユーザーに分かるよう軽くフィードバックを出す（取りこぼしと誤認させない）
-  if (tappedBeats[nearestBeat]) {
-    var fbEl = document.getElementById('fb-text');
-    fbEl.textContent = '一拍一次哦！';
-    fbEl.className = 'fb-text';
-    return;
-  }
-  tappedBeats[nearestBeat] = true;
-
   var absDiff = Math.abs(signed);
 
-  taps.push({diff: absDiff, signed: signed});
+  if (tappedBeats[nearestBeat]) {
+    // 同拍への2回目タップ：
+    // 前回が「早タップ仮登録（provisional）」なら、より正確な今回のタップで上書き
+    var prevIdx = taps.findIndex(function(t) { return t.beat === nearestBeat; });
+    if (prevIdx !== -1 && taps[prevIdx].provisional) {
+      taps[prevIdx] = {beat: nearestBeat, diff: absDiff, signed: signed, provisional: false};
+      // → そのまま下のUIフィードバック処理へ進む
+    } else {
+      var fbEl = document.getElementById('fb-text');
+      fbEl.textContent = '一拍一次哦！';
+      fbEl.className = 'fb-text';
+      return;
+    }
+  } else {
+    tappedBeats[nearestBeat] = true;
+    // 基準点より前のタップは「仮登録」フラグを立てる（後から上書き可能）
+    var isProvisional = (signed < -beatInterval * 0.3);
+    taps.push({beat: nearestBeat, diff: absDiff, signed: signed, provisional: isProvisional});
+  }
 
   // ── リアルタイム系統誤差補正 ──
   var signedSum = taps.reduce(function(s, t) { return s + t.signed; }, 0);
