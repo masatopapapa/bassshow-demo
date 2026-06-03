@@ -455,13 +455,11 @@ function handleTap() {
   var signed = now - beatTime;
   var absDiff = Math.abs(signed);
 
-  if (tappedBeats[nearestBeat]) {
-    // 同拍への2回目タップ：
-    // 前回が「早タップ仮登録（provisional）」なら、より正確な今回のタップで上書き
-    var prevIdx = taps.findIndex(function(t) { return t.beat === nearestBeat; });
-    if (prevIdx !== -1 && taps[prevIdx].provisional) {
-      taps[prevIdx] = {beat: nearestBeat, diff: absDiff, signed: signed, provisional: false};
-      // → そのまま下のUIフィードバック処理へ進む
+  var prevIdx = tappedBeats[nearestBeat]; // 登録済みなら taps のインデックス(0以上)、未登録なら undefined
+  if (prevIdx !== undefined) {
+    // 同拍への2回目タップ：より精度が高ければ上書き、そうでなければ無視
+    if (absDiff < taps[prevIdx].diff) {
+      taps[prevIdx] = {diff: absDiff, signed: signed};
     } else {
       var fbEl = document.getElementById('fb-text');
       fbEl.textContent = '一拍一次哦！';
@@ -469,10 +467,8 @@ function handleTap() {
       return;
     }
   } else {
-    tappedBeats[nearestBeat] = true;
-    // 基準点より前のタップは「仮登録」フラグを立てる（後から上書き可能）
-    var isProvisional = (signed < -beatInterval * 0.3);
-    taps.push({beat: nearestBeat, diff: absDiff, signed: signed, provisional: isProvisional});
+    tappedBeats[nearestBeat] = taps.length; // tapsの次のインデックスを保存
+    taps.push({diff: absDiff, signed: signed});
   }
 
   // ── リアルタイム系統誤差補正 ──
