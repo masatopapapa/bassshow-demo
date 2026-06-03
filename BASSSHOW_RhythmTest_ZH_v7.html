@@ -278,7 +278,7 @@ var DIFF = {
 };
 var PREP = 8, MEAS = 16, TOTAL = 24, MAX_D = 450;
 var RANKS = [
-  {lv:10,max:15,  name:'节奏之神',   score:100,comment:'太厉害了！达到了顶级节拍手的水准！'},
+  {lv:10,max:10,  name:'节奏之神',   score:100,comment:'太厉害了！达到了顶级节拍手的水准！'},
   {lv:9, max:25,  name:'传奇贝斯手', score:95, comment:'令人惊叹的节奏感！专业演奏家级别！'},
   {lv:8, max:40,  name:'职业贝斯手', score:85, comment:'非常精准！你的节奏感可以上台演出了。'},
   {lv:7, max:60,  name:'高级律动',   score:75, comment:'很扎实！再磨练一下就能达到职业水准。'},
@@ -300,6 +300,9 @@ var audioCtx = null;
 var beatTimer = null;
 var beatIdx = 0, beatTimes = [], taps = [];
 var avgMs = 0, bestMs = 999, gameResult = null;
+var measureStartTime = 0;   // 測定フェーズ最初のビートが鳴った時刻（基準点）
+var beatInterval = 0;       // 1拍の長さ(ms)
+var tappedBeats = {};       // タップ済みの拍番号を記録（重複防止）
 
 // ══════════════════════════════════════════
 // 音声
@@ -354,6 +357,7 @@ document.getElementById('btn-start').addEventListener('click', startGame);
 function startGame() {
   beatIdx = 0; beatTimes = []; taps = [];
   avgMs = 0; bestMs = 999; gameResult = null;
+  measureStartTime = 0; beatInterval = 0; tappedBeats = {};
   showScreen('game');
   var badge = document.getElementById('bpm-badge');
   badge.textContent = DIFF[selectedDiff].bpm + ' BPM';
@@ -386,11 +390,14 @@ function beatLoop() {
       document.getElementById('countdown-num').textContent = PREP - beatIdx;
       playBeep(isAccent ? 660 : 440, 0.07, isAccent ? 0.35 : 0.2);
     } else {
-      // 音が実際に耳に届く時刻を記録（出力レイテンシを加算）
-      // これによりユーザーが聴いた瞬間とタップの比較が正確になる
-      beatTimes.push(now + getAudioLatency());
+      // 音が実際に耳に届く時刻（出力レイテンシ加算）
+      var audibleTime = now + getAudioLatency();
+      beatTimes.push(audibleTime);
       dotEl.className = isAccent ? 'beat-dot aa' : 'beat-dot am';
       if (beatIdx === PREP) {
+        // ★測定フェーズ基準点を確立★
+        measureStartTime = audibleTime; // 最初の測定ビートが鳴った時刻
+        beatInterval = interval;        // 1拍の長さ
         document.getElementById('phase-label').textContent = '测量中！';
         document.getElementById('phase-label').className = 'phase-label phase-meas';
         document.getElementById('countdown-num').textContent = '';
@@ -429,45 +436,45 @@ function handleTap() {
   var now = performance.now();
   playBeep(200, 0.06, 0.15);
 
-  // BPMから「次のビート理論時刻」を予測して候補に加える
-  var interval = 60000 / DIFF[selectedDiff].bpm;
-  // beatTimesの最後の時刻 + interval が「次のビート予測時刻」
-  var candidates = [];
-  beatTimes.forEach(function(t, i) {
-    if (t !== null) candidates.push({t: t, i: i});
-  });
-  // 最後の既記録ビートから次のビートを予測追加
-  if (candidates.length > 0) {
-    var lastT = candidates[candidates.length - 1].t;
-    candidates.push({t: lastT + interval, i: -1}); // -1 = 予測値（将来ビート）
-  }
+  // 基準点が未確立なら受け付けない（測定開始前）
+  if (measureStartTime === 0 || beatInterval === 0) return;
 
-  // 最も近い候補を探す（早い・遅いどちらも正確に）
-  var minDiff = Infinity, minIdx = -1, minT = 0;
-  candidates.forEach(function(c) {
-    if (c.i !== -1 && beatTimes[c.i] === null) return; // 使用済みスキップ
-    var d = Math.abs(now - c.t);
-    if (d < minDiff) { minDiff = d; minIdx = c.i; minT = c.t; }
-  });
+  // ★拍グリッド・スナップ方式★
+  // タップ時刻が基準点から何拍目に最も近いかを計算
+  // beatPosition = タップが基準点から何拍分離れているか（小数）
+  var beatPosition = (now - measureStartTime) / beatInterval;
+  // 最も近い整数拍にスナップ（早くても遅くても確実に最近傍が見つかる）
+  var nearestBeat = Math.round(beatPosition);
 
-  if (minDiff > MAX_D) return; // 有効範囲外
+  // 負の拍（基準点より前=早すぎ）は0拍目に丸める
+  if (nearestBeat < 0) nearestBeat = 0;
 
+  // その拍の理論時刻
+  var beatTime = measureStartTime + nearestBeat * beatInterval;
   // signed: 負=早い、正=遅い
-  var signed = now - minT;
-  if (minIdx >= 0) beatTimes[minIdx] = null; // 使用済みマーク
+  var signed = now - beatTime;
 
-  taps.push({diff: minDiff, signed: signed});
+  // 同じ拍に二重タップした場合：1拍1回ルールなので無視するが、
+  // ユーザーに分かるよう軽くフィードバックを出す（取りこぼしと誤認させない）
+  if (tappedBeats[nearestBeat]) {
+    var fbEl = document.getElementById('fb-text');
+    fbEl.textContent = '一拍一次哦！';
+    fbEl.className = 'fb-text';
+    return;
+  }
+  tappedBeats[nearestBeat] = true;
+
+  var absDiff = Math.abs(signed);
+
+  taps.push({diff: absDiff, signed: signed});
 
   // ── リアルタイム系統誤差補正 ──
-  // これまでのタップの平均オフセットを計算し、それを基準にズレを再評価
   var signedSum = taps.reduce(function(s, t) { return s + t.signed; }, 0);
   var offset = signedSum / taps.length;
-  // 補正後のズレ（リズムのばらつき）
   var correctedSigned = signed - offset;
   var correctedAbs = Math.abs(correctedSigned);
 
   if (correctedAbs < bestMs) bestMs = correctedAbs;
-  // 補正後の平均ズレを表示
   var totalCorrected = taps.reduce(function(s, t) {
     return s + Math.abs(t.signed - offset);
   }, 0);
