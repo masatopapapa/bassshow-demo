@@ -407,21 +407,26 @@ function beatLoop() {
       document.getElementById('phase-label').className = 'phase-label phase-prep';
       document.getElementById('countdown-num').textContent = PREP - beatIdx;
       playBeep(isAccent ? 660 : 440, 0.07, isAccent ? 0.35 : 0.2);
+      // 準備最後のビートでボタンを有効化し、測定基準点を予測値でセット
+      if (beatIdx === PREP - 1) {
+        beatInterval = interval;
+        measureStartTime = now + interval + getAudioLatency();
+        var btn = document.getElementById('tap-btn');
+        btn.disabled = false;
+        btn.classList.add('enabled');
+      }
     } else {
       // 音が実際に耳に届く時刻（出力レイテンシ加算）
       var audibleTime = now + getAudioLatency();
       beatTimes.push(audibleTime);
       dotEl.className = isAccent ? 'beat-dot aa' : 'beat-dot am';
       if (beatIdx === PREP) {
-        // ★測定フェーズ基準点を確立★
-        measureStartTime = audibleTime; // 最初の測定ビートが鳴った時刻
+        // ★測定フェーズ基準点を正確な値で上書き★
+        measureStartTime = audibleTime; // 最初の測定ビートが鳴った時刻（精確値）
         beatInterval = interval;        // 1拍の長さ
         document.getElementById('phase-label').textContent = '测量中！';
         document.getElementById('phase-label').className = 'phase-label phase-meas';
         document.getElementById('countdown-num').textContent = '';
-        var btn = document.getElementById('tap-btn');
-        btn.disabled = false;
-        btn.classList.add('enabled');
       }
       document.getElementById('tap-count-label').textContent = Math.min(taps.length, 16) + ' / 16 拍';
       playBeep(isAccent ? 880 : 550, 0.07, isAccent ? 0.4 : 0.25);
@@ -472,19 +477,23 @@ function handleTap() {
   // signed: 負=早い、正=遅い
   var signed = now - beatTime;
 
-  // 同じ拍に二重タップした場合：1拍1回ルールなので無視するが、
-  // ユーザーに分かるよう軽くフィードバックを出す（取りこぼしと誤認させない）
-  if (tappedBeats[nearestBeat]) {
-    var fbEl = document.getElementById('fb-text');
-    fbEl.textContent = '一拍一次哦！';
-    fbEl.className = 'fb-text';
-    return;
-  }
-  tappedBeats[nearestBeat] = true;
-
   var absDiff = Math.abs(signed);
 
-  taps.push({diff: absDiff, signed: signed});
+  var prevIdx = tappedBeats[nearestBeat];
+  if (prevIdx !== undefined) {
+    if (nearestBeat === 0 || absDiff < taps[prevIdx].diff) {
+      // 0拍目は常に上書き（早タップ仮登録を正タップで必ず更新できるようにする）
+      taps[prevIdx] = {diff: absDiff, signed: signed};
+    } else {
+      var fbEl = document.getElementById('fb-text');
+      fbEl.textContent = '一拍一次哦！';
+      fbEl.className = 'fb-text';
+      return;
+    }
+  } else {
+    tappedBeats[nearestBeat] = taps.length;
+    taps.push({diff: absDiff, signed: signed});
+  }
 
   // ── リアルタイム系統誤差補正 ──
   var signedSum = taps.reduce(function(s, t) { return s + t.signed; }, 0);
