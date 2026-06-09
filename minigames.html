@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ============================================================
+     BASS SHOW 小游戏合集 入口（リダイレクト）HTML
+     ・QR / シェア / 配布URL はこのファイルを指す
+     ・公開URL: masatopapapa.github.io/bassshow-demo/minigames.html
+     ・新版を出したら下の LATEST を書き換えるだけ（旧版は残す）
+     ============================================================ -->
+<title>BASS SHOW 小游戏合集</title>
+<meta http-equiv="refresh" content="0; url=games.html">
+<style>
+  html,body{margin:0;height:100%;background:#0d0e12;color:#9aa0ac;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans","Microsoft YaHei",sans-serif;
+    display:flex;align-items:center;justify-content:center;}
+  .loading{font-size:14px;text-align:center;line-height:1.8;}
+  .dot{display:inline-block;animation:blink 1.2s infinite;}
+  @keyframes blink{0%,100%{opacity:.2;}50%{opacity:1;}}
+</style>
+</head>
+<body>
+<div class="loading">BASS SHOW<br>加载中<span class="dot">…</span></div>
+<script>
+  // LATEST: ハブ本体のファイル名。本体を作り直したらここを書き換える。
+  var LATEST = "games.html";
+  location.replace(LATEST);
+</script>
+</body>
+</html>
