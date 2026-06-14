@@ -1,1 +1,9 @@
 DEPLOY_RULES.md
+
+# 検証・開発の副産物（コミット対象外）
+node_modules/
+package.json
+package-lock.json
+_qr_decode_all.js
+_probe_render.html
+*.bak
