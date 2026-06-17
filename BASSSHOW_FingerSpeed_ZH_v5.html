@@ -508,19 +508,19 @@
   }
 
   // ランク閾値（Lv.1..Lv.10の下限）。BPM区分(MASATO決定)を次/秒(÷15・16分音符)に変換。
-  // 双指/三指で分ける。三指は双指×1.2（三指の方が速く出る前提・実測で再確認済）。
-  // Lv1下限=双指1BPM/三指1BPM、以降 双指[20,50,80,120,150,180,200,220,240]BPM。
+  // 双指/三指で分ける（三指の方が速く出る前提）。
+  // Lv1下限=双指1BPM/三指1BPM、以降 双指[20,50,80,120,140,160,180,200,220]BPM。
   // 0次/秒(=0タップ有効)はLv0として別扱い。
   var BPM2PS=1/15; // 16分音符BPM → 次/秒
   var RANK_TH={
     // [Lv1,Lv2,..,Lv10] の各下限BPM
-    2:[1,20,50,80,120,150,180,200,220,240].map(function(b){return b*BPM2PS;}),
-    3:[1,24,60,96,144,180,216,240,264,288].map(function(b){return b*BPM2PS;})
+    2:[1,20,50,80,120,140,160,180,200,220].map(function(b){return b*BPM2PS;}),
+    3:[1,25,60,95,145,165,190,215,240,260].map(function(b){return b*BPM2PS;})
   };
   // 超越段(传说超え)と機械疑い段の下限BPM（MASATO決定）
   var TIER_TH={
-    transcend:{2:280,3:336},  // 双指280 / 三指336 BPM〜 = 传说中の280哥
-    machine:  {2:400,3:450}   // 双指400 / 三指450 BPM〜 = 機械疑い
+    transcend:{2:280,3:330},  // 双指280 / 三指330 BPM〜 = 传说中の280哥
+    machine:  {2:350,3:400}   // 双指350 / 三指400 BPM〜 = 機械疑い
   };
   // Lv0..10 を返す（0次/秒=Lv0）
   function rankFor(perSec, n){
@@ -534,8 +534,8 @@
   function tierFor(bpm, n){
     var mt=TIER_TH.machine[n]||TIER_TH.machine[2];
     var tt=TIER_TH.transcend[n]||TIER_TH.transcend[2];
-    if(bpm>mt) return 'machine';       // 上限超え（400/450 BPMを「超えた」場合）
-    if(bpm>=tt) return 'transcend';    // 传说超え（280/336 BPM以上）
+    if(bpm>=mt) return 'machine';      // 警告境界以上（双指350/三指400 BPM以上を警告扱い）
+    if(bpm>=tt) return 'transcend';    // 传说超え（双指280/三指330 BPM以上）
     return 'normal';
   }
 
