@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>BASS SHOW / 节奏测试</title>
+<style>
+:root{
+  --bg:#0A0A0F;--bg2:#13131A;--bg3:#1C1C26;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+  --text:#F0EFF8;--text2:#9896B0;--text3:#5A5870;
+  --teal:#1D9E75;--teal-l:#5DCAA5;--amber:#EF9F27;--coral:#F0997B;--purple:#534AB7;
+  --r:12px;--rs:8px;
+  --accent:#ff2d2d;
+  --accent-2:#ffb02e;
+}
+.demo-tag{font-size:10px;font-weight:700;color:var(--accent-2);border:0.5px solid var(--accent-2);border-radius:6px;padding:1px 6px;margin-left:6px;white-space:nowrap;display:inline-block;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+/* ===== 統一テンプレート 共通ヘッダー（2026/6/14） ===== */
+.bs-topbar{display:flex;justify-content:center;margin:14px 0 4px;}
+.bs-topbar img{height:34px;width:auto;display:block;}
+.bs-hero{width:130px;height:130px;margin:8px auto 6px;border-radius:16px;object-fit:cover;display:block;background:#000;}
+.bs-game-title{text-align:center;font-size:22px;font-weight:800;color:var(--text);margin:6px 0 2px;letter-spacing:.5px;}
+.bs-reslogo{display:flex;justify-content:center;margin-bottom:6px;}
+.bs-reslogo img{height:26px;width:auto;display:block;}
+.bs-res-title{text-align:center;font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px;letter-spacing:.5px;}
+.bs-cap-hint{text-align:center;font-size:11px;color:var(--text3);margin:10px 0 14px;}
+/* 言語切替（右上） */
+.bs-lang-switch{position:absolute;top:10px;right:10px;display:flex;gap:2px;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:2px;z-index:10;}
+.bs-lang-switch button{background:transparent;border:none;color:var(--text3);font-size:12px;font-weight:700;padding:4px 9px;border-radius:6px;cursor:pointer;line-height:1;}
+.bs-lang-switch button.active{background:var(--accent);color:#fff;}
+/* 結果カード（スクショ対象） */
+.bs-share-capture{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:18px 16px;margin-bottom:4px;}
+/* 机器人(10+)帯：特別背景演出（FingerSpeed超越段を横展開・ゴールド特別バッジ色） */
+@keyframes tierRobotPulse{
+  0%,100%{box-shadow:0 0 12px 2px rgba(232,178,58,.50), inset 0 0 16px rgba(232,178,58,.16);}
+  50%{box-shadow:0 0 22px 6px rgba(232,178,58,.80), inset 0 0 22px rgba(232,178,58,.30);}
+}
+.bs-share-capture.tier-robot{
+  border:1px solid #E8B23A;
+  background:linear-gradient(160deg,#1c160a,#241b0c 60%,#2c2008);
+  animation:tierRobotPulse 1.6s ease-in-out infinite;
+}
+.bs-share-capture.tier-robot .color-bar-seg.filled{box-shadow:0 0 6px rgba(232,178,58,.9);}
+.bs-share-foot{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);}
+.bs-share-foot-text{flex:1;}
+.bs-share-badge{display:inline-block;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:3px;}
+.bs-share-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.3;}
+.bs-share-desc{font-size:10px;color:var(--text3);margin-top:3px;}
+.bs-share-qr{width:72px;height:72px;flex-shrink:0;background:#fff;border-radius:8px;padding:4px;}
+.bs-share-qr .sc-qrbox{width:100%;height:100%;}
+.bs-share-icon{width:72px;height:72px;flex-shrink:0;border-radius:8px;overflow:hidden;}
+.bs-share-icon img{width:100%;height:100%;object-fit:cover;display:block;}
+body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:16px 16px 40px;}
+.container{width:100%;max-width:420px;position:relative;}
+
+/* ─── START ─── */
+.logo-block{text-align:center;padding:24px 0 20px;}
+.logo-img{width:140px;height:140px;object-fit:contain;border-radius:50%;display:block;margin:0 auto 8px;}
+.logo-sub{font-size:11px;letter-spacing:6px;color:var(--text3);margin-top:2px;}
+.logo-divider{width:40px;height:1px;background:var(--border2);margin:14px auto;}
+.desc-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:14px 16px;font-size:13px;line-height:1.8;color:var(--text2);margin-bottom:20px;text-align:center;}
+.diff-label{font-size:11px;color:var(--text3);letter-spacing:2px;text-align:center;margin-bottom:10px;}
+.diff-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;}
+.diff-btn{border:0.5px solid var(--border2);background:var(--bg2);border-radius:var(--rs);padding:12px 6px;cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all 0.15s;}
+/* 難易度キャラ（CHAR_LV3_A/B/C をカード内に表示・訂正2026-06-17） */
+.diff-btn .d-char{width:100%;max-width:64px;aspect-ratio:1/1;object-fit:cover;border-radius:10px;display:block;background:#000;margin-bottom:4px;}
+.diff-btn .d-dot{width:6px;height:6px;border-radius:50%;margin-top:2px;}
+.diff-btn .d-name{font-size:13px;font-weight:700;color:var(--text);}
+.diff-btn .d-bpm{font-size:11px;color:var(--text2);}
+.diff-btn[data-diff="easy"].active{background:#E1F5EE;border-color:#5DCAA5;}
+.diff-btn[data-diff="easy"].active .d-name{color:#085041;}
+.diff-btn[data-diff="easy"].active .d-bpm{color:#0F6E56;}
+.diff-btn[data-diff="easy"] .d-dot{background:#5DCAA5;}
+.diff-btn[data-diff="normal"].active{background:#FAEEDA;border-color:#EF9F27;}
+.diff-btn[data-diff="normal"].active .d-name{color:#633806;}
+.diff-btn[data-diff="normal"].active .d-bpm{color:#854F0B;}
+.diff-btn[data-diff="normal"] .d-dot{background:#EF9F27;}
+.diff-btn[data-diff="hard"].active{background:#FAECE7;border-color:#F0997B;}
+.diff-btn[data-diff="hard"].active .d-name{color:#712B13;}
+.diff-btn[data-diff="hard"].active .d-bpm{color:#993C1D;}
+.diff-btn[data-diff="hard"] .d-dot{background:#F0997B;}
+.start-btn{width:100%;padding:16px;background:var(--text);color:var(--bg);border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;letter-spacing:2px;}
+
+/* ─── GAME ─── */
+.game-header{padding-top:14px;margin-bottom:14px;}
+.game-header-top{display:flex;flex-direction:column;align-items:center;margin-bottom:12px;}
+.game-header-top img{height:30px;width:auto;display:block;margin-bottom:6px;}
+.game-header-title{font-size:16px;font-weight:800;color:var(--text);letter-spacing:.5px;}
+.game-header-info{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.tap-progress{font-size:13px;color:var(--text2);flex:1;text-align:center;}
+.bpm-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:1px;white-space:nowrap;}
+.bpm-easy{background:#E1F5EE;color:#085041;}.bpm-normal{background:#FAEEDA;color:#633806;}.bpm-hard{background:#FAECE7;color:#712B13;}
+.beat-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:24px 20px 20px;text-align:center;margin-bottom:12px;}
+.phase-label{font-size:11px;letter-spacing:3px;font-weight:500;margin-bottom:10px;}
+.phase-prep{color:var(--amber);}.phase-meas{color:var(--teal);}
+.countdown-num{font-size:52px;font-weight:700;color:var(--text);line-height:1;margin-bottom:16px;min-height:52px;}
+.beat-dots{display:flex;justify-content:center;gap:16px;}
+.beat-dot{width:14px;height:14px;border-radius:50%;background:var(--bg3);border:0.5px solid var(--border2);transition:transform 0.07s,background 0.07s;}
+.beat-dot.ap{background:#BA7517;transform:scale(1.3);}.beat-dot.aa{background:#3C3489;transform:scale(1.4);}.beat-dot.am{background:var(--teal);transform:scale(1.3);}
+.tap-btn{width:110px;height:110px;border-radius:50%;background:var(--bg2);border:1.5px solid var(--border2);color:var(--text);font-size:17px;font-weight:700;letter-spacing:3px;cursor:pointer;display:block;margin:0 auto 14px;transition:transform 0.07s,border-color 0.07s;}
+.tap-btn:not(:disabled):active{transform:scale(0.91);}
+.tap-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.tap-btn.enabled{border-color:var(--teal);color:var(--teal-l);}
+.feedback-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:14px 16px;}
+.fb-text{text-align:center;font-size:14px;font-weight:500;margin-bottom:10px;min-height:20px;color:var(--text2);}
+.fb-text.perfect{color:#5DCAA5;}.fb-text.great{color:var(--amber);}.fb-text.good{color:var(--text);}.fb-text.off{color:var(--coral);}
+.deviation-bar-wrap{position:relative;height:6px;background:var(--bg3);border-radius:3px;margin-bottom:5px;}
+.deviation-needle{position:absolute;top:-4px;width:14px;height:14px;border-radius:50%;background:var(--text);transform:translateX(-50%);left:50%;transition:left 0.15s;}
+.deviation-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:8px;}
+.fb-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.fb-stat{background:var(--bg3);border-radius:var(--rs);padding:8px;text-align:center;}
+.fb-stat-label{font-size:10px;color:var(--text3);margin-bottom:2px;}
+.fb-stat-val{font-size:15px;font-weight:700;color:var(--text);}
+
+/* ─── RESULT ─── */
+.result-header{text-align:center;padding:20px 0 16px;}
+/* ① 結果画面の難易度連動キャラ（96px） */
+.res-char{display:block;width:96px;height:96px;margin:4px auto 4px;border-radius:16px;object-fit:cover;background:#000;}
+.res-diff-label{text-align:center;font-size:12px;font-weight:700;color:var(--text2);letter-spacing:1px;margin:0 auto 8px;}
+.result-lv-num{font-size:68px;font-weight:700;line-height:1;}
+.result-lv-label{font-size:11px;color:var(--text3);letter-spacing:3px;margin-top:2px;}
+.result-rank-name{font-size:20px;font-weight:700;margin-top:8px;}
+.result-comment{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.7;}
+/* ③ 評分をカラーバーの上に配置 */
+.result-score{text-align:center;margin:14px 0 4px;}
+.result-score-num{font-size:40px;font-weight:700;line-height:1;}
+.result-score-label{font-size:10px;color:var(--text3);letter-spacing:3px;margin-top:3px;}
+.color-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin:12px 0 5px;}
+.color-bar-seg{flex:1;border-radius:2px;opacity:0.2;}
+.color-bar-seg.filled{opacity:1;}
+.color-bar-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:16px;}
+/* ③ 平均偏差・最佳・有効点击 を横一列（1×3） */
+.stat-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rs);padding:12px 6px;text-align:center;}
+.stat-card-label{font-size:10px;color:var(--text3);margin-bottom:4px;}
+.stat-card-val{font-size:20px;font-weight:700;}
+.stat-card-unit{font-size:10px;color:var(--text2);margin-left:2px;}
+
+/* ─── SHARE CARD ─── */
+.share-section{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px;}
+.share-section-title{font-size:11px;color:var(--text3);letter-spacing:2px;margin-bottom:12px;text-align:center;}
+.share-card-visual{background:#0A0A0F;border-radius:10px;border:0.5px solid var(--border);padding:20px 16px;margin-bottom:12px;}
+.sc-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.sc-logo img{width:44px;height:44px;object-fit:contain;border-radius:50%;}
+.sc-logo-text{flex:1;}
+.sc-logo-name{font-size:15px;font-weight:700;letter-spacing:2px;}
+.sc-logo-sub{font-size:10px;color:var(--text3);letter-spacing:3px;margin-top:1px;}
+.sc-lv{text-align:center;margin-bottom:14px;}
+.sc-lv-num{font-size:56px;font-weight:700;line-height:1;}
+.sc-lv-label{font-size:10px;color:var(--text3);letter-spacing:3px;}
+.sc-rank-name{font-size:18px;font-weight:700;margin-top:6px;}
+.sc-comment{font-size:11px;color:var(--text2);margin-top:4px;line-height:1.6;}
+.sc-bar{display:flex;height:8px;gap:2px;margin:14px 0 4px;border-radius:4px;overflow:hidden;}
+.sc-bar-seg{flex:1;border-radius:2px;opacity:0.2;}
+.sc-bar-seg.filled{opacity:1;}
+.sc-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-bottom:12px;}
+.sc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:14px;}
+.sc-stat{background:var(--bg2);border-radius:6px;padding:8px 4px;text-align:center;border:0.5px solid var(--border);}
+.sc-stat-label{font-size:9px;color:var(--text3);margin-bottom:3px;}
+.sc-stat-val{font-size:16px;font-weight:700;}
+.sc-stat-unit{font-size:9px;color:var(--text2);}
+.sc-footer{display:flex;align-items:center;gap:12px;padding-top:14px;border-top:1px solid var(--border);}
+.sc-footer-text{flex:1;}
+.sc-footer-badge{font-size:10px;color:var(--text3);margin-bottom:3px;}
+.sc-footer-title{font-size:13px;font-weight:700;}
+.sc-footer-desc{font-size:10px;color:var(--text2);margin-top:2px;line-height:1.5;}
+.sc-footer-hashtag{font-size:10px;font-weight:700;margin-top:3px;}
+.sc-qr{width:72px;height:72px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#fff;padding:4px;box-sizing:border-box;}
+.sc-qr .sc-qrbox{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+.sc-qr .sc-qrbox svg{width:100%;height:100%;display:block;}
+.share-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.share-btn{padding:11px 8px;border-radius:var(--rs);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;text-align:center;}
+.share-btn.primary{background:var(--text);color:var(--bg);border-color:transparent;}
+
+/* ─── PROMO ─── */
+.promo-section{margin-bottom:14px;}
+.promo-title{font-size:11px;color:var(--text3);letter-spacing:2px;text-align:center;margin-bottom:10px;}
+.promo-cards{display:flex;flex-direction:column;gap:8px;}
+.promo-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.promo-icon{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;}
+.promo-icon img{width:100%;height:100%;object-fit:cover;border-radius:9px;}
+.promo-icon-bs{background:linear-gradient(135deg,#0F6E56,#534AB7);}
+.promo-icon-bili{background:linear-gradient(135deg,#00A1D6,#0066CC);}
+.promo-text{flex:1;}
+.promo-name{font-size:14px;font-weight:700;}
+.promo-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.5;}
+.promo-arrow{color:var(--text3);font-size:18px;}
+.promo-icon-gzh{background:linear-gradient(135deg,#07C160,#0F6E56);}
+.promo-icon-games{background:linear-gradient(135deg,#E8552D,#B7841E);}
+.gzh-qr-wrap{display:none;flex-direction:column;align-items:center;gap:8px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:16px;margin-top:-2px;}
+.gzh-qr-wrap.show{display:flex;}
+.gzh-qr-wrap img{width:160px;height:160px;border-radius:8px;background:#fff;padding:6px;box-sizing:border-box;}
+.gzh-qr-wrap p{font-size:11px;color:var(--text2);text-align:center;line-height:1.6;margin:0;}
+.retry-btn{width:100%;padding:14px;background:transparent;border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text2);font-size:14px;font-weight:500;cursor:pointer;letter-spacing:1px;margin-bottom:32px;}
+</style>
+<script src="shared-assets.js"></script>
+</head>
+<body>
+<div class="container">
+<div class="bs-lang-switch" id="bs-lang-switch">
+  <button data-lang="zh" class="active">中</button>
+  <button data-lang="ja">日</button>
+  <button data-lang="en">EN</button>
+</div>
+
+<!-- ══ START ══ -->
+<div id="screen-start">
+  <div class="bs-topbar"><img id="bs-banner-top" alt="BASS SHOW"></div>
+  <img class="bs-hero" id="bs-hero-rhythm" alt="节奏测试">
+  <div class="bs-game-title" data-i18n="title">节奏测试</div>
+  <div class="desc-card" data-i18n="desc">先听 2 小节准备节拍，然后从第 3 小节开始<br>跟着节拍点击！全 10 个等级，测出你的节奏感。</div>
+  <div class="diff-label" data-i18n="diff_label">选择难度</div>
+  <div class="diff-btns">
+    <button class="diff-btn active" data-diff="easy"><img class="d-char" id="d-char-easy" alt=""><div class="d-dot"></div><div class="d-name" data-i18n="diff_easy">简单</div><div class="d-bpm">120 BPM</div></button>
+    <button class="diff-btn" data-diff="normal"><img class="d-char" id="d-char-normal" alt=""><div class="d-dot"></div><div class="d-name" data-i18n="diff_normal">普通</div><div class="d-bpm">90 BPM</div></button>
+    <button class="diff-btn" data-diff="hard"><img class="d-char" id="d-char-hard" alt=""><div class="d-dot"></div><div class="d-name" data-i18n="diff_hard">困难</div><div class="d-bpm">60 BPM</div></button>
+  </div>
+  <button class="start-btn" id="btn-start" data-i18n="start">开始测试</button>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="screen-game" style="display:none">
+  <div class="game-header">
+    <div class="game-header-top">
+      <img id="bs-banner-game" alt="BASS SHOW">
+      <div class="game-header-title" data-i18n="title">节奏测试</div>
+    </div>
+    <div class="game-header-info">
+      <div class="tap-progress" id="tap-count-label">0 / 16 拍</div>
+      <div class="bpm-badge bpm-easy" id="bpm-badge">120 BPM</div>
+    </div>
+  </div>
+  <div class="beat-card">
+    <div class="phase-label phase-prep" id="phase-label">准备中…</div>
+    <div class="countdown-num" id="countdown-num">8</div>
+    <div class="beat-dots">
+      <div class="beat-dot" id="dot0"></div>
+      <div class="beat-dot" id="dot1"></div>
+      <div class="beat-dot" id="dot2"></div>
+      <div class="beat-dot" id="dot3"></div>
+    </div>
+  </div>
+  <div class="feedback-card">
+    <div class="fb-text" id="fb-text" data-i18n="fb_ready">听准节拍，准备好了就点击！</div>
+    <div class="deviation-bar-wrap"><div class="deviation-needle" id="deviation-needle"></div></div>
+    <div class="deviation-labels"><span data-i18n="dev_early">偏早</span><span data-i18n="dev_perfect">刚好</span><span data-i18n="dev_late">偏晚</span></div>
+    <div class="fb-stats">
+      <div class="fb-stat"><div class="fb-stat-label" data-i18n="avg_dev">平均偏差</div><div class="fb-stat-val" id="avg-ms">—</div></div>
+      <div class="fb-stat"><div class="fb-stat-label" data-i18n="best_score">最佳成绩</div><div class="fb-stat-val" id="best-ms">—</div></div>
+    </div>
+  <button class="tap-btn" id="tap-btn" disabled>TAP</button>
+  </div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="screen-result" style="display:none">
+  <!-- ［スクショ対象］結果カード（表示＝そのままシェア画像） -->
+  <div class="bs-share-capture" id="bs-share-capture">
+    <div class="bs-reslogo"><img id="bs-banner-res" alt="BASS SHOW"></div>
+    <div class="bs-res-title" data-i18n="title">节奏测试</div>
+    <!-- ① 難易度連動キャラ（測定時の難易度に連動）＋難易度名BPM表記 -->
+    <img class="res-char" id="res-char" alt="">
+    <div class="res-diff-label" id="res-diff-label">简单 120 BPM</div>
+    <div class="result-header">
+      <div class="result-lv-num" id="res-lv-num">—</div>
+      <div class="result-lv-label">LEVEL</div>
+      <div class="result-rank-name" id="res-rank-name">—</div>
+      <div class="result-comment" id="res-comment">—</div>
+    </div>
+    <!-- ③ 評分をカラーバーの上に -->
+    <div class="result-score">
+      <div class="result-score-num" id="res-score">—</div>
+      <div class="result-score-label" data-i18n="score">评分</div>
+    </div>
+    <div class="color-bar" id="color-bar"></div>
+    <div class="color-bar-labels"><span>Lv.1</span><span>Lv.5</span><span>Lv.10</span></div>
+    <!-- ③ 平均偏差・最佳・有效点击 の3つを横一列 -->
+    <div class="stat-cards">
+      <div class="stat-card"><div class="stat-card-label" data-i18n="avg_dev">平均偏差</div><div class="stat-card-val" id="res-avg">—</div></div>
+      <div class="stat-card"><div class="stat-card-label" data-i18n="best">最佳</div><div class="stat-card-val" id="res-best">—</div></div>
+      <div class="stat-card"><div class="stat-card-label" data-i18n="valid_taps">有效点击</div><div class="stat-card-val" id="res-taps">—</div></div>
+    </div>
+    <div class="bs-share-foot">
+      <div class="bs-share-icon"><img id="bs-share-game-icon" alt="节奏测试"></div>
+      <div class="bs-share-foot-text">
+        <div class="bs-share-badge" data-i18n="share_badge">扫码挑战</div>
+        <div class="bs-share-title" data-i18n="share_title">你的节奏感有几级？</div>
+        <div class="bs-share-desc" data-i18n="share_card_sub">BASS SHOW · 节奏测试</div>
+      </div>
+      <div class="bs-share-qr"><div id="shareQrBox" class="sc-qrbox"></div></div>
+    </div>
+  </div>
+  <!-- ［スクショ対象外］
+  <div class="bs-cap-hint">截图分享给你的贝斯手朋友 📸</div> -->
+  <div class="share-btn-row">
+    <button class="share-btn primary" id="btn-screenshot" data-i18n="btn_screenshot">截图分享给你的朋友</button>
+    <button class="share-btn" id="btn-copy-text" data-i18n="btn_copy">复制文字</button>
+  </div>
+
+<!-- プラットフォーム誘導 -->
+  <div class="promo-section">
+    <div class="promo-title" data-i18n="promo_title">加入贝斯手社区</div>
+    <div class="promo-cards">
+      <div class="promo-card" id="gzh-card">
+        <div class="promo-icon promo-icon-gzh">📱</div>
+        <div class="promo-text">
+          <div class="promo-name" data-i18n="promo_gzh_name">加入贝斯手交流群</div>
+          <div class="promo-desc" data-i18n="promo_gzh_desc">扫码关注公众号 · 回复「入群」即可进群</div>
+        </div>
+        <div class="promo-arrow" id="gzh-arrow">›</div>
+      </div>
+      <div class="gzh-qr-wrap" id="gzh-qr-wrap">
+        <img id="gzhQrImg" alt="BASS SHOW 公众号 QR">
+        <p data-i18n="promo_gzh_steps">① 微信扫码关注 → ② 回复「入群」→ ③ 收到进群方式</p>
+      </div>
+      <div class="promo-card" onclick="window.open('https://b23.tv/CGkvQc4','_blank')">
+        <div class="promo-icon promo-icon-bili">📺</div>
+        <div class="promo-text">
+          <div class="promo-name" data-i18n="promo_bili_name">Bilibili · 在华日本音乐人MASATO</div>
+          <div class="promo-desc" data-i18n="promo_bili_desc">贝斯教学视频 · BASS SHOW系列<br>6,700+ 粉丝 · 3万获赞</div>
+        </div>
+        <div class="promo-arrow">›</div>
+      </div>
+      <div class="promo-card" onclick="window.open('https://bassshow.rocks/platform.html','_blank')">
+        <div class="promo-icon promo-icon-bs"><img class="bs-logo-asset" alt="BASS SHOW"></div>
+        <div class="promo-text">
+          <div class="promo-name">BASS SHOW<span class="demo-tag" data-i18n="demo_tag">Demo 体验版</span></div>
+          <div class="promo-desc" data-i18n="platform_desc">贝斯手专属平台<br>乐谱・器材・社区一站式</div>
+        </div>
+        <div class="promo-arrow">›</div>
+      </div>
+      <div class="promo-card" onclick="window.open('https://bassshow.rocks/minigames.html','_blank')">
+        <div class="promo-icon promo-icon-games"><img class="bs-logo-asset" alt="BASS SHOW 小游戏"></div>
+        <div class="promo-text">
+          <div class="promo-name" data-i18n="promo_games_name">BASS SHOW 小游戏合集</div>
+          <div class="promo-desc" data-i18n="promo_games_desc">更多贝斯手测试 · 性格诊断・实力训练</div>
+        </div>
+        <div class="promo-arrow">›</div>
+      </div>
+    </div>
+  </div>
+  <button class="retry-btn" id="btn-retry" data-i18n="retry">再测一次</button>
+</div>
+
+</div><!-- /container -->
+
+
+<script>
+// ══════════════════════════════════════════
+// 定数
+// ══════════════════════════════════════════
+var DIFF = {
+  easy:   {bpm:120, label:'简单'},
+  normal: {bpm:90,  label:'普通'},
+  hard:   {bpm:60,  label:'困难'}
+};
+// ① 難易度→汎用3段階キャラ（shared-assets.js / window.BS_ASSETS で一元管理）
+//    简单=A(弱) / 普通=B(中) / 困难=C(強)
+function diffCharSrc(diff){
+  var A = window.BS_ASSETS || {};
+  var map = {easy:A.CHAR_LV3_A, normal:A.CHAR_LV3_B, hard:A.CHAR_LV3_C};
+  return map[diff] || A.CHAR_LV3_A || A.ICON_RHYTHM || '';
+}
+// ③ 難易度名（3言語）＋ BPM 表記。例: "Easy 120 BPM"（言語切替で名称切替・BPM不変）
+var DIFF_NAMES = {
+  easy:   {zh:'简单', ja:'かんたん', en:'Easy'},
+  normal: {zh:'普通', ja:'ふつう',   en:'Normal'},
+  hard:   {zh:'困难', ja:'むずかしい', en:'Hard'}
+};
+function diffLabelText(diff){
+  var lang = window.BS_LANG || 'zh';
+  var d = DIFF[diff] || DIFF.easy;
+  var n = (DIFF_NAMES[diff] || DIFF_NAMES.easy);
+  return (n[lang] || n.zh) + ' ' + d.bpm + ' BPM';
+}
+var PREP = 8, MEAS = 16, TOTAL = 24, MAX_D = 450;
+// ── 閾値テーブル（難易度共通・単一）──
+// tier: カラーバー点灯数・色index用の連番(1..11)。label: 表示用(10+ 等)。
+// max : この帯の偏差上限(ms)。先頭からmax昇順に並べ getRank(ms<=max) で上から判定。
+// score: 帯の「代表評分」＝良端(小さい偏差側)の評分。実際の評分は scoreFor() で帯内線形補間。
+// Lv1の上限(LV1_MAX_HI)は線形補間用の有限上限。これ以上は評分0クランプ。
+var LV1_MAX_HI = 560;
+var RANKS = [
+  {tier:11, lv:'10+', max:3,   score:100, robot:true,
+    name:{zh:'机器人',ja:'ロボット',en:'Machine'},
+    comment:{zh:'你的精准度已经不输机器人了！',ja:'もうお前はロボットにも劣らない正確さ！',en:'Your precision rivals a machine now!'}},
+  {tier:10, lv:'10', max:10,  score:100,
+    name:{zh:'节奏之神',ja:'リズムの神',en:'Rhythm God'},
+    comment:{zh:'太厉害了！达到了顶级节拍手的水准！',ja:'すごい！超人レベルのリズム感です！',en:'Amazing! Top-tier timing!'}},
+  {tier:9,  lv:'9',  max:20,  score:95,
+    name:{zh:'传奇贝斯手',ja:'伝説のベーシスト',en:'Legendary Bassist'},
+    comment:{zh:'令人惊叹的节奏感！专业演奏家级别！',ja:'驚異のリズム感！プロ演奏家レベル！',en:'Stunning rhythm! Pro-level!'}},
+  {tier:8,  lv:'8',  max:30,  score:85,
+    name:{zh:'职业贝斯手',ja:'プロベーシスト',en:'Pro Bassist'},
+    comment:{zh:'非常精准！你的节奏感可以上台演出了。',ja:'とても正確！ステージで演奏できるレベル。',en:'Very precise! Stage-ready timing.'}},
+  {tier:7,  lv:'7',  max:50,  score:75,
+    name:{zh:'高级律动',ja:'上級グルーヴ',en:'Advanced Groove'},
+    comment:{zh:'很扎实！再磨练一下就能达到职业水准。',ja:'堅実！あと少しでプロ水準です。',en:'Solid! Almost pro-level.'}},
+  {tier:6,  lv:'6',  max:70,  score:63,
+    name:{zh:'律动达人',ja:'グルーヴマスター',en:'Groove Master'},
+    comment:{zh:'不错的节奏感！继续保持练习吧！',ja:'いいリズム感！この調子で練習を！',en:'Good timing! Keep practicing!'}},
+  {tier:5,  lv:'5',  max:100, score:50,
+    name:{zh:'中级节拍',ja:'中級ビート',en:'Intermediate'},
+    comment:{zh:'已经掌握基础！配合节拍器继续练习。',ja:'基礎はバッチリ！メトロノームで練習を。',en:'Basics down! Practice with a metronome.'}},
+  {tier:4,  lv:'4',  max:140, score:38,
+    name:{zh:'业余节拍',ja:'アマチュアビート',en:'Amateur Beat'},
+    comment:{zh:'还有提升空间！保持练习是关键。',ja:'伸びしろあり！継続が鍵です。',en:'Room to grow! Keep at it.'}},
+  {tier:3,  lv:'3',  max:200, score:27,
+    name:{zh:'初学者节拍',ja:'初心者ビート',en:'Beginner Beat'},
+    comment:{zh:'开始有节奏感了！慢慢来，别急。',ja:'リズム感が出てきた！焦らずいこう。',en:'Getting there! Take your time.'}},
+  {tier:2,  lv:'2',  max:280, score:17,
+    name:{zh:'节奏修行中',ja:'リズム修行中',en:'Training'},
+    comment:{zh:'节奏感正在培养中！跟着节拍器多听多练。',ja:'リズム感を養成中！メトロノームで多く練習を。',en:'Building rhythm! Listen and practice more.'}},
+  {tier:1,  lv:'1',  max:Infinity, score:8,
+    name:{zh:'节奏探索中',ja:'リズム模索中',en:'Exploring'},
+    comment:{zh:'每个大师都是从这里出发的！加油！',ja:'名人も皆ここから！がんばって！',en:'Every master starts here! Go for it!'}}
+];
+// LV_COLORS は tier(1..11) に1対1（index = tier-1）。先頭(index0)=Lv1色、末尾(index10)=机器人色。
+// 既存10色(Lv1..10)＋机器人用の特別色(ゴールド系)を1枚追加して11色化。
+var LV_COLORS = ['#E24B4A','#D85A30','#BA7517','#EF9F27','#639922','#1D9E75','#0F6E56','#534AB7','#3C3489','#26215C','#E8B23A'];
+
+// ── 評分：Lv帯内で線形補間（境界連続・0〜100クランプ）──
+// 良端(小さい偏差)=その帯の代表score、悪端(大きい偏差)=1つ下の帯の代表score に接続。
+// 帯の偏差レンジ：下端loMs=1つ上の帯のmax、上端hiMs=自帯のmax。
+function scoreFor(ms, rank) {
+  if (rank.robot) return 100; // 机器人帯(≤3ms)は固定100（頭打ち・確定）
+  var idx = RANKS.indexOf(rank);
+  // loMs＝1つ上(良い)の帯のmax。最上位の通常帯(Lv10)の上はrobot帯(max=3)。
+  var upper = RANKS[idx - 1];           // 1つ上の帯（robot帯含む）
+  var lower = RANKS[idx + 1];           // 1つ下の帯（Lv1の下は無し）
+  var loMs = upper ? upper.max : 0;     // 良端の偏差
+  var hiMs = rank.max;                  // 悪端の偏差
+  if (!isFinite(hiMs)) hiMs = LV1_MAX_HI; // Lv1帯は有限上限で線形（超過は0クランプ）
+  var goodScore = rank.score;                       // 良端の評分
+  var badScore  = lower ? lower.score : 0;          // 悪端の評分（Lv1の下=0）
+  var span = (hiMs - loMs);
+  var t = span > 0 ? (ms - loMs) / span : 0;        // 0(良)〜1(悪)
+  if (t < 0) t = 0; if (t > 1) t = 1;
+  var sc = Math.round(goodScore - t * (goodScore - badScore));
+  if (sc < 0) sc = 0; if (sc > 100) sc = 100;
+  return sc;
+}
+var GAME_URL = 'https://bassshow.rocks/Rhythm.html';
+
+// ══════════════════════════════════════════
+// JS動的生成テキスト辞書（data-i18n属性で扱えない動的テキスト用）
+// ══════════════════════════════════════════
+var BS_DYN = {
+  // B群：フェーズ表示
+  phase_prep:   {zh:'准备中…',          ja:'準備中…',        en:'Get ready…'},
+  phase_meas:   {zh:'测量中！',          ja:'測定中！',        en:'Measuring!'},
+  one_per_beat: {zh:'一拍一次哦！',       ja:'1拍に1回だよ！',   en:'One tap per beat!'},
+  beats_suffix: {zh:' 拍',              ja:' 拍',            en:' beats'},
+  // C群：タップ精度フィードバック
+  fb_perfect:   {zh:'完美！',            ja:'パーフェクト！',   en:'Perfect!'},
+  fb_great_late:{zh:'很棒！（晚了一点）',  ja:'素晴らしい！（少し遅い）', en:'Great! (a bit late)'},
+  fb_great_early:{zh:'很棒！（早了一点）', ja:'素晴らしい！（少し早い）', en:'Great! (a bit early)'},
+  fb_good_early:{zh:'不错！（偏早）',      ja:'いいね！（早め）', en:'Nice! (early)'},
+  fb_good_late: {zh:'不错！（偏晚）',      ja:'いいね！（遅め）', en:'Nice! (late)'},
+  fb_too_early: {zh:'太早了！',          ja:'早すぎ！',        en:'Too early!'},
+  fb_too_late:  {zh:'太晚了！',          ja:'遅すぎ！',        en:'Too late!'},
+  // E群：シェア用テキスト＋アラート
+  share_head:   {zh:'【BASS SHOW 节奏测试】', ja:'【BASS SHOW リズムテスト】', en:'[BASS SHOW Rhythm Test]'},
+  share_score_label:{zh:'评分', ja:'スコア', en:'Score'},
+  share_cta:    {zh:'你也来测一测 👉',    ja:'あなたも測ってみて 👉', en:'Try it yourself 👉'},
+  share_tags:   {zh:'#BASSSHOW #节奏测试 #贝斯', ja:'#BASSSHOW #リズムテスト #ベース', en:'#BASSSHOW #RhythmTest #Bass'},
+  copied:       {zh:'已复制！',          ja:'コピーしました！', en:'Copied!'},
+  copy_manual:  {zh:'请手动复制：',       ja:'手動でコピーしてください：', en:'Please copy manually:'},
+  share_avg_label: {zh:'平均偏差', ja:'平均誤差', en:'Avg offset'},
+  share_best_label:{zh:'最佳',     ja:'ベスト',   en:'Best'},
+  screenshot_hint: {zh:'请长按上方卡片图片保存📸\n或截图保存后分享！',
+                    ja:'上のカードを長押しで保存📸\nまたはスクショして共有してください！',
+                    en:'Long-press the card above to save 📸\nor take a screenshot to share!'}
+};
+// 現在言語で辞書値を引く（未設定はzhフォールバック）
+function bsL(key){
+  var lang = window.BS_LANG || 'zh';
+  var d = BS_DYN[key];
+  if(!d) return '';
+  return d[lang] || d.zh;
+}
+
+// ══════════════════════════════════════════
+// 状態
+// ══════════════════════════════════════════
+var selectedDiff = 'easy';
+var measuredDiff = 'easy';   // ① 測定時に選んでいた難易度（結果画面キャラの連動用）
+var audioCtx = null;
+var beatTimer = null;
+var beatIdx = 0, beatTimes = [], taps = [];
+var avgMs = 0, bestMs = 999, gameResult = null;
+var measureStartTime = 0;   // 測定フェーズ最初のビートが鳴った時刻（基準点）
+var beatInterval = 0;       // 1拍の長さ(ms)
+var tappedBeats = {};       // タップ済みの拍番号を記録（重複防止）
+
+// ══════════════════════════════════════════
+// 音声
+// ══════════════════════════════════════════
+function getACtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  return audioCtx;
+}
+function playBeep(freq, dur, vol) {
+  // 即時発音（タップ音など）。ビート音は playBeepAt() で絶対時刻予約する。
+  playBeepAt(freq, dur, vol, 0);
+}
+// ④ Web Audio 絶対時刻スケジューリング：whenSec=ctx.currentTime基準の発音予定秒
+//    whenSec<=0 なら即時。setTimeout/setInterval の累積誤差を排除しビート間隔を固定。
+function playBeepAt(freq, dur, vol, whenSec) {
+  try {
+    var ctx = getACtx();
+    if (!ctx) return;
+    var t = (whenSec && whenSec > ctx.currentTime) ? whenSec : ctx.currentTime;
+    var d = dur || 0.06;
+    var o = ctx.createOscillator();
+    var g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = freq;
+    o.type = 'sine';
+    g.gain.setValueAtTime(vol || 0.3, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + d);
+    o.start(t); o.stop(t + d);
+  } catch(e) {}
+}
+
+// オーディオ出力レイテンシ（ms）を取得：音が実際に耳に届くまでの遅延
+function getAudioLatency() {
+  var ctx = getACtx();
+  if (!ctx) return 0;
+  // baseLatency + outputLatency が実際の出力遅延
+  var base = ctx.baseLatency || 0;
+  var output = ctx.outputLatency || 0;
+  return (base + output) * 1000; // 秒→ms
+}
+
+// ══════════════════════════════════════════
+// 難易度ボタン
+// ══════════════════════════════════════════
+document.querySelectorAll('.diff-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.diff-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    selectedDiff = btn.dataset.diff;
+    // ※Top中央Iconはゲームの顔(固定)。難易度では変えない（訂正2026-06-17）。
+  });
+});
+
+// ══════════════════════════════════════════
+// ゲーム開始
+// ══════════════════════════════════════════
+document.getElementById('btn-start').addEventListener('click', startGame);
+
+function startGame() {
+  measuredDiff = selectedDiff;   // ① この測定の難易度を固定（結果キャラ連動用）
+  beatIdx = 0; beatTimes = []; taps = [];
+  avgMs = 0; bestMs = 999; gameResult = null;
+  measureStartTime = 0; beatInterval = 0; tappedBeats = {};
+  showScreen('game');
+  var badge = document.getElementById('bpm-badge');
+  badge.textContent = DIFF[selectedDiff].bpm + ' BPM';
+  badge.className = 'bpm-badge bpm-' + selectedDiff;
+  var tapBtn = document.getElementById('tap-btn');
+  tapBtn.disabled = true;
+  tapBtn.classList.remove('enabled');
+  document.getElementById('tap-count-label').textContent = '0 / 16' + bsL('beats_suffix');
+  document.getElementById('avg-ms').textContent = '—';
+  document.getElementById('best-ms').textContent = '—';
+  document.getElementById('fb-text').textContent = (BS_I18N.fb_ready[window.BS_LANG||'zh'] || BS_I18N.fb_ready.zh);
+  document.getElementById('fb-text').className = 'fb-text';
+  document.getElementById('deviation-needle').style.left = '50%';
+  beatLoop();
+}
+
+function beatLoop() {
+  var interval = 60000 / DIFF[selectedDiff].bpm; // 1拍(ms)
+  clearInterval(beatTimer);
+
+  var ctx = getACtx();
+  // iOS等で suspended のことがあるので明示的に resume
+  if (ctx && ctx.state === 'suspended' && ctx.resume) { try { ctx.resume(); } catch(e){} }
+
+  // ──④ 絶対時刻スケジューリングの基準点を確立──
+  // 全ビート（準備PREP拍＋測定）を ctx.currentTime 基準で一括予約。
+  // setInterval の累積誤差・初回基準ズレを排除し、ビート間隔を固定する。
+  var beatLenSec = interval / 1000;
+  var LEAD_SEC = 0.12; // 予約開始までの余裕（最初の発音が間に合うように）
+  var ctxNow0  = ctx ? ctx.currentTime : 0;       // 予約基準（audio clock）
+  var perfNow0 = performance.now();               // 同時刻の performance clock 値
+  var audioT0  = ctxNow0 + LEAD_SEC;              // 0拍目を鳴らす絶対時刻(audio clock)
+
+  // audio clock → performance clock への変換オフセット(ms)。
+  // ctx.currentTime の経過と performance.now の経過は同じ実時間なので、
+  // 任意の audioTime(秒) は perfNow0 + (audioTime - ctxNow0)*1000 で perf時刻に写せる。
+  // これに出力レイテンシを足したものが「実際に耳に届く時刻(perf)」。
+  function audioToPerf(audioTimeSec){
+    return perfNow0 + (audioTimeSec - ctxNow0) * 1000 + getAudioLatency();
+  }
+
+  // 全ビートの発音を絶対時刻で予約（揺れない）
+  for (var i = 0; i < TOTAL; i++) {
+    var whenSec = audioT0 + i * beatLenSec;
+    var accent  = ((i % 4) === 0);
+    if (i < PREP) {
+      playBeepAt(accent ? 660 : 440, 0.07, accent ? 0.35 : 0.2, whenSec);
+    } else {
+      playBeepAt(accent ? 880 : 550, 0.07, accent ? 0.4 : 0.25, whenSec);
+      // 測定ビートの「耳に届く時刻(perf)」を記録（判定グリッドと同一基準）
+      beatTimes.push(audioToPerf(whenSec));
+    }
+  }
+  // 測定フェーズ基準点＝PREP拍目（最初の測定ビート）の耳到達時刻(perf)
+  beatInterval = interval;
+  measureStartTime = audioToPerf(audioT0 + PREP * beatLenSec);
+
+  // ── 視覚演出・状態遷移は setInterval で駆動（音はもう予約済みなので揺れても無音響）──
+  // 0拍目の発音(audioT0)に視覚を合わせるため、開始を LEAD_SEC ＋出力レイテンシ分だけ遅らせる。
+  var visualLeadMs = LEAD_SEC * 1000 + getAudioLatency();
+  function beatTick() {
+    var dotIdx = beatIdx % 4;
+    var isAccent = (dotIdx === 0);
+    document.querySelectorAll('.beat-dot').forEach(function(d) { d.className = 'beat-dot'; });
+    var dotEl = document.getElementById('dot' + dotIdx);
+    if (beatIdx < PREP) {
+      dotEl.className = 'beat-dot ap';
+      document.getElementById('phase-label').textContent = bsL('phase_prep');
+      document.getElementById('phase-label').className = 'phase-label phase-prep';
+      document.getElementById('countdown-num').textContent = PREP - beatIdx;
+      // 準備最後のビートでタップボタンを有効化（基準点は予約時に確定済み）
+      if (beatIdx === PREP - 1) {
+        var btn = document.getElementById('tap-btn');
+        btn.disabled = false;
+        btn.classList.add('enabled');
+      }
+    } else {
+      dotEl.className = isAccent ? 'beat-dot aa' : 'beat-dot am';
+      if (beatIdx === PREP) {
+        document.getElementById('phase-label').textContent = bsL('phase_meas');
+        document.getElementById('phase-label').className = 'phase-label phase-meas';
+        document.getElementById('countdown-num').textContent = '';
+      }
+      document.getElementById('tap-count-label').textContent = Math.min(taps.length, 16) + ' / 16' + bsL('beats_suffix');
+      if (beatIdx >= TOTAL - 1 || taps.length >= MEAS) {
+        clearInterval(beatTimer);
+        setTimeout(finishGame, 300);
+        return;
+      }
+    }
+    beatIdx++;
+  }
+  // 0拍目に同期して初回tick→以降は interval ごと（音は絶対時刻予約済みで揺れない）
+  setTimeout(function(){
+    beatTick();                              // 0拍目
+    beatTimer = setInterval(beatTick, interval);
+  }, visualLeadMs);
+}
+
+// pointerdownで即座に反応（clickの遅延を排除）
+var tapBtnEl = document.getElementById('tap-btn');
+tapBtnEl.addEventListener('pointerdown', function(e) {
+  e.preventDefault();
+  handleTap();
+});
+// pointerdown非対応環境のフォールバック
+if (!window.PointerEvent) {
+  tapBtnEl.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    handleTap();
+  });
+  tapBtnEl.addEventListener('mousedown', handleTap);
+}
+
+function handleTap() {
+  var now = performance.now();
+  playBeep(200, 0.06, 0.15);
+
+  // 基準点が未確立なら受け付けない（測定開始前）
+  if (measureStartTime === 0 || beatInterval === 0) return;
+
+  // ★拍グリッド・スナップ方式★
+  // タップ時刻が基準点から何拍目に最も近いかを計算
+  // beatPosition = タップが基準点から何拍分離れているか（小数）
+  var beatPosition = (now - measureStartTime) / beatInterval;
+  // 最も近い整数拍にスナップ（早くても遅くても確実に最近傍が見つかる）
+  var nearestBeat = Math.round(beatPosition);
+
+  // 負の拍（基準点より前=早すぎ）は0拍目に丸める
+  if (nearestBeat < 0) nearestBeat = 0;
+
+  // その拍の理論時刻
+  var beatTime = measureStartTime + nearestBeat * beatInterval;
+  // signed: 負=早い、正=遅い
+  var signed = now - beatTime;
+
+  var absDiff = Math.abs(signed);
+
+  var prevIdx = tappedBeats[nearestBeat];
+  if (prevIdx !== undefined) {
+    if (nearestBeat === 0 || absDiff < taps[prevIdx].diff) {
+      // 0拍目は常に上書き（早タップ仮登録を正タップで必ず更新できるようにする）
+      taps[prevIdx] = {diff: absDiff, signed: signed};
+    } else {
+      var fbEl = document.getElementById('fb-text');
+      fbEl.textContent = bsL('one_per_beat');
+      fbEl.className = 'fb-text';
+      return;
+    }
+  } else {
+    tappedBeats[nearestBeat] = taps.length;
+    taps.push({diff: absDiff, signed: signed});
+  }
+
+  // ── リアルタイム系統誤差補正 ──
+  var signedSum = taps.reduce(function(s, t) { return s + t.signed; }, 0);
+  var offset = signedSum / taps.length;
+  var correctedSigned = signed - offset;
+  var correctedAbs = Math.abs(correctedSigned);
+
+  if (correctedAbs < bestMs) bestMs = correctedAbs;
+  var totalCorrected = taps.reduce(function(s, t) {
+    return s + Math.abs(t.signed - offset);
+  }, 0);
+  avgMs = Math.round(totalCorrected / taps.length);
+
+  updateFeedback(correctedSigned, correctedAbs);
+  document.getElementById('tap-count-label').textContent = taps.length + ' / 16' + bsL('beats_suffix');
+}
+
+function updateFeedback(signed, abs) {
+  var el = document.getElementById('fb-text');
+  var txt, cls;
+  // 精度判定
+  if (abs <= 20) {
+    txt = bsL('fb_perfect'); cls = 'perfect';
+  } else if (abs <= 50) {
+    // 早い/遅いを区別
+    txt = signed < 0 ? bsL('fb_great_early') : bsL('fb_great_late');
+    cls = 'great';
+  } else if (abs <= 100) {
+    txt = signed < 0 ? bsL('fb_good_early') : bsL('fb_good_late');
+    cls = 'good';
+  } else {
+    txt = signed < 0 ? bsL('fb_too_early') : bsL('fb_too_late');
+    cls = 'off';
+  }
+  el.textContent = txt; el.className = 'fb-text ' + cls;
+  // 針の位置：signed 負=左（早）、正=右（遅）
+  var pct = Math.max(0, Math.min(1, (signed + MAX_D) / (MAX_D * 2)));
+  document.getElementById('deviation-needle').style.left = (pct * 100) + '%';
+  document.getElementById('avg-ms').textContent = avgMs + ' ms';
+  document.getElementById('best-ms').textContent = Math.round(bestMs) + ' ms';
+}
+
+function getRank(ms) {
+  for (var i = 0; i < RANKS.length; i++) { if (ms <= RANKS[i].max) return RANKS[i]; }
+  return RANKS[RANKS.length - 1];
+}
+
+function finishGame() {
+  clearInterval(beatTimer);
+  document.getElementById('tap-btn').disabled = true;
+  if (taps.length === 0) { showScreen('start'); return; }
+
+  var REQUIRED = MEAS; // 16
+
+  // ── 系統誤差（デバイス遅延）を補正 ──
+  // 全タップのsigned平均 = 機材由来の一定の遅延オフセット
+  // リズム感の本質は「ばらつき」なので、平均ズレを引いて評価する
+  var signedSum = taps.reduce(function(s, t) { return s + t.signed; }, 0);
+  var offset = signedSum / taps.length; // 系統的オフセット(ms)
+
+  // オフセット補正後の各タップの絶対ズレ（=本来のリズムのばらつき）
+  var correctedDiffs = taps.map(function(t) {
+    return Math.abs(t.signed - offset);
+  });
+
+  // 補正後の平均ズレ
+  var totalCorrected = correctedDiffs.reduce(function(s, d) { return s + d; }, 0);
+  var missCount = Math.max(0, REQUIRED - taps.length);
+  totalCorrected += missCount * MAX_D; // 未タップ分はペナルティ
+  var fAvg = Math.round(totalCorrected / REQUIRED);
+
+  // ベストも補正後の最小ズレ
+  var fBest = Math.round(Math.min.apply(null, correctedDiffs));
+
+  var rank = getRank(fAvg);
+  var fScore = scoreFor(fAvg, rank); // 帯内線形補間した評分
+  gameResult = {rank:rank, finalAvg:fAvg, finalBest:fBest, finalScore:fScore, tapCount:taps.length, offset:Math.round(offset)};
+  renderResult(rank, fAvg, fBest, taps.length);
+  showScreen('result');
+  renderQR();
+}
+
+// 共有QR：GAME_URL（入口HTML経由の新ドメイン）から動的SVG生成
+function renderQR() {
+  var box = document.getElementById('shareQrBox');
+  if (!box) return;
+  var svg;
+  try {
+    var qr = qrcode(0, 'M'); qr.addData(GAME_URL); qr.make();
+    svg = qr.createSvgTag({cellSize:4, margin:2, scalable:true});
+  } catch (e) {
+    svg = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#111;font-size:8px;word-break:break-all;padding:2px;box-sizing:border-box;text-align:center">' + GAME_URL + '</div>';
+  }
+  box.innerHTML = svg;
+}
+
+function renderResult(rank, avg, best, count) {
+  var lang = window.BS_LANG || 'zh';
+  var c = LV_COLORS[rank.tier - 1];     // tier(1..11) → 色index
+  // 机器人(10+)帯はカードに特別背景クラスを付与（FingerSpeedの超越演出を横展開）
+  var cap = document.getElementById('bs-share-capture');
+  if (cap) cap.classList.toggle('tier-robot', !!rank.robot);
+  document.getElementById('res-lv-num').textContent = 'Lv.' + rank.lv; // labelは '10+' 等
+  document.getElementById('res-lv-num').style.color = c;
+  document.getElementById('res-rank-name').textContent = rank.name[lang] || rank.name.zh;
+  document.getElementById('res-rank-name').style.color = c;
+  document.getElementById('res-comment').textContent = rank.comment[lang] || rank.comment.zh;
+  // ① 結果キャラ＝測定時の難易度に連動（言語切替の引き直しでも維持）
+  var resChar = document.getElementById('res-char');
+  if (resChar) resChar.src = diffCharSrc(measuredDiff);
+  // ③ キャラ下の難易度名＋BPM（測定時の難易度・言語切替で名称も再描画）
+  var diffLabel = document.getElementById('res-diff-label');
+  if (diffLabel) diffLabel.textContent = diffLabelText(measuredDiff);
+  // ② 評分は帯内線形補間（avg=fAvgから再計算。言語切替の引き直しでも一致）
+  document.getElementById('res-score').textContent = scoreFor(avg, rank);
+  document.getElementById('res-score').style.color = c;
+  document.getElementById('res-avg').innerHTML = avg + '<span class="stat-card-unit">ms</span>';
+  document.getElementById('res-best').innerHTML = best + '<span class="stat-card-unit">ms</span>';
+  document.getElementById('res-taps').textContent = count;
+  var bar = document.getElementById('color-bar');
+  bar.innerHTML = '';
+  for (var i = 0; i < 11; i++) {        // 11段化（tier段まで点灯）
+    var s = document.createElement('div');
+    s.className = 'color-bar-seg' + (i < rank.tier ? ' filled' : '');
+    s.style.background = LV_COLORS[i];
+    bar.appendChild(s);
+  }
+}
+
+// ══════════════════════════════════════════
+// シェアカード（純HTML・CDN不要）
+// ══════════════════════════════════════════
+function renderShareCard(rank, avg, best) {
+  var lang = window.BS_LANG || 'zh';
+  var c = LV_COLORS[rank.tier - 1];
+  // Lv
+  var lvEl = document.getElementById('sc-lv-num');
+  lvEl.textContent = 'Lv.' + rank.lv;
+  lvEl.style.color = c;
+  document.getElementById('sc-rank-name').textContent = rank.name[lang] || rank.name.zh;
+  document.getElementById('sc-rank-name').style.color = c;
+  document.getElementById('sc-comment').textContent = rank.comment[lang] || rank.comment.zh;
+  document.getElementById('sc-hashtag').style.color = c;
+  // カラーバー（11段化）
+  var bar = document.getElementById('sc-bar');
+  bar.innerHTML = '';
+  for (var i = 0; i < 11; i++) {
+    var s = document.createElement('div');
+    s.className = 'sc-bar-seg' + (i < rank.tier ? ' filled' : '');
+    s.style.background = LV_COLORS[i];
+    bar.appendChild(s);
+  }
+  // スタットカード（评分は帯内線形補間）
+  var stats = [
+    {label:'评分', val:scoreFor(avg, rank), unit:''},
+    {label:'平均偏差', val:avg, unit:'ms'},
+    {label:'最佳', val:best, unit:'ms'},
+    {label:'难度', val:DIFF[measuredDiff].label, unit:''}
+  ];
+  var sc = document.getElementById('sc-stats');
+  sc.innerHTML = '';
+  stats.forEach(function(s) {
+    var el = document.createElement('div');
+    el.className = 'sc-stat';
+    el.innerHTML = '<div class="sc-stat-label">' + s.label + '</div>' +
+      '<div class="sc-stat-val" style="color:' + (s.label==='评分'?c:'#F0EFF8') + '">' + s.val +
+      (s.unit ? '<span class="sc-stat-unit"> ' + s.unit + '</span>' : '') + '</div>';
+    sc.appendChild(el);
+  });
+}
+
+// ══════════════════════════════════════════
+// シェアボタン
+// ══════════════════════════════════════════
+document.getElementById('btn-screenshot').addEventListener('click', function() {
+  // WeChat/モバイル向け：長押し保存の案内
+  alert(bsL('screenshot_hint'));
+});
+
+document.getElementById('btn-copy-text').addEventListener('click', function() {
+  if (!gameResult) return;
+  var lang = window.BS_LANG || 'zh';
+  var r = gameResult;
+  var rname = r.rank.name[lang] || r.rank.name.zh;
+  var rcomment = r.rank.comment[lang] || r.rank.comment.zh;
+  var text = bsL('share_head') + '\n' +
+    rname + ' Lv.' + r.rank.lv + ' / ' + bsL('share_score_label') + ' ' + r.finalScore + '\n' +
+    bsL('share_avg_label') + ' ' + r.finalAvg + 'ms · ' + bsL('share_best_label') + ' ' + r.finalBest + 'ms\n' +
+    rcomment + '\n' +
+    bsL('share_cta') + ' ' + GAME_URL + '\n' +
+    bsL('share_tags');
+  // WeChat対応コピー
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.getElementById('btn-copy-text');
+      btn.textContent = bsL('copied');
+      setTimeout(function(){ btn.textContent = (BS_I18N.btn_copy[window.BS_LANG||'zh']||BS_I18N.btn_copy.zh); }, 2000);
+    }).catch(function() { fallbackCopy(text); });
+  } else {
+    fallbackCopy(text);
+  }
+});
+
+function fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try {
+    document.execCommand('copy');
+    var btn = document.getElementById('btn-copy-text');
+    btn.textContent = bsL('copied');
+    setTimeout(function(){ btn.textContent = (BS_I18N.btn_copy[window.BS_LANG||'zh']||BS_I18N.btn_copy.zh); }, 2000);
+  } catch(e) {
+    alert(bsL('copy_manual') + '\n\n' + text);
+  }
+  document.body.removeChild(ta);
+}
+
+// ══════════════════════════════════════════
+// リトライ・画面切替
+// ══════════════════════════════════════════
+document.getElementById('btn-retry').addEventListener('click', function() {
+  clearInterval(beatTimer);
+  showScreen('start');
+});
+
+// 公众号カード：タップでQR開閉
+document.getElementById('gzh-card').addEventListener('click', function() {
+  var w = document.getElementById('gzh-qr-wrap');
+  var open = w.classList.toggle('show');
+  document.getElementById('gzh-arrow').textContent = open ? '⌄' : '›';
+});
+
+function showScreen(name) {
+  document.getElementById('screen-start').style.display  = name==='start'  ? 'block' : 'none';
+  document.getElementById('screen-game').style.display   = name==='game'   ? 'block' : 'none';
+  document.getElementById('screen-result').style.display = name==='result' ? 'block' : 'none';
+}
+
+// 公众号QR（固定）を shared-assets.js から差し込み
+var gq = document.getElementById('gzhQrImg'); if(gq) gq.src = window.BS_ASSETS.GZH_QR;
+/* 統一テンプレート：共通アセット注入 */
+(function(){
+  var A = window.BS_ASSETS || {};
+  ['bs-banner-top','bs-banner-game','bs-banner-res'].forEach(function(id){
+    var n=document.getElementById(id); if(n && A.LOGO_BANNER) n.src=A.LOGO_BANNER;
+  });
+  // Top中央Iconはゲームの顔(固定・ICON_RHYTHM)。難易度では変えない（訂正2026-06-17）。
+  var hero=document.getElementById('bs-hero-rhythm'); if(hero && A.ICON_RHYTHM) hero.src=A.ICON_RHYTHM;
+  // ② 難易度キャラを各カード内に表示（简单=A / 普通=B / 困难=C）
+  var cEasy=document.getElementById('d-char-easy');     if(cEasy)   cEasy.src=diffCharSrc('easy');
+  var cNormal=document.getElementById('d-char-normal'); if(cNormal) cNormal.src=diffCharSrc('normal');
+  var cHard=document.getElementById('d-char-hard');     if(cHard)   cHard.src=diffCharSrc('hard');
+  // 結果カード下部のシェアアイコンはゲーム識別用にICON_RHYTHMのまま
+  var shareIcon=document.getElementById('bs-share-game-icon'); if(shareIcon && A.ICON_RHYTHM) shareIcon.src=A.ICON_RHYTHM;
+  document.querySelectorAll('.bs-logo-asset').forEach(function(n){ if(A.LOGO) n.src=A.LOGO; });
+})();
+
+/* ===== 言語切替（zh/ja/en・主要テキスト。結果称号は今後追加） ===== */
+var BS_I18N = {
+  "title": {
+    "zh": "节奏测试",
+    "ja": "リズムテスト",
+    "en": "Rhythm Test"
+  },
+  "desc": {
+    "zh": "先听 2 小节准备节拍，然后从第 3 小节开始<br>跟着节拍点击！全 10 个等级，测出你的节奏感。",
+    "ja": "最初の2小節で準備拍を聞き、3小節目から<br>ビートに合わせてタップ！全10レベルでリズム感を測定。",
+    "en": "Listen to 2 prep bars, then from bar 3<br>tap to the beat! 10 levels to measure your timing."
+  },
+  "diff_label": {
+    "zh": "选择难度",
+    "ja": "難易度を選択",
+    "en": "Select Difficulty"
+  },
+  "diff_easy": {
+    "zh": "简单",
+    "ja": "イージー",
+    "en": "Easy"
+  },
+  "diff_normal": {
+    "zh": "普通",
+    "ja": "ノーマル",
+    "en": "Normal"
+  },
+  "diff_hard": {
+    "zh": "困难",
+    "ja": "ハード",
+    "en": "Hard"
+  },
+  "start": {
+    "zh": "开始测试",
+    "ja": "スタート",
+    "en": "Start"
+  },
+  "prep": {
+    "zh": "准备中…",
+    "ja": "準備中…",
+    "en": "Get ready…"
+  },
+  "fb_ready": {
+    "zh": "听准节拍，准备好了就点击！",
+    "ja": "ビートを聞いて、準備ができたらタップ！",
+    "en": "Listen to the beat, then tap!"
+  },
+  "dev_early": {
+    "zh": "偏早",
+    "ja": "早い",
+    "en": "Early"
+  },
+  "dev_perfect": {
+    "zh": "刚好",
+    "ja": "ぴったり",
+    "en": "Perfect"
+  },
+  "dev_late": {
+    "zh": "偏晚",
+    "ja": "遅い",
+    "en": "Late"
+  },
+  "avg_dev": {
+    "zh": "平均偏差",
+    "ja": "平均誤差",
+    "en": "Avg. Offset"
+  },
+  "best_score": {
+    "zh": "最佳成绩",
+    "ja": "ベスト",
+    "en": "Best"
+  },
+  "score": {
+    "zh": "评分",
+    "ja": "スコア",
+    "en": "Score"
+  },
+  "best": {
+    "zh": "最佳",
+    "ja": "ベスト",
+    "en": "Best"
+  },
+  "valid_taps": {
+    "zh": "有效点击",
+    "ja": "有効タップ",
+    "en": "Valid Taps"
+  },
+  "share_badge": {
+    "zh": "扫码挑战",
+    "ja": "QRで挑戦",
+    "en": "Scan to Try"
+  },
+  "share_title": {
+    "zh": "你的节奏感有几级？",
+    "ja": "あなたのリズム感は何級？",
+    "en": "What's your rhythm level?"
+  },
+  "btn_screenshot": {
+    "zh": "截图分享给你的朋友",
+    "ja": "スクショして友達にシェア",
+    "en": "Screenshot & Share"
+  },
+  "btn_copy": {
+    "zh": "复制文字",
+    "ja": "テキストをコピー",
+    "en": "Copy Text"
+  },
+  "promo_title": {
+    "zh": "加入贝斯手社区",
+    "ja": "ベーシストコミュニティに参加",
+    "en": "Join the Bassist Community"
+  },
+  "retry": {
+    "zh": "再测一次",
+    "ja": "もう一度",
+    "en": "Try Again"
+  },
+  "demo_tag": {
+    "zh": "Demo 体验版",
+    "ja": "Demo 体験版",
+    "en": "Demo"
+  },
+  "platform_desc": {
+    "zh": "贝斯手专属平台<br>乐谱・器材・社区一站式",
+    "ja": "ベーシスト専用プラットフォーム<br>楽譜・機材・コミュニティのワンストップ",
+    "en": "Bassist platform<br>Scores, gear & community in one"
+  },
+  "share_card_sub": {
+    "zh": "BASS SHOW · 节奏测试",
+    "ja": "BASS SHOW · リズムテスト",
+    "en": "BASS SHOW · Rhythm Test"
+  },
+  "promo_gzh_name": {
+    "zh": "加入贝斯手交流群",
+    "ja": "ベーシスト交流グループに参加",
+    "en": "Join the Bassist Group"
+  },
+  "promo_gzh_desc": {
+    "zh": "扫码关注公众号 · 回复「入群」即可进群",
+    "ja": "QRで公式アカウントをフォロー→「入群」と返信で参加",
+    "en": "Scan to follow, reply \"入群\" to join"
+  },
+  "promo_gzh_steps": {
+    "zh": "① 微信扫码关注 → ② 回复「入群」→ ③ 收到进群方式",
+    "ja": "①WeChatでQRフォロー→②「入群」と返信→③参加方法が届く",
+    "en": "① Scan on WeChat → ② Reply \"入群\" → ③ Get the invite"
+  },
+  "promo_bili_name": {
+    "zh": "Bilibili · 在华日本音乐人MASATO",
+    "ja": "Bilibili · 在中日本人ミュージシャンMASATO",
+    "en": "Bilibili · MASATO, Japanese musician in China"
+  },
+  "promo_bili_desc": {
+    "zh": "贝斯教学视频 · BASS SHOW系列<br>6,700+ 粉丝 · 3万获赞",
+    "ja": "ベース教則動画 · BASS SHOWシリーズ<br>フォロワー6,700+ · いいね3万",
+    "en": "Bass lessons · BASS SHOW series<br>6,700+ followers · 30k likes"
+  },
+  "promo_games_name": {
+    "zh": "BASS SHOW 小游戏合集",
+    "ja": "BASS SHOW ミニゲーム集",
+    "en": "BASS SHOW Mini-Games"
+  },
+  "promo_games_desc": {
+    "zh": "更多贝斯手测试 · 性格诊断・实力训练",
+    "ja": "ベーシスト診断もっと · 性格診断・実力トレーニング",
+    "en": "More tests · personality & skill"
+  }
+};
+function bsApplyLang(lang){
+  window.BS_LANG = lang;
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var key=el.getAttribute('data-i18n');
+    var dict=BS_I18N[key];
+    if(dict && dict[lang]) el.innerHTML=dict[lang];
+  });
+  document.querySelectorAll('.bs-lang-switch button').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-lang')===lang);
+  });
+  document.documentElement.lang = (lang==='zh'?'zh-CN':lang);
+  // 動的生成テキストの再描画（言語切替に追従させる）
+  // 結果画面が表示中なら称号・コメント等を引き直す
+  if(window.gameResult && typeof renderResult==='function'){
+    var g=window.gameResult;
+    renderResult(g.rank, g.finalAvg, g.finalBest, g.tapCount);
+  }
+}
+(function(){
+  var sw=document.getElementById('bs-lang-switch');
+  if(sw){
+    sw.addEventListener('click', function(e){
+      var b=e.target.closest('button[data-lang]'); if(!b) return;
+      bsApplyLang(b.getAttribute('data-lang'));
+    });
+  }
+  // 初期言語は中国語
+  bsApplyLang('zh');
+})();
+
+
+showScreen('start');
+</script>
+</body>
+</html>
