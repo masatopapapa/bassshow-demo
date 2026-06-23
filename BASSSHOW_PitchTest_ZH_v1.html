@@ -462,13 +462,15 @@ var MASTER=null;   // v2修正3：全音を通すマスター（リミッター�
 function ac(){
   if(!AC){
     AC=new (window.AudioContext||window.webkitAudioContext)();
-    // マスターリミッター：音量1.5倍化で複数倍音が重なってもクリップしないよう抑える
+    // v2.1：マスターリミッターをソフト設定に。
+    //   旧設定(threshold-6/ratio12/attack3ms)はアタックで急激に潰れ「ポンッ」というポンピング雑音が出ていた。
+    //   knee を広く、ratio を緩め、attack を少し伸ばして、歪み防止の安全網として滑らかに効かせる。
     MASTER=AC.createDynamicsCompressor();
-    MASTER.threshold.setValueAtTime(-6, AC.currentTime);
-    MASTER.knee.setValueAtTime(6, AC.currentTime);
-    MASTER.ratio.setValueAtTime(12, AC.currentTime);
-    MASTER.attack.setValueAtTime(0.003, AC.currentTime);
-    MASTER.release.setValueAtTime(0.15, AC.currentTime);
+    MASTER.threshold.setValueAtTime(-3, AC.currentTime);   // 効き始めを上げる（通常時はほぼ素通し）
+    MASTER.knee.setValueAtTime(18, AC.currentTime);        // 広いソフトニー（急変を避ける）
+    MASTER.ratio.setValueAtTime(6, AC.currentTime);        // 緩めの圧縮
+    MASTER.attack.setValueAtTime(0.008, AC.currentTime);   // アタックを少し伸ばしポンピング抑制
+    MASTER.release.setValueAtTime(0.25, AC.currentTime);   // 緩やかなリリース
     MASTER.connect(AC.destination);
   }
   return AC;
@@ -488,8 +490,10 @@ function midiToFreq(m){ return 440*Math.pow(2,(m-69)/12); }
 
 function bassNote(midi,when){
   var c=ac(), t0=c.currentTime+when, f=midiToFreq(midi);
-  // v2修正1：出力ゲインを 0.9→1.35（おおよそ1.5倍）。クリップ回避のためマスターに soft limit 用の余裕を残す。
-  var out=c.createGain(); out.gain.value=1.35; out.connect(masterNode());
+  // v2.1：出力ゲインを 1.35→1.0 に低減。リミッターを緩めた分、突入量を下げて
+  //   コンプの急激なゲインリダクション（ポンピング雑音）を避ける。
+  //   体感音量は「素の音圧 × 軽いリミッティング」で v2 と同等程度を確保。
+  var out=c.createGain(); out.gain.value=1.0; out.connect(masterNode());
 
   // v2修正1：ローパスを「サスティーン中もある程度開いたまま」に。
   //   旧設計は f*1.4 まで落ちて基音以外を削り、こもって音程が不明瞭だった。
@@ -500,13 +504,19 @@ function bassNote(midi,when){
   lp.Q.value=1.2;            // v2: 3→1.2（共振による色付き・濁りを低減）
   lp.connect(out);
 
-  // v2修正1：エンベロープ。アタック後すぐ落とさず、サスティーンを長く保ってから緩やかに減衰。
+  // v2.1修正：破裂音（クリック/ポップ）対策。
+  //   アタックは 0 から linearRamp で立ち上げ、低周波の波形断ち切りクリックを防ぐ。
+  //   末尾は exponential ではなく linearRampToValueAtTime で「実質ゼロ(0)」まで確実に落とし切る
+  //   （指数ランプは 0 に到達できず微小振幅が残り、stop で断ち切られて破裂音になっていた）。
+  var END=NOTE_LEN;                 // 振幅が 0 に到達する時刻
+  var STOP=t0+END+0.03;             // stop は無音到達後に置く
   var env=c.createGain();
-  env.gain.setValueAtTime(0.0001,t0);
-  env.gain.exponentialRampToValueAtTime(1.0,t0+0.012);          // 速いアタック
-  env.gain.exponentialRampToValueAtTime(0.72,t0+0.20);          // v2: 0.45→0.72（サスティーンを高く維持）
-  env.gain.exponentialRampToValueAtTime(0.50,t0+NOTE_LEN*0.6);  // 緩やかに減衰
-  env.gain.exponentialRampToValueAtTime(0.0008,t0+NOTE_LEN);    // 末尾でフェードアウト（プチノイズ防止）
+  env.gain.setValueAtTime(0,t0);
+  env.gain.linearRampToValueAtTime(1.0,t0+0.015);              // 0→1 線形アタック（クリック防止）
+  env.gain.exponentialRampToValueAtTime(0.72,t0+0.20);        // サスティーンを高く維持
+  env.gain.exponentialRampToValueAtTime(0.50,t0+END*0.6);     // 緩やかに減衰
+  env.gain.exponentialRampToValueAtTime(0.02,t0+END*0.92);    // ここまで指数で自然に
+  env.gain.linearRampToValueAtTime(0,t0+END);                 // 最後は線形で完全な 0 へ
   env.connect(lp);
 
   function osc(type,freq,gain,detune,decayTo,decayT){
@@ -514,18 +524,20 @@ function bassNote(midi,when){
     var g=c.createGain(); g.gain.setValueAtTime(gain,t0);
     if(decayTo!==undefined){ g.gain.exponentialRampToValueAtTime(Math.max(0.0001,decayTo),t0+(decayT||0.3)); }
     o.connect(g); g.connect(env);
-    o.start(t0); o.stop(t0+NOTE_LEN+0.05);
+    // env が END で完全な 0 になっているので、その後 STOP で停止しても断ち切りクリックは出ない
+    o.start(t0); o.stop(STOP);
     activeNodes.push(o,g);
   }
   // v2修正1+3：倍音構成をクリアに。
   //   基音(sine)を主役にしつつ、ピッチ感を補強する偶数倍音を程よく。
   //   濁りの原因だった triangle の detune 唸りを排除（detune=0）。
   //   高次倍音は鳴りっぱなしにせず緩やかに減衰させ、アタックだけ濁る現象を防ぐ。
-  osc("sine",     f,     1.00, 0);              // 基音（主役）
-  osc("sine",     f/2,   0.40, 0);              // サブオクターブ（ベースらしい厚み）
-  osc("triangle", f,     0.30, 0);              // v2: detune 4→0（唸り除去）。基音を補強
-  osc("sine",     f*2,   0.18, 0, 0.05, 0.8);   // 2倍音：ゆっくり減衰でピッチ感を支える
-  osc("sine",     f*3,   0.07, 0, 0.02, 0.5);   // 3倍音：ごく薄く
+  // v2.1：倍音 gain を微調整（同位相時の理論ピークを下げ、リミッター突入を緩和）。
+  osc("sine",     f,     0.90, 0);              // 基音（主役）
+  osc("sine",     f/2,   0.34, 0);              // サブオクターブ（ベースらしい厚み）
+  osc("triangle", f,     0.24, 0);              // 基音を補強（detune 無しで唸り無し）
+  osc("sine",     f*2,   0.15, 0, 0.05, 0.8);   // 2倍音：ゆっくり減衰でピッチ感を支える
+  osc("sine",     f*3,   0.06, 0, 0.02, 0.5);   // 3倍音：ごく薄く
 
   activeNodes.push(out,lp,env);
 }
