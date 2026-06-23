@@ -690,6 +690,23 @@ function finish(){
   renderResult();
   showScreen('result');
   renderQR();
+  // ── 結果演出（到達時1回・言語切替の renderResult では発動させない）──
+  if(window.BS_RESULT){
+    var _idx=titleIdxOf(score), _tier=_idx+1;
+    BS_RESULT.reveal({
+      host:      document.getElementById('bs-share-capture'),
+      valueEl:   document.getElementById('res-score'),
+      titleEl:   document.getElementById('res-rank-name'),
+      value:     score,
+      decimals:  1,
+      title:     titleOf(s.diff, score),
+      isTopTier: _tier>=10,              // Lv10以上（绝对音感疑い含む）で別格演出
+      scoreRatio: score/100,
+      accent:    LV_COLORS[_idx],
+      // カウント完了後にフェードイン表示（評価コメント・カラーバー）
+      revealEls: ['res-comment', 'color-bar']
+    });
+  }
 }
 
 function renderResult(){
@@ -782,8 +799,8 @@ function fallbackCopy(text){
 // ══════════════════════════════════════════
 document.getElementById("btn-next").onclick=function(){ stopAll(); state.idx++; nextQuestion(); };
 document.getElementById("btn-play").onclick=function(){ if(state&&state.cur) playQuestion(state.cur); };
-document.getElementById("btn-again").onclick=function(){ stopAll(); if(window.gameResult) startGame(window.gameResult.diff); };
-document.getElementById("btn-home").onclick=function(){ stopTimer(); stopAll(); showScreen('start'); };
+document.getElementById("btn-again").onclick=function(){ if(window.BS_RESULT) BS_RESULT.stop(); stopAll(); if(window.gameResult) startGame(window.gameResult.diff); };
+document.getElementById("btn-home").onclick=function(){ if(window.BS_RESULT) BS_RESULT.stop(); stopTimer(); stopAll(); showScreen('start'); };
 document.querySelectorAll(".diff-card").forEach(function(c){ c.onclick=function(){ startGame(c.dataset.diff); }; });
 
 // 公众号カード：タップでQR開閉

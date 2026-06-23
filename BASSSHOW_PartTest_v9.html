@@ -749,7 +749,23 @@ function choose(i){
   if(idx===8){ addDynamicQuestions(); }   // 8問終えたら接戦軸の動的2問を追加
   if(idx>=quizQ.length){ finish(); } else { renderQ(); }
 }
-function finish(){resultKey=judge(score);renderResult();show("s-result");}
+function finish(){
+  resultKey=judge(score);renderResult();show("s-result");
+  // ── 結果演出（到達時1回・言語切替の renderResult では発動させない）──
+  // PartTest は2値診断（普通/レア）。スコアカウントが無いため revealBadge で結果名を登場。
+  if(window.BS_RESULT){
+    BS_RESULT.revealBadge({
+      host:    el("resCard"),
+      badgeEl: el("rName"),                 // 結果タイプ名を flip 登場
+      rare:    !!RARE[resultKey],           // レア5タイプ=別格演出 / 普通5タイプ=控えめ
+      style:   'flip',
+      accent:  '#ffd23f',                   // ゴールド系グロー（--accent2 相当）
+      suspenseMs: 2000,                     // カウント不可のため「診断中…」で約2秒稼ぐ
+      // 演出後に表示（キャラ・タグ・レアバッジ・紹介文・軸バー）
+      revealEls: ['rEmoji','rTag','rRare','rBody','rBars']
+    });
+  }
+}
 
 function renderResult(){
   const r=RESULTS[resultKey], L=r[lang];
@@ -815,7 +831,7 @@ document.querySelectorAll("#bs-lang-switch button").forEach(b=>{
 });
 el("startBtn").onclick=startQuiz;
 el("copyBtn").onclick=copyShare;
-el("retryBtn").onclick=retry;
+el("retryBtn").onclick=function(){if(window.BS_RESULT)BS_RESULT.stop();retry();};
 // 截图分享：機能なし＝手動スクショ案内（html2canvas不採用・WeChatで不確実なため）
 {const bs=el("btn-screenshot"); if(bs) bs.onclick=()=>toast(T[lang].toastShot);}
 el("togOpen").onclick=()=>{shareMode="open";applyShareMode();};

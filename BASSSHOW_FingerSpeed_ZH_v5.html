@@ -625,6 +625,26 @@
     showResult.last={fingers:fingers,valid:validCount,perSec:perSec,bpm:bpm,acc:acc,rank:rank,tier:tier,pb:pb};
     show(scResult);
     renderQR();
+    // ── 結果演出（到達時1回・言語切替の rerenderResult では発動させない）──
+    if(window.BS_RESULT){
+      var _topTier=(tier==='transcend'||tier==='machine');   // Lv10以上（超越段・機械疑い段）で別格演出
+      var _maxBpm=(fingers===3?400:350);
+      BS_RESULT.reveal({
+        host:      $('bs-share-capture'),
+        valueEl:   $('r-bpm'),
+        titleEl:   $('r-rank'),
+        value:     bpm,
+        decimals:  0,
+        unit:      'BPM',
+        title:     $('r-rank').textContent,    // applyTier 適用後の Lv 表記（Lv.X / Lv.10⁺ / Lv.∞）
+        isTopTier: _topTier,
+        scoreRatio: Math.min(1, bpm/_maxBpm),
+        accent:    (tier==='machine'?'#ff6b6b':'#ffd24a'),
+        // カウント完了後にフェードイン表示（次/秒の主役数値・評価コメント・カラーバー）
+        // ※カウント対象は BPM(r-bpm)。r-main(次/秒) は答えが先見えしないよう演出後に表示
+        revealEls: ['r-main','r-lv-comment','color-bar']
+      });
+    }
   }
 
   // 段階に応じてLvバッジ・コメント・カラーバー・カード演出を適用
@@ -713,7 +733,7 @@
   }
 
   $('btn-start').addEventListener('pointerdown',startGame);
-  $('btn-again').addEventListener('pointerdown',function(){show(scStart);});
+  $('btn-again').addEventListener('pointerdown',function(){if(window.BS_RESULT)BS_RESULT.stop();show(scStart);});
 
   // gzh QR toggle (from v8)
   $('gzh-card').addEventListener('click',function(){

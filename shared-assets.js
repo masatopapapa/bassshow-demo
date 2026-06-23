@@ -2351,3 +2351,439 @@ var qrcode = function() {
   };
 
 })();
+
+
+/* ============================================================
+ * BS_RESULT  —  BASS SHOW 共通リザルト演出モジュール
+ * shared-assets.js に追記する想定（BS_QR / CHAR_LV3 と同じ命名規約）
+ *
+ * 使い方:
+ *   BS_RESULT.reveal({
+ *     host:        document.getElementById('result-screen'), // 演出を載せる要素
+ *     value:       183,            // 主役メトリックの最終値（数値）
+ *     displayValue:'183',          // 表示文字列（任意・小数や桁区切り対応）
+ *     unit:        'BPM',          // 単位ラベル
+ *     decimals:    0,              // カウントアップ時の小数桁
+ *     title:       '超越段',        // 称号テキスト
+ *     titleEl:     elTitle,        // 称号を描画する既存DOM（任意）
+ *     valueEl:     elValue,        // 数値を描画する既存DOM（任意）
+ *     grade:       2,              // 0=控えめ 1=高帯 2=最上位 （未指定なら gradeFor で自動）
+ *     accent:      '#ffd24a',      // 最上位グロー色（任意）
+ *     onDone:      ()=>{}          // 完了コールバック（任意）
+ *   });
+ *
+ * grade を渡さない場合、scoreRatio(0..1) から自動判定:
+ *   ratio < 0.55 -> 0(控えめ) / < 0.88 -> 1(高帯) / それ以上 -> 2(最上位)
+ *   ※ isTopTier:true を渡すと ratio に関わらず grade=2 に固定
+ * ============================================================ */
+(function (global) {
+  'use strict';
+
+  // ---- 内部状態（多重発火ガード）----
+  var _running = false;
+  var _rafIds = [];
+  var _timers = [];
+  var _styleInjected = false;
+
+  function _clearAll() {
+    _rafIds.forEach(function (id) { cancelAnimationFrame(id); });
+    _timers.forEach(function (id) { clearTimeout(id); });
+    _rafIds = [];
+    _timers = [];
+  }
+  function _raf(fn) { var id = requestAnimationFrame(fn); _rafIds.push(id); return id; }
+  function _wait(ms, fn) { var id = setTimeout(fn, ms); _timers.push(id); return id; }
+
+  // ---- スタイル注入（1回のみ）----
+  function _injectStyle() {
+    if (_styleInjected) return;
+    _styleInjected = true;
+    var css =
+      '.bsr-layer{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:30}' +
+      '.bsr-title-pop{animation:bsrPop .5s cubic-bezier(.18,1.5,.4,1) both}' +
+      '@keyframes bsrPop{0%{transform:scale(.2);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}' +
+      '.bsr-glow{animation:bsrGlow 1.4s ease-in-out infinite}' +
+      '@keyframes bsrGlow{0%,100%{text-shadow:0 0 6px var(--bsr-accent,#ffd24a),0 0 14px var(--bsr-accent,#ffd24a)}50%{text-shadow:0 0 16px var(--bsr-accent,#ffd24a),0 0 36px var(--bsr-accent,#ffd24a)}}' +
+      '.bsr-flash{position:absolute;inset:0;background:#fff;opacity:0;z-index:40;pointer-events:none;animation:bsrFlash .5s ease-out forwards}' +
+      '@keyframes bsrFlash{0%{opacity:.85}100%{opacity:0}}' +
+      '.bsr-shake{animation:bsrShake .45s ease-in-out}' +
+      '@keyframes bsrShake{0%,100%{transform:translate(0,0)}20%{transform:translate(-4px,2px)}40%{transform:translate(4px,-2px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(3px,2px)}}' +
+      '.bsr-pulse-ring{position:absolute;left:50%;top:50%;width:20px;height:20px;border:3px solid var(--bsr-accent,#ffd24a);border-radius:50%;transform:translate(-50%,-50%) scale(0);opacity:.9;animation:bsrRing .9s ease-out forwards}' +
+      '@keyframes bsrRing{to{transform:translate(-50%,-50%) scale(18);opacity:0}}' +
+      // バッジ（PartTest等・数値なし結果）用
+      '.bsr-badge-flip{animation:bsrFlip .7s cubic-bezier(.2,.9,.3,1) both;transform-style:preserve-3d}' +
+      '@keyframes bsrFlip{0%{transform:perspective(600px) rotateY(90deg) scale(.7);opacity:0}60%{transform:perspective(600px) rotateY(-12deg) scale(1.08)}100%{transform:perspective(600px) rotateY(0) scale(1);opacity:1}}' +
+      '.bsr-badge-pop{animation:bsrPop .55s cubic-bezier(.18,1.5,.4,1) both}' +
+      // 「演出後にフェードイン表示」する要素用（称号/Lv/コメント/カラーバー等）
+      '.bsr-reveal-in{animation:bsrRevealIn .5s ease-out both}' +
+      '@keyframes bsrRevealIn{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:translateY(0)}}' +
+      // サスペンス（PartTest「診断中…」）用
+      '.bsr-suspense{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:35;pointer-events:none}' +
+      '.bsr-suspense-dots{display:flex;gap:8px}' +
+      '.bsr-suspense-dots i{width:12px;height:12px;border-radius:50%;background:var(--bsr-accent,#ffd24a);opacity:.3;animation:bsrDot 1s ease-in-out infinite}' +
+      '.bsr-suspense-dots i:nth-child(2){animation-delay:.16s}' +
+      '.bsr-suspense-dots i:nth-child(3){animation-delay:.32s}' +
+      '@keyframes bsrDot{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}' +
+      '.bsr-suspense-fade{animation:bsrSusFade .35s ease-out forwards}' +
+      '@keyframes bsrSusFade{to{opacity:0}}';
+    var st = document.createElement('style');
+    st.id = 'bsr-style';
+    st.textContent = css;
+    document.head.appendChild(st);
+  }
+
+  // ---- イージング ----
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  function easeOutBack(t) {
+    var c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  }
+
+  // ---- grade 自動判定 ----
+  function gradeFor(ratio, isTopTier) {
+    if (isTopTier) return 2;
+    if (typeof ratio !== 'number' || isNaN(ratio)) return 0;
+    if (ratio < 0.55) return 0;
+    if (ratio < 0.88) return 1;
+    return 2;
+  }
+
+  // ---- カウントアップ ----
+  function countUp(el, to, decimals, durationMs, done) {
+    if (!el) { if (done) done(); return; }
+    var from = 0;
+    var start = null;
+    var dur = Math.max(200, durationMs);
+    function step(ts) {
+      if (start === null) start = ts;
+      var p = Math.min(1, (ts - start) / dur);
+      var v = from + (to - from) * easeOutCubic(p);
+      el.textContent = v.toFixed(decimals);
+      if (p < 1) { _raf(step); }
+      else { el.textContent = to.toFixed(decimals); if (done) done(); }
+    }
+    _raf(step);
+  }
+
+  // ---- 紙吹雪 ----
+  function confetti(layer, opts) {
+    opts = opts || {};
+    var count = opts.count || 60;
+    var colors = opts.colors || ['#e23b3b', '#ffd24a', '#3bb0e2', '#54d36a', '#ffffff'];
+    var gold = opts.gold;
+    var W = layer.clientWidth || 320;
+    var H = layer.clientHeight || 480;
+    var pieces = [];
+    var i;
+    for (i = 0; i < count; i++) {
+      var el = document.createElement('div');
+      var sz = 6 + Math.random() * 6;
+      el.style.position = 'absolute';
+      el.style.width = sz + 'px';
+      el.style.height = (sz * 0.6) + 'px';
+      el.style.background = gold
+        ? (Math.random() < 0.7 ? '#ffd24a' : '#fff3b0')
+        : colors[(Math.random() * colors.length) | 0];
+      el.style.left = (Math.random() * W) + 'px';
+      el.style.top = '-20px';
+      el.style.opacity = '0.95';
+      el.style.borderRadius = Math.random() < 0.5 ? '2px' : '50%';
+      layer.appendChild(el);
+      pieces.push({
+        el: el,
+        x: parseFloat(el.style.left),
+        y: -20,
+        vx: (Math.random() - 0.5) * 2.4,
+        vy: 2 + Math.random() * 3,
+        rot: Math.random() * 360,
+        vr: (Math.random() - 0.5) * 18,
+        sway: 0.5 + Math.random() * 1.5
+      });
+    }
+    var t0 = null;
+    var life = opts.life || 2200;
+    function frame(ts) {
+      if (t0 === null) t0 = ts;
+      var elapsed = ts - t0;
+      var k = 0;
+      for (k = 0; k < pieces.length; k++) {
+        var p = pieces[k];
+        p.x += p.vx + Math.sin((elapsed / 240) + p.sway) * 0.8;
+        p.y += p.vy;
+        p.vy += 0.04;
+        p.rot += p.vr;
+        p.el.style.transform = 'translate(' + (p.x - parseFloat(p.el.style.left)) + 'px,' + p.y + 'px) rotate(' + p.rot + 'deg)';
+        if (elapsed > life - 500) {
+          p.el.style.opacity = String(Math.max(0, (life - elapsed) / 500) * 0.95);
+        }
+      }
+      if (elapsed < life && pieces.some(function (p) { return p.y < H + 40; })) {
+        _raf(frame);
+      } else {
+        pieces.forEach(function (p) { if (p.el.parentNode) p.el.parentNode.removeChild(p.el); });
+      }
+    }
+    _raf(frame);
+  }
+
+  // ---- メイン ----
+  function reveal(o) {
+    o = o || {};
+    var host = o.host;
+    if (!host) { console.warn('[BS_RESULT] host が指定されていません'); return; }
+
+    _injectStyle();
+    // 再入時：進行中のタイマー/rAF停止に加え、生成済みレイヤーDOMも除去
+    if (_running) {
+      _clearAll();
+      var stale = document.querySelectorAll('.bsr-layer');
+      stale.forEach(function (l) { if (l.parentNode) l.parentNode.removeChild(l); });
+      _running = false;
+    }
+    _running = true;
+
+    // host を演出の基準に（position 確保）
+    var hostPos = getComputedStyle(host).position;
+    if (hostPos === 'static') { host.style.position = 'relative'; }
+
+    var accent = o.accent || '#ffd24a';
+    host.style.setProperty('--bsr-accent', accent);
+
+    var value = (typeof o.value === 'number') ? o.value : parseFloat(o.value) || 0;
+    var decimals = (typeof o.decimals === 'number') ? o.decimals : 0;
+    var grade = (typeof o.grade === 'number')
+      ? o.grade
+      : gradeFor(o.scoreRatio, o.isTopTier);
+
+    // 称号は伏せておく
+    if (o.titleEl) { o.titleEl.style.visibility = 'hidden'; }
+    // カウントアップ完了後に出す要素（称号/Lv/コメント/カラーバー等）も伏せる
+    var revealEls = _normalizeEls(o.revealEls);
+    revealEls.forEach(function (el) { el.style.visibility = 'hidden'; });
+
+    // 演出レイヤー
+    var layer = document.createElement('div');
+    layer.className = 'bsr-layer';
+    host.appendChild(layer);
+
+    // カウント時間：盛り上げのため一律 2 秒（要望反映）
+    var countDur = 2000;
+
+    function showTitle() {
+      if (o.titleEl) {
+        if (typeof o.title === 'string') o.titleEl.textContent = o.title;
+        o.titleEl.style.visibility = 'visible';
+        o.titleEl.classList.remove('bsr-title-pop');
+        void o.titleEl.offsetWidth; // reflow で再アニメ
+        o.titleEl.classList.add('bsr-title-pop');
+      }
+      // カウント完了後に結果要素をフェードイン表示
+      revealEls.forEach(function (el) {
+        el.style.visibility = 'visible';
+        el.classList.remove('bsr-reveal-in');
+        void el.offsetWidth;
+        el.classList.add('bsr-reveal-in');
+      });
+
+      if (grade === 0) {
+        _finish(o);
+        return;
+      }
+
+      if (grade === 1) {
+        confetti(layer, { count: 50, life: 2000 });
+        // パルスリング1発
+        var ring = document.createElement('div');
+        ring.className = 'bsr-pulse-ring';
+        layer.appendChild(ring);
+        _wait(2100, function () { _cleanupLayer(layer); _finish(o); });
+        return;
+      }
+
+      // grade === 2 : 最上位別格（要望反映：全体で約3秒）
+      var flash = document.createElement('div');
+      flash.className = 'bsr-flash';
+      layer.appendChild(flash);
+      host.classList.add('bsr-shake');
+      _wait(460, function () { host.classList.remove('bsr-shake'); });
+
+      // ゴールド紙吹雪豪雨
+      confetti(layer, { count: 120, gold: true, life: 3000 });
+      // 三重リング（尺を延ばして盛り上げ）
+      [0, 260, 520].forEach(function (delay) {
+        _wait(delay, function () {
+          var ring = document.createElement('div');
+          ring.className = 'bsr-pulse-ring';
+          layer.appendChild(ring);
+        });
+      });
+      // 称号にグロー脈動
+      if (o.titleEl) {
+        _wait(500, function () { o.titleEl.classList.add('bsr-glow'); });
+      }
+      _wait(3000, function () { _cleanupLayer(layer); _finish(o); });
+    }
+
+    // カウントアップ開始 → 完了で称号
+    if (o.valueEl) {
+      countUp(o.valueEl, value, decimals, countDur, showTitle);
+    } else {
+      _wait(countDur, showTitle);
+    }
+  }
+
+  // revealEls を DOM配列に正規化（要素 / id文字列 / 配列 を許容）
+  function _normalizeEls(v) {
+    if (!v) return [];
+    if (!Array.isArray(v)) v = [v];
+    var out = [];
+    v.forEach(function (x) {
+      var el = (typeof x === 'string') ? document.getElementById(x) : x;
+      if (el) out.push(el);
+    });
+    return out;
+  }
+
+  function _cleanupLayer(layer) {
+    if (layer && layer.parentNode) layer.parentNode.removeChild(layer);
+  }
+
+  function _finish(o) {
+    _running = false;
+    _clearAll();
+    if (typeof o.onDone === 'function') {
+      try { o.onDone(); } catch (e) { console.error('[BS_RESULT] onDone error', e); }
+    }
+  }
+
+  // ============================================================
+  // revealBadge : 数値カウントが無い「2値結果」用（PartTest 普通/レア 等）
+  //   reveal() がスコア連続値向けなのに対し、こちらはバッジ/称号の
+  //   "登場演出" に特化。rare=true で最上位別格（フラッシュ+震動+
+  //   ゴールド紙吹雪+グロー）、false で控えめ（カードめくり登場のみ）。
+  //
+  //   BS_RESULT.revealBadge({
+  //     host: 結果画面ルート,
+  //     badgeEl: バッジ/結果を表示する要素,   // flip/pop アニメ対象
+  //     rare: true|false,                    // レア=別格
+  //     style: 'flip'|'pop',                 // 既定 flip（めくり）
+  //     accent: '#ffd24a',
+  //     onDone: fn
+  //   });
+  // ============================================================
+  function revealBadge(o) {
+    o = o || {};
+    var host = o.host;
+    if (!host) { console.warn('[BS_RESULT] host が指定されていません'); return; }
+
+    _injectStyle();
+    if (_running) {
+      _clearAll();
+      var stale = document.querySelectorAll('.bsr-layer');
+      stale.forEach(function (l) { if (l.parentNode) l.parentNode.removeChild(l); });
+      _running = false;
+    }
+    _running = true;
+
+    if (getComputedStyle(host).position === 'static') { host.style.position = 'relative'; }
+    var accent = o.accent || '#ffd24a';
+    host.style.setProperty('--bsr-accent', accent);
+
+    var layer = document.createElement('div');
+    layer.className = 'bsr-layer';
+    host.appendChild(layer);
+
+    var badge = o.badgeEl;
+    var animClass = (o.style === 'pop') ? 'bsr-badge-pop' : 'bsr-badge-flip';
+    // 結果（キャラ/名称/紹介文等）は演出後に出す
+    var revealEls = _normalizeEls(o.revealEls);
+    // サスペンス時間（PartTest=2秒で尺を稼ぐ）。0 なら即登場（従来動作）
+    var suspenseMs = (typeof o.suspenseMs === 'number') ? o.suspenseMs : 0;
+
+    // ── 結果カード本体の登場（サスペンス後 or 即時）──
+    function showBadge() {
+      revealEls.forEach(function (el) {
+        el.style.visibility = 'visible';
+        el.classList.remove('bsr-reveal-in');
+        void el.offsetWidth;
+        el.classList.add('bsr-reveal-in');
+      });
+      if (badge) {
+        badge.style.visibility = 'visible';
+        badge.classList.remove('bsr-badge-flip', 'bsr-badge-pop', 'bsr-glow');
+        void badge.offsetWidth; // reflow
+        badge.classList.add(animClass);
+      }
+
+      if (!o.rare) {
+        // 普通：控えめ（登場アニメのみ）
+        _wait(700, function () { _cleanupLayer(layer); _finish(o); });
+        return;
+      }
+
+      // レア：別格演出（reveal の grade2 と同等・約3秒）
+      var flash = document.createElement('div');
+      flash.className = 'bsr-flash';
+      layer.appendChild(flash);
+      host.classList.add('bsr-shake');
+      _wait(460, function () { host.classList.remove('bsr-shake'); });
+
+      confetti(layer, { count: 120, gold: true, life: 3000 });
+      [0, 260, 520].forEach(function (delay) {
+        _wait(delay, function () {
+          var ring = document.createElement('div');
+          ring.className = 'bsr-pulse-ring';
+          layer.appendChild(ring);
+        });
+      });
+      if (badge) {
+        _wait(560, function () { badge.classList.add('bsr-glow'); });
+      }
+      _wait(3000, function () { _cleanupLayer(layer); _finish(o); });
+    }
+
+    if (suspenseMs > 0) {
+      // 結果を伏せてサスペンス演出（「診断中…」ドット＋パルスリング）
+      revealEls.forEach(function (el) { el.style.visibility = 'hidden'; });
+      if (badge) badge.style.visibility = 'hidden';
+
+      var sus = document.createElement('div');
+      sus.className = 'bsr-suspense';
+      sus.innerHTML = '<div class="bsr-suspense-dots"><i></i><i></i><i></i></div>';
+      layer.appendChild(sus);
+      // サスペンス中に繰り返しパルスリング
+      [200, 900, 1600].forEach(function (delay) {
+        _wait(delay, function () {
+          var ring = document.createElement('div');
+          ring.className = 'bsr-pulse-ring';
+          layer.appendChild(ring);
+        });
+      });
+      _wait(suspenseMs, function () {
+        sus.classList.add('bsr-suspense-fade');
+        _wait(300, function () { if (sus.parentNode) sus.parentNode.removeChild(sus); });
+        showBadge();
+      });
+    } else {
+      showBadge();
+    }
+  }
+
+  // 中断（home遷移・再プレイ時に呼ぶ）
+  function stop() {
+    _clearAll();
+    _running = false;
+    var layers = document.querySelectorAll('.bsr-layer');
+    layers.forEach(function (l) { if (l.parentNode) l.parentNode.removeChild(l); });
+    // バッジ/称号に残ったグロー脈動も停止
+    var glows = document.querySelectorAll('.bsr-glow');
+    glows.forEach(function (g) { g.classList.remove('bsr-glow'); });
+  }
+
+  global.BS_RESULT = {
+    reveal: reveal,
+    revealBadge: revealBadge,
+    stop: stop,
+    gradeFor: gradeFor
+  };
+})(typeof window !== 'undefined' ? window : this);
