@@ -462,15 +462,16 @@ var MASTER=null;   // v2修正3：全音を通すマスター（リミッター�
 function ac(){
   if(!AC){
     AC=new (window.AudioContext||window.webkitAudioContext)();
-    // v2.1：マスターリミッターをソフト設定に。
-    //   旧設定(threshold-6/ratio12/attack3ms)はアタックで急激に潰れ「ポンッ」というポンピング雑音が出ていた。
-    //   knee を広く、ratio を緩め、attack を少し伸ばして、歪み防止の安全網として滑らかに効かせる。
+    // v2.3：超低域カットでピークが下がったため、リミッターは更に穏やかな安全網に。
+    //   threshold をほぼ素通しの -1dB に、release を 0.25→0.12 に短縮して、
+    //   1音目の減衰でかかった僅かなゲインリダクションが 2音目アタック時に残って
+    //   「ポンッ」となる現象を防ぐ。attack も少し伸ばし急変を回避。
     MASTER=AC.createDynamicsCompressor();
-    MASTER.threshold.setValueAtTime(-3, AC.currentTime);   // 効き始めを上げる（通常時はほぼ素通し）
-    MASTER.knee.setValueAtTime(18, AC.currentTime);        // 広いソフトニー（急変を避ける）
-    MASTER.ratio.setValueAtTime(6, AC.currentTime);        // 緩めの圧縮
-    MASTER.attack.setValueAtTime(0.008, AC.currentTime);   // アタックを少し伸ばしポンピング抑制
-    MASTER.release.setValueAtTime(0.25, AC.currentTime);   // 緩やかなリリース
+    MASTER.threshold.setValueAtTime(-1, AC.currentTime);
+    MASTER.knee.setValueAtTime(20, AC.currentTime);
+    MASTER.ratio.setValueAtTime(4, AC.currentTime);
+    MASTER.attack.setValueAtTime(0.012, AC.currentTime);
+    MASTER.release.setValueAtTime(0.12, AC.currentTime);
     MASTER.connect(AC.destination);
   }
   return AC;
@@ -488,20 +489,26 @@ var playToken=0;
 
 function midiToFreq(m){ return 440*Math.pow(2,(m-69)/12); }
 
-function bassNote(midi,when){
-  var c=ac(), t0=c.currentTime+when, f=midiToFreq(midi);
+function bassNote(midi,when,baseTime){
+  var c=ac(), f=midiToFreq(midi);
+  // v2.3：基準時刻を呼び出し側から渡せるように（1音目と2音目で同一の時間軸を共有し、
+  //   呼び出し間の currentTime ズレに起因する 2音目頭のタイミング不整合・クリックを防ぐ）。
+  var base=(typeof baseTime==='number')?baseTime:c.currentTime;
+  var t0=base+when;
   // v2.1：出力ゲインを 1.35→1.0 に低減。リミッターを緩めた分、突入量を下げて
   //   コンプの急激なゲインリダクション（ポンピング雑音）を避ける。
   //   体感音量は「素の音圧 × 軽いリミッティング」で v2 と同等程度を確保。
   var out=c.createGain(); out.gain.value=1.0; out.connect(masterNode());
 
-  // v2.2：超低域カットのハイパス。基音の下に溜まるブーミーな重低音（音程を埋もれさせる帯域）を抑える。
-  //   実機のエレキベース＋キャビも超低域はあまり出ないため、これで自然かつ音程が明瞭になる。
-  //   カットオフは基音に追従させつつ 45Hz〜基音*0.7 の範囲（基音自体は削らない）。
-  var hp=c.createBiquadFilter(); hp.type="highpass";
-  hp.frequency.value=Math.min(f*0.7, 70);   // 例: E1(41Hz)では約29Hz、高い音でも70Hz上限
-  hp.Q.value=0.7;
-  hp.connect(out);
+  // v2.3：スマホでのビビり・音割れ対策。
+  //   超低域（スマホスピーカーが再生できずコーンを無理に揺らしてビビる帯域）を確実にカットする。
+  //   旧版は基音追従(min(f*0.7,70))で、低い音だと約29Hzまでしか切れずスマホで歪んでいた。
+  //   基音追従をやめ、固定 90Hz の2段ハイパス（-24dB/oct 相当）でしっかり落とす。
+  //   ベース低音弦の基音(41〜80Hz)はスマホでは元々ほぼ再生されないため、
+  //   第二倍音以上で音程を聴かせる設計（音程の聴き取りやすさは倍音側で担保）。
+  var hp1=c.createBiquadFilter(); hp1.type="highpass"; hp1.frequency.value=90; hp1.Q.value=0.5;
+  var hp2=c.createBiquadFilter(); hp2.type="highpass"; hp2.frequency.value=90; hp2.Q.value=0.5;
+  hp1.connect(hp2); hp2.connect(out);
 
   // v2.2：ローパス下限を上げ、第二倍音(f*2)をサスティーン中も確実に通す。
   //   旧 f*2.2 では第二倍音が削られ低域だけ残って音程が埋もれていた。
@@ -510,7 +517,7 @@ function bassNote(midi,when){
   lp.frequency.setValueAtTime(Math.min(3000,f*7),t0);
   lp.frequency.exponentialRampToValueAtTime(Math.max(360,f*3.4),t0+NOTE_LEN*0.9);
   lp.Q.value=0.9;            // v2.2: 1.2→0.9（共振を更に抑え自然な減衰に）
-  lp.connect(hp);            // v2.2: env→lp→hp→out の順（ローパス後に超低域カット）
+  lp.connect(hp1);           // v2.3: env→lp→hp1→hp2→out（ローパス後に超低域を2段カット）
 
   // v2.1修正：破裂音（クリック/ポップ）対策。
   //   アタックは 0 から linearRamp で立ち上げ、低周波の波形断ち切りクリックを防ぐ。
@@ -540,17 +547,16 @@ function bassNote(midi,when){
   //   基音(sine)を主役にしつつ、ピッチ感を補強する偶数倍音を程よく。
   //   濁りの原因だった triangle の detune 唸りを排除（detune=0）。
   //   高次倍音は鳴りっぱなしにせず緩やかに減衰させ、アタックだけ濁る現象を防ぐ。
-  // v2.2：低域が重く音程が埋もれていたため、低域比率を下げて第二倍音を強める。
-  //   指弾きエレキベースを基調に、正弦波中心の構成を維持（saw/square は使わずシンセ臭さを回避）。
-  //   サブオクターブを大きく削り、基音より上の倍音でピッチ感を立たせる。
-  osc("sine",     f,     0.85, 0);              // 基音（主役・音程の核）
-  osc("sine",     f/2,   0.12, 0);              // v2.2: 0.34→0.12 サブオクターブを薄く（重低音を抑制）
-  osc("triangle", f,     0.20, 0);              // 指弾きの芯。三角波の弱い倍音で輪郭を出す
-  osc("sine",     f*2,   0.34, 0, 0.16, 1.0);   // v2.2: 0.15→0.34 第二倍音を強化（ピッチ感の主役級）
-  osc("sine",     f*3,   0.12, 0, 0.05, 0.6);   // v2.2: 0.06→0.12 第三倍音も少し上げ明瞭化
-  osc("sine",     f*4,   0.05, 0, 0.02, 0.4);   // 第四倍音：ごく薄く張りを足す
+  // v2.3：超低域を 90Hz でカットしたため、サブオクターブ(f/2)はほぼ消える上に
+  //   リミッターを無駄に刺激するので削除。基音＋第二倍音以上でピッチ感を作る。
+  //   指弾きエレキベース基調（正弦波中心＋triangle、saw/square 不使用）は維持。
+  osc("sine",     f,     0.80, 0);              // 基音（主役・音程の核）
+  osc("triangle", f,     0.18, 0);              // 指弾きの芯。三角波の弱い倍音で輪郭を出す
+  osc("sine",     f*2,   0.40, 0, 0.20, 1.0);   // 第二倍音：ピッチ感の主役級（スマホでもよく鳴る帯域）
+  osc("sine",     f*3,   0.14, 0, 0.06, 0.6);   // 第三倍音：明瞭化
+  osc("sine",     f*4,   0.06, 0, 0.02, 0.4);   // 第四倍音：ごく薄く張りを足す
 
-  activeNodes.push(out,lp,hp,env);
+  activeNodes.push(out,lp,hp1,hp2,env);
 }
 
 function stopAll(){
@@ -640,9 +646,13 @@ function playQuestion(q, lead){
   var L=(typeof lead==='number'&&lead>0)?lead:0;
   var myToken=++playToken;
   playing=true; setPlayBtn(true);
-  bassNote(q.rootMidi, L);
-  bassNote(q.targetMidi, L+GAP);
-  // 2音目の発音終了時刻 = lead + GAP + NOTE_LEN（秒）
+  // v2.3：1音目・2音目で共通の基準時刻を使う。
+  //   さらに +0.06 秒の先読みマージンを置き、スケジューリングが現在時刻に間に合わず
+  //   発音頭が詰まってクリックになるのを防ぐ（特にスマホ／iOS Safari）。
+  var base=c.currentTime+0.06;
+  bassNote(q.rootMidi,  L,      base);
+  bassNote(q.targetMidi, L+GAP, base);
+  // 2音目の発音終了時刻 = lead + GAP + NOTE_LEN（秒）（+マージンは僅少なので無視）
   var totalMs=(L+GAP+NOTE_LEN)*1000;
   setTimeout(function(){
     if(myToken!==playToken) return;
