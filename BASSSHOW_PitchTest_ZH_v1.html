@@ -495,14 +495,22 @@ function bassNote(midi,when){
   //   体感音量は「素の音圧 × 軽いリミッティング」で v2 と同等程度を確保。
   var out=c.createGain(); out.gain.value=1.0; out.connect(masterNode());
 
-  // v2修正1：ローパスを「サスティーン中もある程度開いたまま」に。
-  //   旧設計は f*1.4 まで落ちて基音以外を削り、こもって音程が不明瞭だった。
-  //   開きを大きめ(下限を f*2.2)に保ち、倍音を残してピッチ感を明瞭にする。
+  // v2.2：超低域カットのハイパス。基音の下に溜まるブーミーな重低音（音程を埋もれさせる帯域）を抑える。
+  //   実機のエレキベース＋キャビも超低域はあまり出ないため、これで自然かつ音程が明瞭になる。
+  //   カットオフは基音に追従させつつ 45Hz〜基音*0.7 の範囲（基音自体は削らない）。
+  var hp=c.createBiquadFilter(); hp.type="highpass";
+  hp.frequency.value=Math.min(f*0.7, 70);   // 例: E1(41Hz)では約29Hz、高い音でも70Hz上限
+  hp.Q.value=0.7;
+  hp.connect(out);
+
+  // v2.2：ローパス下限を上げ、第二倍音(f*2)をサスティーン中も確実に通す。
+  //   旧 f*2.2 では第二倍音が削られ低域だけ残って音程が埋もれていた。
+  //   下限を f*3.4 に。アタックは指弾きの軽い明るさを出しつつ、開きすぎ（シンセ的）は避ける。
   var lp=c.createBiquadFilter(); lp.type="lowpass";
-  lp.frequency.setValueAtTime(Math.min(2600,f*6),t0);
-  lp.frequency.exponentialRampToValueAtTime(Math.max(260,f*2.2),t0+NOTE_LEN*0.9);
-  lp.Q.value=1.2;            // v2: 3→1.2（共振による色付き・濁りを低減）
-  lp.connect(out);
+  lp.frequency.setValueAtTime(Math.min(3000,f*7),t0);
+  lp.frequency.exponentialRampToValueAtTime(Math.max(360,f*3.4),t0+NOTE_LEN*0.9);
+  lp.Q.value=0.9;            // v2.2: 1.2→0.9（共振を更に抑え自然な減衰に）
+  lp.connect(hp);            // v2.2: env→lp→hp→out の順（ローパス後に超低域カット）
 
   // v2.1修正：破裂音（クリック/ポップ）対策。
   //   アタックは 0 から linearRamp で立ち上げ、低周波の波形断ち切りクリックを防ぐ。
@@ -532,14 +540,17 @@ function bassNote(midi,when){
   //   基音(sine)を主役にしつつ、ピッチ感を補強する偶数倍音を程よく。
   //   濁りの原因だった triangle の detune 唸りを排除（detune=0）。
   //   高次倍音は鳴りっぱなしにせず緩やかに減衰させ、アタックだけ濁る現象を防ぐ。
-  // v2.1：倍音 gain を微調整（同位相時の理論ピークを下げ、リミッター突入を緩和）。
-  osc("sine",     f,     0.90, 0);              // 基音（主役）
-  osc("sine",     f/2,   0.34, 0);              // サブオクターブ（ベースらしい厚み）
-  osc("triangle", f,     0.24, 0);              // 基音を補強（detune 無しで唸り無し）
-  osc("sine",     f*2,   0.15, 0, 0.05, 0.8);   // 2倍音：ゆっくり減衰でピッチ感を支える
-  osc("sine",     f*3,   0.06, 0, 0.02, 0.5);   // 3倍音：ごく薄く
+  // v2.2：低域が重く音程が埋もれていたため、低域比率を下げて第二倍音を強める。
+  //   指弾きエレキベースを基調に、正弦波中心の構成を維持（saw/square は使わずシンセ臭さを回避）。
+  //   サブオクターブを大きく削り、基音より上の倍音でピッチ感を立たせる。
+  osc("sine",     f,     0.85, 0);              // 基音（主役・音程の核）
+  osc("sine",     f/2,   0.12, 0);              // v2.2: 0.34→0.12 サブオクターブを薄く（重低音を抑制）
+  osc("triangle", f,     0.20, 0);              // 指弾きの芯。三角波の弱い倍音で輪郭を出す
+  osc("sine",     f*2,   0.34, 0, 0.16, 1.0);   // v2.2: 0.15→0.34 第二倍音を強化（ピッチ感の主役級）
+  osc("sine",     f*3,   0.12, 0, 0.05, 0.6);   // v2.2: 0.06→0.12 第三倍音も少し上げ明瞭化
+  osc("sine",     f*4,   0.05, 0, 0.02, 0.4);   // 第四倍音：ごく薄く張りを足す
 
-  activeNodes.push(out,lp,env);
+  activeNodes.push(out,lp,hp,env);
 }
 
 function stopAll(){
