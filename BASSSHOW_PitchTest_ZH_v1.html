@@ -384,8 +384,8 @@ var INTERVALS={
 };
 var NOTE_NAMES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 var DIFFICULTY={
-  easy:  {pool:[0,7,12,4,3],         dir:["up"],        maxSec:12, q:10},
-  normal:{pool:[0,3,4,5,7,9,11,12],  dir:["up"],        maxSec:12, q:10},
+  easy:  {pool:[0,7,12,4,3],         dir:["up"],        maxSec:20, q:10},
+  normal:{pool:[0,3,4,5,7,9,11,12],  dir:["up"],        maxSec:15, q:10},
   hard:  {pool:[1,2,3,4,5,6,7,8,9,10,11,12], dir:["up","down"], maxSec:10, q:10}
 };
 // 出題に使う全ての音は MIDI 28(E1=4弦ベース開放E) 以上に制限（修正2）。
@@ -415,12 +415,17 @@ function diffNameText(diff){
 // ══════════════════════════════════════════
 // スコア(100点満点)・称号（Demo v3 引き継ぎ）
 // ══════════════════════════════════════════
-var BASE_PER_Q=100, SPEED_BONUS_MAX=60, FAST_SEC=5;
+// v3.1：速度ボーナスの満点維持区切りを warn 発動と完全同期。
+//   WARN_FRAC＝warn(黄)が出る「経過時間の割合」。タイマー色と共用の単一基準。
+//   経過 maxSec×WARN_FRAC（簡単8/普通6/難しい4秒）までは満点ボーナス維持、
+//   そこから時間切れ(maxSec)まで直線減衰して 0 に。
+var BASE_PER_Q=100, SPEED_BONUS_MAX=60, WARN_FRAC=0.4;
 function questionScore(correct,sec,maxSec){
   if(!correct) return 0;
-  if(sec<=FAST_SEC) return BASE_PER_Q+SPEED_BONUS_MAX;
-  if(sec>=maxSec)   return BASE_PER_Q;
-  var r=(sec-FAST_SEC)/(maxSec-FAST_SEC);
+  var fast=maxSec*WARN_FRAC;            // 満点維持の区切り（=warn発動の経過時間）
+  if(sec<=fast)   return BASE_PER_Q+SPEED_BONUS_MAX;
+  if(sec>=maxSec) return BASE_PER_Q;
+  var r=(sec-fast)/(maxSec-fast);
   return BASE_PER_Q+Math.round(SPEED_BONUS_MAX*(1-r));
 }
 function toScore100(raw,q){ var mx=q*(BASE_PER_Q+SPEED_BONUS_MAX); return Math.round((raw/mx)*1000)/10; }
@@ -459,20 +464,29 @@ var LV_COLORS = ['#E24B4A','#D85A30','#BA7517','#EF9F27','#639922','#1D9E75','#0
 // ══════════════════════════════════════════
 var AC=null;
 var MASTER=null;   // v2修正3：全音を通すマスター（リミッターでクリップ歪み＝雑音を防止）
+var MASTERGAIN=null;  // v2.5：コンプ後段のメイクアップゲイン（全体底上げ）
 function ac(){
   if(!AC){
     AC=new (window.AudioContext||window.webkitAudioContext)();
-    // v2.3：超低域カットでピークが下がったため、リミッターは更に穏やかな安全網に。
-    //   threshold をほぼ素通しの -1dB に、release を 0.25→0.12 に短縮して、
-    //   1音目の減衰でかかった僅かなゲインリダクションが 2音目アタック時に残って
-    //   「ポンッ」となる現象を防ぐ。attack も少し伸ばし急変を回避。
+    // v2.5：コンプは「知覚音量」ではなく「実振幅(同位相ピーク)」で動くため、
+    //   実振幅の大きい低音を余計に潰してしまい、知覚音量差の補正にはむしろ逆効果だった。
+    //   → コンプは歪み防止の最終安全網としてのみ浅く効かせ、音量差の均一化は
+    //     loudnessGain（知覚ベースの事前ゲイン）側で行う。
+    //   メイクアップゲインで全体を底上げし、低音を含めて十分な音量を確保する。
+    // v3：コンプは「歪み防止の最終安全網」専用の浅いリミッター。
+    //   各音は loudnessGain で既に同位相ピーク≦1.0 に正規化済みのため、
+    //   コンプはごく稀な倍音同位相アライメント時だけ軽く触れる。音量均一化は
+    //   合成側（固定倍音シェイプ＋帯域エネルギー正規化）で完結させる。
     MASTER=AC.createDynamicsCompressor();
-    MASTER.threshold.setValueAtTime(-1, AC.currentTime);
-    MASTER.knee.setValueAtTime(20, AC.currentTime);
-    MASTER.ratio.setValueAtTime(4, AC.currentTime);
-    MASTER.attack.setValueAtTime(0.012, AC.currentTime);
-    MASTER.release.setValueAtTime(0.12, AC.currentTime);
-    MASTER.connect(AC.destination);
+    MASTER.threshold.setValueAtTime(-3, AC.currentTime);   // -3dBを超える瞬間ピークのみ抑制
+    MASTER.knee.setValueAtTime(8, AC.currentTime);
+    MASTER.ratio.setValueAtTime(3, AC.currentTime);
+    MASTER.attack.setValueAtTime(0.006, AC.currentTime);
+    MASTER.release.setValueAtTime(0.15, AC.currentTime);
+    // v3：メイクアップゲイン。各音の OUT スケールは loudnessGain 内で適用済みなので
+    //   ここは 1.0 基準。歪みは出ない設計（検証済：最大同位相ピーク≦1.0）。
+    MASTERGAIN=AC.createGain(); MASTERGAIN.gain.value=1.0;
+    MASTER.connect(MASTERGAIN); MASTERGAIN.connect(AC.destination);
   }
   return AC;
 }
@@ -489,35 +503,86 @@ var playToken=0;
 
 function midiToFreq(m){ return 440*Math.pow(2,(m-69)/12); }
 
+// ══════════════════════════════════════════
+// v3：音量均一化の方針を根本から立て直し。
+//   旧 v2.x は「低音を持ち上げる/高音を下げる」を架空のスピーカー応答モデル上で
+//   多層ゲイン（loudnessGain＋tilt倍音＋コンプ＋makeup）で操作し、自己矛盾していた。
+//   さらにローパスが低音の倍音を削り、肝心の「倍音で運ぶピッチ」を殺していた。
+//   v3：物理に即した単純設計に統一する。
+//   ・E1〜A1 の基音はスマホで物理的に再生不可。基音は追わず倍音でピッチを運ぶ
+//     （missing fundamental／残差ピッチ）。倍音シェイプは全音共通＝音色を一定に保つ。
+//   ・「実際に聞こえる帯域(HP/LP通過後×聞こえやすさ重み)のエネルギー」だけを基準に
+//     1本の透明な曲線で各音を正規化。低音はゲインを上げて補うが、上限クランプと
+//     全体 OUT スケールで同位相ピーク≦1.0 を保証（歪み・ビビり源を断つ）。
+// ══════════════════════════════════════════
+
+// 端末（スマホ／小型スピーカー）の周波数別「聞こえやすさ」重み 0..1。
+//   単一・単調・透明。55Hz以下ほぼ無、低中域で立ち上がり、400〜2500でフラット、超高域で減衰。
+function audWeight(hz){
+  if(hz<55)   return 0.02;
+  if(hz<110)  return 0.02 + 0.20*(hz-55)/55;
+  if(hz<220)  return 0.22 + 0.46*(hz-110)/110;
+  if(hz<400)  return 0.68 + 0.27*(hz-220)/180;
+  if(hz<2500) return 0.95 + 0.05*(hz-400)/2100;
+  if(hz<5000) return 1.00 - 0.45*(hz-2500)/2500;
+  return 0.50;
+}
+// フィルタ振幅応答（正規化計算用の近似）：HP78×1段, LP2600×~2pole
+function hpMag(hz){ var r=hz/78;   return r/Math.sqrt(1+r*r); }
+function lpMag(hz){ var r=hz/2600; return 1/Math.sqrt(1+Math.pow(r,4)); }
+
+// 全音共通の固定倍音シェイプ（指弾きエレキベース：低〜中倍音を厚く、高次は控えめ）。
+//   bassNote の合成と完全に一致させる（正規化の基準とするため）。
+var BASS_HARMONICS=[ {m:1,a:1.00},{m:2,a:0.72},{m:3,a:0.52},{m:4,a:0.34},
+                     {m:5,a:0.22},{m:6,a:0.14},{m:7,a:0.09},{m:8,a:0.06} ];
+
+// その音の「聞こえる帯域での実効ラウドネス」。
+function noteLoudness(f){
+  var s=0;
+  BASS_HARMONICS.forEach(function(h){
+    var hz=f*h.m, a=h.a*hpMag(hz)*lpMag(hz)*audWeight(hz);
+    s+=a*a;
+  });
+  return Math.sqrt(s);
+}
+
+// 正規化パラメータ（design2.js で検証して確定）。
+var LG_REF=noteLoudness(110.0);  // 基準音 A2(110Hz) を相対ゲイン≒1 に
+var LG_MIN=0.45, LG_MAX=2.7;     // 低音の持ち上げ上限／高音の下げ下限
+var LG_OUT=0.16;                 // 全体出力スケール：最大同位相ピーク≦1.0を保証（歪み厳禁）
+
+// out.gain に掛ける最終ゲイン（相対正規化 × 全体スケール）。
+//   低音ほど大きく、高音ほど小さく。これ1本で音域差をならす。
+function loudnessGain(f){
+  var rel=LG_REF/noteLoudness(f);
+  rel=Math.max(LG_MIN, Math.min(LG_MAX, rel));
+  return rel*LG_OUT;
+}
+
 function bassNote(midi,when,baseTime){
   var c=ac(), f=midiToFreq(midi);
   // v2.3：基準時刻を呼び出し側から渡せるように（1音目と2音目で同一の時間軸を共有し、
   //   呼び出し間の currentTime ズレに起因する 2音目頭のタイミング不整合・クリックを防ぐ）。
   var base=(typeof baseTime==='number')?baseTime:c.currentTime;
   var t0=base+when;
-  // v2.1：出力ゲインを 1.35→1.0 に低減。リミッターを緩めた分、突入量を下げて
-  //   コンプの急激なゲインリダクション（ポンピング雑音）を避ける。
-  //   体感音量は「素の音圧 × 軽いリミッティング」で v2 と同等程度を確保。
-  var out=c.createGain(); out.gain.value=1.0; out.connect(masterNode());
+  // v2.4：音域別の知覚ラウドネス補正を out.gain に適用（音量を音域で均一化）。
+  var out=c.createGain(); out.gain.value=loudnessGain(f); out.connect(masterNode());
 
-  // v2.3：スマホでのビビり・音割れ対策。
-  //   超低域（スマホスピーカーが再生できずコーンを無理に揺らしてビビる帯域）を確実にカットする。
-  //   旧版は基音追従(min(f*0.7,70))で、低い音だと約29Hzまでしか切れずスマホで歪んでいた。
-  //   基音追従をやめ、固定 90Hz の2段ハイパス（-24dB/oct 相当）でしっかり落とす。
-  //   ベース低音弦の基音(41〜80Hz)はスマホでは元々ほぼ再生されないため、
-  //   第二倍音以上で音程を聴かせる設計（音程の聴き取りやすさは倍音側で担保）。
-  var hp1=c.createBiquadFilter(); hp1.type="highpass"; hp1.frequency.value=90; hp1.Q.value=0.5;
-  var hp2=c.createBiquadFilter(); hp2.type="highpass"; hp2.frequency.value=90; hp2.Q.value=0.5;
-  hp1.connect(hp2); hp2.connect(out);
+  // v3：ハイパス 78Hz×1段。E1/A1 の基音(41〜55Hz)はスマホで再生不能＆ビビり源。
+  //   最初から送らず捨てる。ピッチは上の倍音列が運ぶので音程は失われない。
+  var hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=78; hp.Q.value=0.6;
+  hp.connect(out);
 
-  // v2.2：ローパス下限を上げ、第二倍音(f*2)をサスティーン中も確実に通す。
-  //   旧 f*2.2 では第二倍音が削られ低域だけ残って音程が埋もれていた。
-  //   下限を f*3.4 に。アタックは指弾きの軽い明るさを出しつつ、開きすぎ（シンセ的）は避ける。
+  // v3：ローパスを「全音共通の固定カットオフ」に変更（最重要修正）。
+  //   旧 v2.x は f*7→f*3.4 で低音ほどカットオフが低く、E1で約290→360Hzと
+  //   スマホが得意な500Hz〜2kHz帯の倍音を削っていた＝低音のピッチを殺す原因。
+  //   固定 3200Hz(アタック)→2500Hz(サスティーン)で、低音の倍音を端末の得意帯域へ通す。
+  //   高音側はこの上限でキンつき／シンセ臭さを抑える。全音で音色も均一になる。
   var lp=c.createBiquadFilter(); lp.type="lowpass";
-  lp.frequency.setValueAtTime(Math.min(3000,f*7),t0);
-  lp.frequency.exponentialRampToValueAtTime(Math.max(360,f*3.4),t0+NOTE_LEN*0.9);
-  lp.Q.value=0.9;            // v2.2: 1.2→0.9（共振を更に抑え自然な減衰に）
-  lp.connect(hp1);           // v2.3: env→lp→hp1→hp2→out（ローパス後に超低域を2段カット）
+  lp.frequency.setValueAtTime(3200,t0);
+  lp.frequency.exponentialRampToValueAtTime(2500,t0+NOTE_LEN*0.5);
+  lp.Q.value=0.7;            // 共振控えめ＝自然な指弾きの減衰
+  lp.connect(hp);            // env→lp→hp→out
 
   // v2.1修正：破裂音（クリック/ポップ）対策。
   //   アタックは 0 から linearRamp で立ち上げ、低周波の波形断ち切りクリックを防ぐ。
@@ -540,46 +605,65 @@ function bassNote(midi,when,baseTime){
     if(decayTo!==undefined){ g.gain.exponentialRampToValueAtTime(Math.max(0.0001,decayTo),t0+(decayT||0.3)); }
     o.connect(g); g.connect(env);
     // env が END で完全な 0 になっているので、その後 STOP で停止しても断ち切りクリックは出ない
+    o.__startAt=t0;   // v2.4：stopAll が start 前 stop を避けるために start 時刻を記録
     o.start(t0); o.stop(STOP);
     activeNodes.push(o,g);
   }
-  // v2修正1+3：倍音構成をクリアに。
-  //   基音(sine)を主役にしつつ、ピッチ感を補強する偶数倍音を程よく。
-  //   濁りの原因だった triangle の detune 唸りを排除（detune=0）。
-  //   高次倍音は鳴りっぱなしにせず緩やかに減衰させ、アタックだけ濁る現象を防ぐ。
-  // v2.3：超低域を 90Hz でカットしたため、サブオクターブ(f/2)はほぼ消える上に
-  //   リミッターを無駄に刺激するので削除。基音＋第二倍音以上でピッチ感を作る。
-  //   指弾きエレキベース基調（正弦波中心＋triangle、saw/square 不使用）は維持。
-  osc("sine",     f,     0.80, 0);              // 基音（主役・音程の核）
-  osc("triangle", f,     0.18, 0);              // 指弾きの芯。三角波の弱い倍音で輪郭を出す
-  osc("sine",     f*2,   0.40, 0, 0.20, 1.0);   // 第二倍音：ピッチ感の主役級（スマホでもよく鳴る帯域）
-  osc("sine",     f*3,   0.14, 0, 0.06, 0.6);   // 第三倍音：明瞭化
-  osc("sine",     f*4,   0.06, 0, 0.02, 0.4);   // 第四倍音：ごく薄く張りを足す
+  // v3：倍音構成を「全音共通の固定シェイプ」に統一（loudnessGain の正規化基準と一致）。
+  //   指弾きエレキベース基調：基音(sine)＋三角波の芯＋低〜中倍音(sine)を厚めに、高次は控えめ。
+  //   saw/square 不使用＝シンセ臭さを回避。倍音シェイプを音域で変えない＝音色が一定。
+  //   音域差は loudnessGain（out.gain）一本でならす（多層ゲインの自己矛盾を排除）。
+  //   指弾きの「ピック感」：高次倍音(h4以上)はアタック後にやや速く減衰させ、
+  //   アタックは明るく→サスティーンはまろやかに、という生ベースの挙動を作る。
+  BASS_HARMONICS.forEach(function(h){
+    var a=h.a;
+    if(h.m===1){
+      osc("sine", f, a, 0);                       // 基音（HP78で低音は実質カットされ倍音がピッチを運ぶ）
+    } else if(h.m<=3){
+      osc("sine", f*h.m, a, 0);                   // 第2〜3倍音：ピッチ感の主役（端末でよく鳴る）。維持
+    } else {
+      // 第4倍音以上：アタックでは出して指弾きの明るさ、その後 40% へ減衰（キンつき回避）
+      osc("sine", f*h.m, a, 0, a*0.4, 0.45);
+    }
+  });
+  osc("triangle", f, 0.10, 0, 0.04, 0.6);         // 指弾きの芯（弱い三角波倍音）。アタック後に減衰
 
-  activeNodes.push(out,lp,hp1,hp2,env);
+  activeNodes.push(out,lp,hp,env);
 }
 
 function stopAll(){
   playToken++;
   if(!AC) return;
   var now=ac().currentTime;
-  // v2修正3：オシレータを now で即 stop すると波形途中で断ち切られ「プチッ」というクリック雑音が出る。
-  //   ゲインノードは数msでフェードアウトしてから、オシレータはその後に停止する。
-  var FADE=0.015;
+  var FADE=0.02;
+  // v2.4：ポップ音対策の見直し。
+  //   旧実装は各 GainNode の「現在の瞬間値(n.gain.value)」を基準にフェードしていたが、
+  //   各オシレータの g.gain は setValueAtTime(gain, t0)（未来の t0）でスケジュールされるため、
+  //   発音前(now<t0)だと瞬間値が食い違い、フェードが効かずに stop でプチッと切れていた。
+  //   また 1秒リード中や2音目発音前に stopAll が来ると、o.stop が o.start より前になり
+  //   ブラウザによってポップ/不整合の原因になっていた。
+  //   対策：
+  //   (1) 全 GainNode を cancelScheduledValues → 現在値固定 → 0 へ linearRamp（未来スケジュールを破棄）
+  //   (2) o.stop は「now+FADE」と「その osc の start 時刻以降」の遅い方に置く（start前 stop を回避）
   activeNodes.forEach(function(n){
     try{
       if(n.gain && n.gain.cancelScheduledValues){
-        // GainNode：現在値から15msで0へランプ（クリック防止）
         n.gain.cancelScheduledValues(now);
-        var cur=n.gain.value;
-        n.gain.setValueAtTime(cur,now);
-        n.gain.linearRampToValueAtTime(0.0001,now+FADE);
+        // setValueAtTime に現在値を置く前に、value を読むと未スケジュール分は初期値だが、
+        // cancel 後に現在の実効値で固定するため setTargetAtTime で滑らかに 0 へ寄せる。
+        n.gain.setValueAtTime(n.gain.value, now);
+        n.gain.linearRampToValueAtTime(0, now+FADE);   // 完全な 0 へ（0.0001 ではなく 0）
       }
     }catch(e){}
   });
   activeNodes.forEach(function(n){
     try{
-      if(n.stop) n.stop(now+FADE+0.005);   // フェード完了後に停止
+      if(n.stop){
+        // start 前に stop すると不整合になるため、start 時刻が記録されていればそれ以降に。
+        var st=(typeof n.__startAt==='number')?n.__startAt:now;
+        var stopAt=Math.max(now+FADE+0.01, st+0.001);
+        n.stop(stopAt);
+      }
     }catch(e){}
   });
   activeNodes=[];
@@ -614,7 +698,10 @@ function startTimer(){
     var ratio=remain/maxSec;                          // 1(満タン)→0
     if(fill){
       fill.style.width=(ratio*100)+'%';
-      fill.className=(remain<=3?'danger':(remain<=maxSec*0.4?'warn':''));
+      // v3.1：warn(黄)を「経過 maxSec×WARN_FRAC（簡単8/普通6/難しい4秒）」で発動。
+      //   ＝残り時間で remain<=maxSec*(1-WARN_FRAC)。速度ボーナスの満点区切りと同一基準。
+      //   danger(赤)は従来どおり残り3秒。
+      fill.className=(remain<=3?'danger':(remain<=maxSec*(1-WARN_FRAC)?'warn':''));
     }
     if(num) num.textContent=Math.ceil(remain);
     if(remain<=0){
