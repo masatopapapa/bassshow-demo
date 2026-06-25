@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>BASS SHOW / 音感测试</title>
+<link id="fav" rel="icon" type="image/webp">
+<style>
+:root{
+  --bg:#0A0A0F;--bg2:#13131A;--bg3:#1C1C26;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+  --text:#F0EFF8;--text2:#9896B0;--text3:#5A5870;
+  --teal:#1D9E75;--teal-l:#5DCAA5;--amber:#EF9F27;--coral:#F0997B;--purple:#534AB7;
+  --ok:#1D9E75;--ng:#F0997B;
+  --r:12px;--rs:8px;
+  --accent:#ff2d2d;
+  --accent-2:#ffb02e;
+}
+.demo-tag{font-size:10px;font-weight:700;color:var(--accent-2);border:0.5px solid var(--accent-2);border-radius:6px;padding:1px 6px;margin-left:6px;white-space:nowrap;display:inline-block;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+/* ===== 統一テンプレート 共通ヘッダー（2026/6/14） ===== */
+.bs-topbar{display:flex;justify-content:center;margin:14px 0 4px;}
+.bs-topbar img{height:34px;width:auto;display:block;}
+.bs-hero{width:130px;height:130px;margin:8px auto 6px;border-radius:16px;object-fit:cover;display:block;background:#000;}
+.bs-game-title{text-align:center;font-size:22px;font-weight:800;color:var(--text);margin:6px 0 2px;letter-spacing:.5px;}
+.bs-reslogo{display:flex;justify-content:center;margin-bottom:6px;}
+.bs-reslogo img{height:26px;width:auto;display:block;}
+.bs-res-title{text-align:center;font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px;letter-spacing:.5px;}
+.bs-cap-hint{text-align:center;font-size:11px;color:var(--text3);margin:10px 0 14px;}
+/* 言語切替（右上） */
+.bs-lang-switch{position:absolute;top:10px;right:10px;display:flex;gap:2px;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:2px;z-index:10;}
+.bs-lang-switch button{background:transparent;border:none;color:var(--text3);font-size:12px;font-weight:700;padding:4px 9px;border-radius:6px;cursor:pointer;line-height:1;}
+.bs-lang-switch button.active{background:var(--accent);color:#fff;}
+/* 結果カード（スクショ対象） */
+.bs-share-capture{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:18px 16px;margin-bottom:4px;}
+/* 絶対音感疑い(11)帯：特別背景演出（FingerSpeed超越段／Rhythm机器人帯を横展開・ゴールド特別バッジ色） */
+@keyframes tierRobotPulse{
+  0%,100%{box-shadow:0 0 12px 2px rgba(232,178,58,.50), inset 0 0 16px rgba(232,178,58,.16);}
+  50%{box-shadow:0 0 22px 6px rgba(232,178,58,.80), inset 0 0 22px rgba(232,178,58,.30);}
+}
+.bs-share-capture.tier-robot{
+  border:1px solid #E8B23A;
+  background:linear-gradient(160deg,#1c160a,#241b0c 60%,#2c2008);
+  animation:tierRobotPulse 1.6s ease-in-out infinite;
+}
+.bs-share-capture.tier-robot .color-bar-seg.filled{box-shadow:0 0 6px rgba(232,178,58,.9);}
+.bs-share-foot{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);}
+.bs-share-foot-text{flex:1;}
+.bs-share-badge{display:inline-block;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:3px;}
+.bs-share-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.3;}
+.bs-share-desc{font-size:10px;color:var(--text3);margin-top:3px;}
+.bs-share-qr{width:72px;height:72px;flex-shrink:0;background:#fff;border-radius:8px;padding:4px;}
+.bs-share-qr .sc-qrbox{width:100%;height:100%;}
+.bs-share-icon{width:72px;height:72px;flex-shrink:0;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#0F6E56,#534AB7);display:flex;align-items:center;justify-content:center;}
+.bs-share-icon img{width:100%;height:100%;object-fit:cover;display:block;}
+.bs-share-icon .ph{font-size:30px;}
+body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:16px 16px 40px;}
+.container{width:100%;max-width:420px;position:relative;}
+
+/* ─── START ─── */
+.desc-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:14px 16px;font-size:13px;line-height:1.8;color:var(--text2);margin-bottom:14px;text-align:center;}
+/* 遊び方＋トレーニング効果（修正3） */
+.intro-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;}
+.intro-block{display:flex;gap:10px;align-items:flex-start;}
+.intro-block + .intro-block{margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border);}
+.intro-emoji{font-size:18px;line-height:1.4;flex-shrink:0;}
+.intro-tt{font-size:12px;font-weight:800;color:var(--text);letter-spacing:.5px;margin-bottom:3px;}
+.intro-bd{font-size:12px;color:var(--text2);line-height:1.7;}
+.diff-label{font-size:11px;color:var(--text3);letter-spacing:2px;text-align:center;margin-bottom:10px;}
+.diff-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.diff-card{display:flex;align-items:center;gap:14px;border:0.5px solid var(--border2);background:var(--bg2);
+  border-radius:var(--r);padding:14px;cursor:pointer;transition:transform .08s,border-color .15s;}
+.diff-card:active{transform:scale(.985);}
+/* 難易度キャラ（CHAR_LV3_A/B/C をカード内に表示） */
+.diff-card .d-char{width:60px;height:60px;flex:0 0 60px;object-fit:cover;border-radius:12px;display:block;background:#000;}
+.diff-card .d-meta{flex:1;}
+.diff-card .d-name{font-size:16px;font-weight:800;color:var(--text);}
+.diff-card .d-desc{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5;}
+.diff-card .d-go{color:var(--accent);font-weight:800;font-size:22px;}
+.diff-card[data-diff="easy"]:active{border-color:#5DCAA5;}
+.diff-card[data-diff="normal"]:active{border-color:#EF9F27;}
+.diff-card[data-diff="hard"]:active{border-color:#F0997B;}
+
+/* ─── QUIZ ─── */
+.game-header{padding-top:14px;margin-bottom:14px;}
+.game-header-top{display:flex;flex-direction:column;align-items:center;margin-bottom:12px;}
+.game-header-top img{height:30px;width:auto;display:block;margin-bottom:6px;}
+.game-header-title{font-size:16px;font-weight:800;color:var(--text);letter-spacing:.5px;}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;color:var(--text2);margin-bottom:10px;}
+.qhead .badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:1px;white-space:nowrap;background:var(--bg3);color:var(--text);}
+.badge.b-easy{background:#E1F5EE;color:#085041;}.badge.b-normal{background:#FAEEDA;color:#633806;}.badge.b-hard{background:#FAECE7;color:#712B13;}
+.progress{height:6px;background:var(--bg3);border-radius:6px;overflow:hidden;margin-bottom:18px;}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s;}
+/* 制限時間カウントダウン（出題進捗バーとは別物） */
+.timer-wrap{margin:2px 0 14px;}
+.timer-bar{height:8px;background:var(--bg3);border-radius:8px;overflow:hidden;}
+.timer-bar i{display:block;height:100%;width:100%;background:var(--teal);border-radius:8px;}
+.timer-bar i.warn{background:var(--amber);}
+.timer-bar i.danger{background:var(--accent);}
+.timer-label{text-align:center;font-size:11px;color:var(--text3);margin-top:5px;letter-spacing:.5px;}
+.timer-label b{color:var(--text2);font-weight:800;margin:0 2px;}
+.play-area{text-align:center;margin:6px 0 16px;}
+.play-btn{min-width:170px;border:1px solid var(--accent);color:var(--accent);background:transparent;
+  border-radius:26px;padding:13px 22px;font-size:15px;font-weight:800;cursor:pointer;transition:opacity .15s;}
+.play-btn:active{background:rgba(255,45,45,.08);}
+.play-btn.playing{background:var(--accent);color:#fff;border-color:var(--accent);}
+.play-btn:disabled{opacity:1;cursor:default;}
+.ask{font-size:15px;font-weight:700;text-align:center;margin:6px 0 14px;color:var(--text);}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.opt{border:0.5px solid var(--border2);background:var(--bg2);border-radius:var(--rs);padding:15px 8px;
+  font-size:15px;font-weight:700;color:var(--text);cursor:pointer;}
+.opt:active{background:var(--bg3);}
+.opt:disabled{cursor:default;}
+.opt.correct{background:#0F2A22;border-color:var(--ok);color:var(--teal-l);}
+.opt.wrong{background:#2A1A15;border-color:var(--ng);color:var(--coral);}
+.fb{margin-top:18px;text-align:center;display:none;}
+.fb.on{display:block;}
+.fb .res{font-size:20px;font-weight:900;margin-bottom:6px;}
+.fb .res.ok{color:var(--teal-l);} .fb .res.ng{color:var(--coral);}
+.fb .detail{font-size:14px;color:var(--text2);line-height:1.7;}
+.fb .detail b{color:var(--text);}
+.next{margin-top:14px;background:var(--text);color:var(--bg);border:0;border-radius:24px;
+  padding:12px 30px;font-size:15px;font-weight:800;cursor:pointer;}
+.next:active{opacity:.85;}
+
+/* ─── RESULT ─── */
+.result-header{text-align:center;padding:8px 0 6px;}
+.res-char{display:block;width:96px;height:96px;margin:4px auto 4px;border-radius:16px;object-fit:cover;background:#000;}
+.res-diff-label{text-align:center;font-size:12px;font-weight:700;color:var(--text2);letter-spacing:1px;margin:0 auto 8px;}
+.result-rank-name{font-size:22px;font-weight:800;margin-top:8px;}
+.result-comment{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.7;}
+.result-score{text-align:center;margin:14px 0 4px;}
+.result-score-num{font-size:46px;font-weight:700;line-height:1;letter-spacing:-.02em;}
+.result-score-num small{font-size:18px;color:var(--text3);font-weight:700;}
+.result-score-label{font-size:10px;color:var(--text3);letter-spacing:3px;margin-top:3px;}
+.color-bar{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;margin:12px 0 5px;}
+.color-bar-seg{flex:1;border-radius:2px;opacity:0.2;}
+.color-bar-seg.filled{opacity:1;}
+.color-bar-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:16px;}
+.stat-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px;}
+.stat-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--rs);padding:12px 6px;text-align:center;}
+.stat-card-label{font-size:10px;color:var(--text3);margin-bottom:4px;}
+.stat-card-val{font-size:20px;font-weight:700;}
+.weak{font-size:12px;background:#1a1607;border:0.5px solid #5a4a18;border-radius:var(--rs);padding:10px;color:#d6b85a;text-align:center;margin-bottom:4px;}
+
+/* ─── SHARE BTN ─── */
+.share-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.share-btn{padding:11px 8px;border-radius:var(--rs);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;text-align:center;}
+.share-btn.primary{background:var(--text);color:var(--bg);border-color:transparent;}
+
+/* ─── PROMO ─── */
+.promo-section{margin-bottom:14px;}
+.promo-title{font-size:11px;color:var(--text3);letter-spacing:2px;text-align:center;margin-bottom:10px;}
+.promo-cards{display:flex;flex-direction:column;gap:8px;}
+.promo-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.promo-icon{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;}
+.promo-icon img{width:100%;height:100%;object-fit:cover;border-radius:9px;}
+.promo-icon-bs{background:linear-gradient(135deg,#0F6E56,#534AB7);}
+.promo-icon-bili{background:linear-gradient(135deg,#00A1D6,#0066CC);}
+.promo-text{flex:1;}
+.promo-name{font-size:14px;font-weight:700;}
+.promo-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.5;}
+.promo-arrow{color:var(--text3);font-size:18px;}
+.promo-icon-gzh{background:linear-gradient(135deg,#07C160,#0F6E56);}
+.promo-icon-games{background:linear-gradient(135deg,#E8552D,#B7841E);}
+.gzh-qr-wrap{display:none;flex-direction:column;align-items:center;gap:8px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:16px;margin-top:-2px;}
+.gzh-qr-wrap.show{display:flex;}
+.gzh-qr-wrap img{width:160px;height:160px;border-radius:8px;background:#fff;padding:6px;box-sizing:border-box;}
+.gzh-qr-wrap p{font-size:11px;color:var(--text2);text-align:center;line-height:1.6;margin:0;}
+.retry-btn{width:100%;padding:14px;background:transparent;border:0.5px solid var(--border2);border-radius:var(--r);color:var(--text2);font-size:14px;font-weight:500;cursor:pointer;letter-spacing:1px;margin-bottom:18px;}
+.ghost-btn{width:100%;padding:12px;background:transparent;border:0.5px solid var(--border);border-radius:var(--r);color:var(--text3);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:32px;}
+</style>
+<script src="shared-assets.js"></script>
+</head>
+<body>
+<div class="container">
+<div class="bs-lang-switch" id="bs-lang-switch">
+  <button data-lang="zh" class="active">中</button>
+  <button data-lang="ja">日</button>
+  <button data-lang="en">EN</button>
+</div>
+
+<!-- ══ START ══ -->
+<div id="screen-start">
+  <div class="bs-topbar"><img id="bs-banner-top" alt="BASS SHOW"></div>
+  <!-- v2修正5：ゲーム専用アイコン（PITCH_ICON）を JS で適用 -->
+  <img class="bs-hero" id="bs-hero-pitch" alt="音感测试">
+  <div class="bs-game-title" data-i18n="title">相对音感测试</div>
+
+  <!-- v2修正: 玩法のみ難易度の上に。训练效果/计分规则/小建议は難易度選択の下へ移動 -->
+  <div class="intro-card">
+    <div class="intro-block">
+      <div class="intro-emoji">🎧</div>
+      <div>
+        <div class="intro-tt" data-i18n="howtoTitle">玩法</div>
+        <div class="intro-bd" data-i18n="howtoBody">先播放基准音（根音），再播放第二个音。听出两音的「音程（度数）」，四选一作答。根音一定先响，新手也友好。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="diff-label" data-i18n="diff_label">选择难度</div>
+  <div class="diff-cards">
+    <div class="diff-card" data-diff="easy">
+      <img class="d-char" id="d-char-easy" alt="">
+      <div class="d-meta"><div class="d-name" data-i18n="easyName">简单</div>
+        <div class="d-desc" data-i18n="easyDesc">根音·五度·八度·三度，从这里开始。</div></div>
+      <div class="d-go">›</div>
+    </div>
+    <div class="diff-card" data-diff="normal">
+      <img class="d-char" id="d-char-normal" alt="">
+      <div class="d-meta"><div class="d-name" data-i18n="normalName">普通</div>
+        <div class="d-desc" data-i18n="normalDesc">三度·四度·五度·六度·七度。乐队耳朵。</div></div>
+      <div class="d-go">›</div>
+    </div>
+    <div class="diff-card" data-diff="hard">
+      <img class="d-char" id="d-char-hard" alt="">
+      <div class="d-meta"><div class="d-name" data-i18n="hardName">困难</div>
+        <div class="d-desc" data-i18n="hardDesc">全音程＋上行下行＋更快。只有超人能登顶。</div></div>
+      <div class="d-go">›</div>
+    </div>
+  </div>
+
+  <!-- 訓練効果・計分規則・小建議（難易度選択の下） -->
+  <div class="intro-card" style="margin-top:14px;">
+    <div class="intro-block">
+      <div class="intro-emoji">💪</div>
+      <div>
+        <div class="intro-tt" data-i18n="benefitTitle">训练效果</div>
+        <div class="intro-bd" data-i18n="benefitBody">训练从根音起跳的听感，直接提升扒带、即兴和贝斯线创作能力，锻炼贝斯手实战的相对音感。</div>
+      </div>
+    </div>
+    <div class="intro-block">
+      <div class="intro-emoji">🏆</div>
+      <div>
+        <div class="intro-tt" data-i18n="scoreTitle">计分规则</div>
+        <div class="intro-bd" data-i18n="scoreBody">答对得分，答得越快分数越高（含速度奖励）。答错则为 0 分，所以别乱猜。在限定时间内作答，比拼最高分。</div>
+      </div>
+    </div>
+    <div class="intro-block">
+      <div class="intro-emoji">🎧</div>
+      <div>
+        <div class="intro-tt" data-i18n="tipTitle">小建议</div>
+        <div class="intro-bd" data-i18n="tipBody">戴上耳机会更容易听清音高。如果光靠耳朵很难判断，不妨实际拿起乐器把音找出来——这也是很好的训练。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ QUIZ ══ -->
+<div id="screen-quiz" style="display:none">
+  <div class="game-header">
+    <div class="game-header-top">
+      <img id="bs-banner-game" alt="BASS SHOW">
+      <div class="game-header-title" data-i18n="title">相对音感测试</div>
+    </div>
+    <div class="qhead">
+      <span class="badge" id="q-diff">普通</span>
+      <span id="q-count">1 / 10</span>
+    </div>
+    <div class="progress"><i id="q-prog"></i></div>
+  </div>
+
+  <div class="play-area">
+    <button class="play-btn" id="btn-play" data-i18n="replay">🔁 再听一次</button>
+  </div>
+  <!-- 修正C：制限時間カウントダウン（採点用 elapsed と同一基準で動く） -->
+  <div class="timer-wrap">
+    <div class="timer-bar"><i id="timer-fill"></i></div>
+    <div class="timer-label"><span data-i18n="timeLeft">剩余</span> <b id="timer-num">—</b><span data-i18n="timeUnit">s</span></div>
+  </div>
+  <div class="ask" data-i18n="askText">刚才是几度？</div>
+  <div class="opts" id="opts"></div>
+
+  <div class="fb" id="fb">
+    <div class="res" id="fb-res"></div>
+    <div class="detail" id="fb-detail"></div>
+    <button class="next" id="btn-next" data-i18n="next">下一题 ›</button>
+  </div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="screen-result" style="display:none">
+  <!-- ［スクショ対象］結果カード -->
+  <div class="bs-share-capture" id="bs-share-capture">
+    <div class="bs-reslogo"><img id="bs-banner-res" alt="BASS SHOW"></div>
+    <div class="bs-res-title" data-i18n="title">相对音感测试</div>
+    <!-- 結果キャラ＝測定時の難易度に連動 -->
+    <img class="res-char" id="res-char" alt="">
+    <div class="res-diff-label" id="res-diff-label">普通</div>
+    <div class="result-header">
+      <div class="result-rank-name" id="res-rank-name">—</div>
+      <div class="result-comment" id="res-comment">—</div>
+    </div>
+    <div class="result-score">
+      <div class="result-score-num"><span id="res-score">0.0</span><small> / 100</small></div>
+      <div class="result-score-label" data-i18n="score">评分</div>
+    </div>
+    <div class="color-bar" id="color-bar"></div>
+    <div class="color-bar-labels"><span>Lv.1</span><span>Lv.6</span><span data-i18n="lvTop">顶级</span></div>
+    <div class="stat-cards">
+      <div class="stat-card"><div class="stat-card-label" data-i18n="stCorrect">正确</div><div class="stat-card-val" id="res-correct">0/10</div></div>
+      <div class="stat-card"><div class="stat-card-label" data-i18n="stSpeed">平均速度</div><div class="stat-card-val" id="res-speed">0.0s</div></div>
+    </div>
+    <div class="weak" id="res-weak"></div>
+    <div class="bs-share-foot">
+      <!-- TODO: ゲームアイコン差し替え（現在はプレースホルダー枠） -->
+      <div class="bs-share-icon"><img id="share-game-icon" alt="Pitch Test"></div>
+      <div class="bs-share-foot-text">
+        <div class="bs-share-badge" data-i18n="share_badge">扫码挑战</div>
+        <div class="bs-share-title" data-i18n="share_title">你的耳朵能听出几度？</div>
+        <div class="bs-share-desc" data-i18n="share_card_sub">BASS SHOW · 音感测试</div>
+      </div>
+      <div class="bs-share-qr"><div id="shareQrBox" class="sc-qrbox"></div></div>
+    </div>
+  </div>
+
+  <div class="share-btn-row">
+    <button class="share-btn primary" id="btn-screenshot" data-i18n="btn_screenshot">截图分享给你的朋友</button>
+    <button class="share-btn" id="btn-copy-text" data-i18n="btn_copy">复制文字</button>
+  </div>
+
+  <!-- プラットフォーム誘導（三段導線・4カード） -->
+  <div class="promo-section">
+    <div class="promo-title" data-i18n="promo_title">加入贝斯手社区</div>
+    <div class="promo-cards">
+      <div class="promo-card" id="gzh-card">
+        <div class="promo-icon promo-icon-gzh">📱</div>
+        <div class="promo-text">
+          <div class="promo-name" data-i18n="promo_gzh_name">加入贝斯手交流群</div>
+          <div class="promo-desc" data-i18n="promo_gzh_desc">扫码关注公众号 · 回复「入群」即可进群</div>
+        </div>
+        <div class="promo-arrow" id="gzh-arrow">›</div>
+      </div>
+      <div class="gzh-qr-wrap" id="gzh-qr-wrap">
+        <img id="gzhQrImg" alt="BASS SHOW 公众号 QR">
+        <p data-i18n="promo_gzh_steps">① 微信扫码关注 → ② 回复「入群」→ ③ 收到进群方式</p>
+      </div>
+      <div class="promo-card" onclick="window.open('https://b23.tv/CGkvQc4','_blank')">
+        <div class="promo-icon promo-icon-bili">📺</div>
+        <div class="promo-text">
+          <div class="promo-name" data-i18n="promo_bili_name">Bilibili · 在华日本音乐人MASATO</div>
+          <div class="promo-desc" data-i18n="promo_bili_desc">贝斯教学视频 · BASS SHOW系列<br>6,700+ 粉丝 · 3万获赞</div>
+        </div>
+        <div class="promo-arrow">›</div>
+      </div>
+      <div class="promo-card" onclick="window.open('https://bassshow.rocks/platform.html','_blank')">
+        <div class="promo-icon promo-icon-bs"><img class="bs-logo-asset" alt="BASS SHOW"></div>
+        <div class="promo-text">
+          <div class="promo-name">BASS SHOW<span class="demo-tag" data-i18n="demo_tag">Demo 体验版</span></div>
+          <div class="promo-desc" data-i18n="platform_desc">贝斯手专属平台<br>乐谱・器材・社区一站式</div>
+        </div>
+        <div class="promo-arrow">›</div>
+      </div>
+      <div class="promo-card" onclick="window.open('https://bassshow.rocks/minigames.html','_blank')">
+        <div class="promo-icon promo-icon-games"><img class="bs-logo-asset" alt="BASS SHOW 小游戏"></div>
+        <div class="promo-text">
+          <div class="promo-name" data-i18n="promo_games_name">BASS SHOW 小游戏合集</div>
+          <div class="promo-desc" data-i18n="promo_games_desc">更多贝斯手测试 · 性格诊断・实力训练</div>
+        </div>
+        <div class="promo-arrow">›</div>
+      </div>
+    </div>
+  </div>
+  <button class="retry-btn" id="btn-again" data-i18n="again">再测一次</button>
+  <button class="ghost-btn" id="btn-home" data-i18n="home">重新选择难度</button>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ══ ゲーム専用アイコン（PitchTest 固有・256px WebP埋め込み）══
+var PITCH_ICON="data:image/webp;base64,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";
+// ══════════════════════════════════════════
+// 度数 / 難易度定義（Demo v3 引き継ぎ）
+// ══════════════════════════════════════════
+var INTERVALS={
+  0:{ja:"完全1度",zh:"纯一度",en:"Unison"},1:{ja:"短2度",zh:"小二度",en:"m2"},
+  2:{ja:"長2度",zh:"大二度",en:"M2"},3:{ja:"短3度",zh:"小三度",en:"m3"},
+  4:{ja:"長3度",zh:"大三度",en:"M3"},5:{ja:"完全4度",zh:"纯四度",en:"P4"},
+  6:{ja:"トライトーン",zh:"三全音",en:"TT"},7:{ja:"完全5度",zh:"纯五度",en:"P5"},
+  8:{ja:"短6度",zh:"小六度",en:"m6"},9:{ja:"長6度",zh:"大六度",en:"M6"},
+  10:{ja:"短7度",zh:"小七度",en:"m7"},11:{ja:"長7度",zh:"大七度",en:"M7"},
+  12:{ja:"オクターブ",zh:"八度",en:"Oct"}
+};
+var NOTE_NAMES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+var DIFFICULTY={
+  easy:  {pool:[0,7,12,4,3],         dir:["up"],        maxSec:20, q:10},
+  normal:{pool:[0,3,4,5,7,9,11,12],  dir:["up"],        maxSec:15, q:10},
+  hard:  {pool:[1,2,3,4,5,6,7,8,9,10,11,12], dir:["up","down"], maxSec:10, q:10}
+};
+// 出題に使う全ての音は MIDI 28(E1=4弦ベース開放E) 以上に制限（修正2）。
+var MIN_MIDI=28;        // E1（4弦ベース最低音）
+var ROOT_LO=28;         // ルート下限（E1）
+var ROOT_HI=45;         // ルート上限（A2）：上行で +12 しても 57 以内に収める
+function clampRootHi(hi){ return hi; }
+
+// 難易度→汎用3段階キャラ（shared-assets.js / window.BS_ASSETS）
+// 简单=A(弱) / 普通=B(中) / 困难=C(強)
+function diffCharSrc(diff){
+  var A = window.BS_ASSETS || {};
+  var map = {easy:A.CHAR_LV3_A, normal:A.CHAR_LV3_B, hard:A.CHAR_LV3_C};
+  return map[diff] || A.CHAR_LV3_A || '';
+}
+var DIFF_NAMES = {
+  easy:   {zh:'简单', ja:'かんたん',   en:'Easy'},
+  normal: {zh:'普通', ja:'ふつう',     en:'Normal'},
+  hard:   {zh:'困难', ja:'むずかしい', en:'Hard'}
+};
+function diffNameText(diff){
+  var lang=window.BS_LANG||'zh';
+  var n=DIFF_NAMES[diff]||DIFF_NAMES.easy;
+  return n[lang]||n.zh;
+}
+
+// ══════════════════════════════════════════
+// スコア(100点満点)・称号（Demo v3 引き継ぎ）
+// ══════════════════════════════════════════
+// v3.1：速度ボーナスの満点維持区切りを warn 発動と完全同期。
+//   WARN_FRAC＝warn(黄)が出る「経過時間の割合」。タイマー色と共用の単一基準。
+//   経過 maxSec×WARN_FRAC（簡単8/普通6/難しい4秒）までは満点ボーナス維持、
+//   そこから時間切れ(maxSec)まで直線減衰して 0 に。
+var BASE_PER_Q=100, SPEED_BONUS_MAX=60, WARN_FRAC=0.4;
+function questionScore(correct,sec,maxSec){
+  if(!correct) return 0;
+  var fast=maxSec*WARN_FRAC;            // 満点維持の区切り（=warn発動の経過時間）
+  if(sec<=fast)   return BASE_PER_Q+SPEED_BONUS_MAX;
+  if(sec>=maxSec) return BASE_PER_Q;
+  var r=(sec-fast)/(maxSec-fast);
+  return BASE_PER_Q+Math.round(SPEED_BONUS_MAX*(1-r));
+}
+function toScore100(raw,q){ var mx=q*(BASE_PER_Q+SPEED_BONUS_MAX); return Math.round((raw/mx)*1000)/10; }
+// 称号（難易度ごと11段×3言語）。最上位＝絶対音感疑い（FingerSpeed機械疑い段と対）。
+var TITLES={
+  easy:{
+    zh:["音痴蛋","初识耳朵","见习耳","雏鸟耳","入门耳","还不错的耳","好耳朵","耳朵很灵","可靠的耳","贝斯耳潜质","简单大师"],
+    ja:["音痴の卵","はじめての耳","みならい耳","ぴよぴよ耳","かけだし耳","なかなかの耳","いい耳してる","耳がさえてる","たしかな耳","ベース耳の素質","簡単マスター"],
+    en:["Tone-Deaf Egg","First Ear","Apprentice Ear","Fledgling Ear","Rookie Ear","Decent Ear","Good Ear","Sharp Ear","Reliable Ear","Bass-Ear Talent","Easy Master"]
+  },
+  normal:{
+    zh:["练习生耳","业余耳","乐队耳","律动耳","即兴耳","能扒带的耳","准职业耳","可靠相对音感","录音室耳","黄金之耳","普通大师"],
+    ja:["練習生の耳","アマチュアの耳","バンドマンの耳","グルーヴ耳","セッション耳","耳コピできる耳","プロ見習いの耳","確かな相対音感","スタジオの耳","黄金の耳","普通マスター"],
+    en:["Trainee Ear","Amateur Ear","Band Ear","Groove Ear","Session Ear","Ear-Copy Ear","Semi-Pro Ear","Solid Relative Pitch","Studio Ear","Golden Ear","Normal Master"]
+  },
+  hard:{
+    zh:["挑战者耳","猛者耳","达人耳","鬼之听音","音程猎人","频率支配者","绝对领域耳","神之耳","视音者","人间调音器","疑似绝对音感"],
+    ja:["挑戦者の耳","猛者の耳","達人の耳","鬼の聴音","音程ハンター","周波数の支配者","絶対領域の耳","神の耳","音を視る者","人間チューナー","絶対音感疑い"],
+    en:["Challenger Ear","Fighter Ear","Master Ear","Demon Hearing","Interval Hunter","Frequency Ruler","Absolute-Zone Ear","God Ear","Note Seer","Human Tuner","Perfect-Pitch Suspect"]
+  }
+};
+var TITLE_COMMENTS={
+  zh:["每位大师都从这里出发，加油！","基础在萌芽，慢慢来。","开始有感觉了，多听多练。","耳朵在成长中！","稳步提升，保持练习。","已能扒出不少音了！","离职业水准只差一步。","你的相对音感很扎实。","非常精准的听感！","顶尖耳朵，令人惊叹！","你的耳朵已经接近绝对音感！"],
+  ja:["名人も皆ここから！がんばって！","基礎が芽生え中、焦らずに。","感覚が出てきた、多く聴こう。","耳が成長中！","着実に上達、練習を継続。","かなり聴き取れるように！","プロ水準まであと一歩。","相対音感が堅実です。","非常に正確な聴感！","頂点の耳、驚異的！","もう絶対音感に迫る耳です！"],
+  en:["Every master starts here. Go!","Basics sprouting, take your time.","Getting a feel, listen more.","Your ear is growing!","Steady progress, keep practicing.","You can pick out a lot now!","One step from pro level.","Solid relative pitch.","Very precise hearing!","Top-tier ear, stunning!","Your ear nears perfect pitch!"]
+};
+var TITLE_CUTS=[0,15,28,40,50,60,68,76,84,90,95];
+function titleIdxOf(s){ var idx=0; for(var i=0;i<TITLE_CUTS.length;i++) if(s>=TITLE_CUTS[i]) idx=i; return idx; }
+function titleOf(diff,s){ return TITLES[diff][window.BS_LANG||'zh'][titleIdxOf(s)]; }
+function commentOf(s){ return TITLE_COMMENTS[window.BS_LANG||'zh'][titleIdxOf(s)]; }
+// カラーバー11色（Rhythm v9 と統一・末尾ゴールド=最上位段）
+var LV_COLORS = ['#E24B4A','#D85A30','#BA7517','#EF9F27','#639922','#1D9E75','#0F6E56','#534AB7','#3C3489','#26215C','#E8B23A'];
+
+// ══════════════════════════════════════════
+// Web Audio：エレキベース風の音色（Demo v3 引き継ぎ）
+// ══════════════════════════════════════════
+var AC=null;
+var MASTER=null;   // v2修正3：全音を通すマスター（リミッターでクリップ歪み＝雑音を防止）
+var MASTERGAIN=null;  // v2.5：コンプ後段のメイクアップゲイン（全体底上げ）
+function ac(){
+  if(!AC){
+    AC=new (window.AudioContext||window.webkitAudioContext)();
+    // v2.5：コンプは「知覚音量」ではなく「実振幅(同位相ピーク)」で動くため、
+    //   実振幅の大きい低音を余計に潰してしまい、知覚音量差の補正にはむしろ逆効果だった。
+    //   → コンプは歪み防止の最終安全網としてのみ浅く効かせ、音量差の均一化は
+    //     loudnessGain（知覚ベースの事前ゲイン）側で行う。
+    //   メイクアップゲインで全体を底上げし、低音を含めて十分な音量を確保する。
+    // v3：コンプは「歪み防止の最終安全網」専用の浅いリミッター。
+    //   各音は loudnessGain で既に同位相ピーク≦1.0 に正規化済みのため、
+    //   コンプはごく稀な倍音同位相アライメント時だけ軽く触れる。音量均一化は
+    //   合成側（固定倍音シェイプ＋帯域エネルギー正規化）で完結させる。
+    MASTER=AC.createDynamicsCompressor();
+    MASTER.threshold.setValueAtTime(-3, AC.currentTime);   // -3dBを超える瞬間ピークのみ抑制
+    MASTER.knee.setValueAtTime(8, AC.currentTime);
+    MASTER.ratio.setValueAtTime(3, AC.currentTime);
+    MASTER.attack.setValueAtTime(0.006, AC.currentTime);
+    MASTER.release.setValueAtTime(0.15, AC.currentTime);
+    // v3：メイクアップゲイン。各音の OUT スケールは loudnessGain 内で適用済みなので
+    //   ここは 1.0 基準。歪みは出ない設計（検証済：最大同位相ピーク≦1.0）。
+    MASTERGAIN=AC.createGain(); MASTERGAIN.gain.value=1.0;
+    MASTER.connect(MASTERGAIN); MASTERGAIN.connect(AC.destination);
+  }
+  return AC;
+}
+function masterNode(){ ac(); return MASTER; }
+// v2修正1：音程を聴き取りやすくするためサスティーンを延長。
+// NOTE_LEN を 1.6 に。GAP を 1.5 にして、1音目をしっかり聴かせてから2音目を鳴らす
+// （重なりを最小化し、2音の音程を明瞭に比較できるようにする）。
+var NOTE_LEN=1.6;             // v2: 1.0→1.6（サスティーン延長・音程判別しやすく）
+var GAP=1.5;                  // v2: 1.0→1.5（ルート発音開始 → 2音目発音開始。重なり抑制）
+var START_LEAD=1.0;          // v2修正2：新規出題時、再生開始までの待ち時間（秒）。画面表示の瞬間ではなく1秒後に鳴らす。
+var activeNodes=[];
+var playing=false;
+var playToken=0;
+var lastPlayAt=0;   // v4：連打デバウンス用（直近のplayQuestion発火時刻 ms）
+
+function midiToFreq(m){ return 440*Math.pow(2,(m-69)/12); }
+
+// ══════════════════════════════════════════
+// v3：音量均一化の方針を根本から立て直し。
+//   旧 v2.x は「低音を持ち上げる/高音を下げる」を架空のスピーカー応答モデル上で
+//   多層ゲイン（loudnessGain＋tilt倍音＋コンプ＋makeup）で操作し、自己矛盾していた。
+//   さらにローパスが低音の倍音を削り、肝心の「倍音で運ぶピッチ」を殺していた。
+//   v3：物理に即した単純設計に統一する。
+//   ・E1〜A1 の基音はスマホで物理的に再生不可。基音は追わず倍音でピッチを運ぶ
+//     （missing fundamental／残差ピッチ）。倍音シェイプは全音共通＝音色を一定に保つ。
+//   ・「実際に聞こえる帯域(HP/LP通過後×聞こえやすさ重み)のエネルギー」だけを基準に
+//     1本の透明な曲線で各音を正規化。低音はゲインを上げて補うが、上限クランプと
+//     全体 OUT スケールで同位相ピーク≦1.0 を保証（歪み・ビビり源を断つ）。
+// ══════════════════════════════════════════
+
+// 端末（スマホ／小型スピーカー）の周波数別「聞こえやすさ」重み 0..1。
+//   単一・単調・透明。55Hz以下ほぼ無、低中域で立ち上がり、400〜2500でフラット、超高域で減衰。
+function audWeight(hz){
+  if(hz<55)   return 0.02;
+  if(hz<110)  return 0.02 + 0.20*(hz-55)/55;
+  if(hz<220)  return 0.22 + 0.46*(hz-110)/110;
+  if(hz<400)  return 0.68 + 0.27*(hz-220)/180;
+  if(hz<2500) return 0.95 + 0.05*(hz-400)/2100;
+  if(hz<5000) return 1.00 - 0.45*(hz-2500)/2500;
+  return 0.50;
+}
+// フィルタ振幅応答（正規化計算用の近似）：HP78×1段, LP2600×~2pole
+function hpMag(hz){ var r=hz/78;   return r/Math.sqrt(1+r*r); }
+function lpMag(hz){ var r=hz/2600; return 1/Math.sqrt(1+Math.pow(r,4)); }
+
+// 全音共通の固定倍音シェイプ（指弾きエレキベース：低〜中倍音を厚く、高次は控えめ）。
+//   bassNote の合成と完全に一致させる（正規化の基準とするため）。
+var BASS_HARMONICS=[ {m:1,a:1.00},{m:2,a:0.72},{m:3,a:0.52},{m:4,a:0.34},
+                     {m:5,a:0.22},{m:6,a:0.14},{m:7,a:0.09},{m:8,a:0.06} ];
+
+// v4：スマホのポップ/破裂音(＝オーディオ・レンダースレッドのバッファ不足)対策。
+//   従来は1音=9オシレータ(基音sine×8倍音＋三角波芯)を毎問18本生成/破棄しており、
+//   1問で計44 AudioNode。Android実機ではこのノード大量生成/破棄が
+//   レンダースレッドを圧迫しアンダーラン(ブツ/ピリピリ)を起こしていた。
+//   → 同一倍音構成を「単一の PeriodicWave」に畳み込み、1音=オシレータ1本に統一する。
+//      波形(倍音シェイプ)は完全に同じなので音色・音量バランスは不変。
+//   三角波の芯(a=0.10)も奇数倍音として畳み込み、「実際に鳴る」倍音振幅 WAVE_IMAG を作る。
+//   loudnessGain の正規化基準も同じ WAVE_IMAG を使い、波形と正規化を完全一致させる。
+var WAVE_IMAG=(function(){
+  var TRI_A=0.10, c8=8/(Math.PI*Math.PI);
+  var arr=[0]; // index0 = DC（0）
+  for(var k=1;k<=8;k++){
+    var s=0;
+    BASS_HARMONICS.forEach(function(h){ if(h.m===k) s+=h.a; });
+    if(k%2===1){ var sign=(k%4===1)?1:-1; s += TRI_A*c8*sign/(k*k); } // 三角波芯を畳み込み
+    arr[k]=s;
+  }
+  return arr;
+})();
+
+// 単一 PeriodicWave（周波数非依存・全音共通）。AudioContext生成後に一度だけ作って使い回す。
+var BASS_WAVE=null;
+function bassWave(){
+  if(!BASS_WAVE){
+    var c=ac();
+    var n=WAVE_IMAG.length;                 // 9 (index 0..8)
+    var real=new Float32Array(n);           // cos成分=0
+    var imag=new Float32Array(n);           // sin成分＝倍音振幅（位相0：現行のsine合成と一致）
+    for(var k=0;k<n;k++){ imag[k]=WAVE_IMAG[k]; }
+    // disableNormalization:true 必須。これが無いと波形がピーク1へ自動正規化され、
+    //   loudnessGain のキャリブレーション(検証済の音量バランス)が壊れる。
+    BASS_WAVE=c.createPeriodicWave(real, imag, {disableNormalization:true});
+  }
+  return BASS_WAVE;
+}
+
+// その音の「聞こえる帯域での実効ラウドネス」。波形(WAVE_IMAG)と完全一致させる。
+function noteLoudness(f){
+  var s=0;
+  for(var k=1;k<=8;k++){
+    var hz=f*k, a=Math.abs(WAVE_IMAG[k])*hpMag(hz)*lpMag(hz)*audWeight(hz);
+    s+=a*a;
+  }
+  return Math.sqrt(s);
+}
+
+// 正規化パラメータ（design2.js で検証して確定）。
+var LG_REF=noteLoudness(110.0);  // 基準音 A2(110Hz) を相対ゲイン≒1 に
+var LG_MIN=0.45, LG_MAX=2.7;     // 低音の持ち上げ上限／高音の下げ下限
+var LG_OUT=0.16;                 // 全体出力スケール：最大同位相ピーク≦1.0を保証（歪み厳禁）
+
+// out.gain に掛ける最終ゲイン（相対正規化 × 全体スケール）。
+//   低音ほど大きく、高音ほど小さく。これ1本で音域差をならす。
+function loudnessGain(f){
+  var rel=LG_REF/noteLoudness(f);
+  rel=Math.max(LG_MIN, Math.min(LG_MAX, rel));
+  return rel*LG_OUT;
+}
+
+function bassNote(midi,when,baseTime){
+  var c=ac(), f=midiToFreq(midi);
+  // v2.3：基準時刻を呼び出し側から渡せるように（1音目と2音目で同一の時間軸を共有し、
+  //   呼び出し間の currentTime ズレに起因する 2音目頭のタイミング不整合・クリックを防ぐ）。
+  var base=(typeof baseTime==='number')?baseTime:c.currentTime;
+  var t0=base+when;
+  // v2.4：音域別の知覚ラウドネス補正を out.gain に適用（音量を音域で均一化）。
+  var out=c.createGain(); out.gain.value=loudnessGain(f); out.connect(masterNode());
+
+  // v3：ハイパス 78Hz×1段。E1/A1 の基音(41〜55Hz)はスマホで再生不能＆ビビり源。
+  //   最初から送らず捨てる。ピッチは上の倍音列が運ぶので音程は失われない。
+  var hp=c.createBiquadFilter(); hp.type="highpass"; hp.frequency.value=78; hp.Q.value=0.6;
+  hp.connect(out);
+
+  // v3：ローパスを「全音共通の固定カットオフ」に変更（最重要修正）。
+  //   旧 v2.x は f*7→f*3.4 で低音ほどカットオフが低く、E1で約290→360Hzと
+  //   スマホが得意な500Hz〜2kHz帯の倍音を削っていた＝低音のピッチを殺す原因。
+  //   固定 3200Hz(アタック)→2500Hz(サスティーン)で、低音の倍音を端末の得意帯域へ通す。
+  //   高音側はこの上限でキンつき／シンセ臭さを抑える。全音で音色も均一になる。
+  var lp=c.createBiquadFilter(); lp.type="lowpass";
+  lp.frequency.setValueAtTime(3200,t0);
+  lp.frequency.exponentialRampToValueAtTime(2500,t0+NOTE_LEN*0.5);
+  lp.Q.value=0.7;            // 共振控えめ＝自然な指弾きの減衰
+  lp.connect(hp);            // env→lp→hp→out
+
+  // v2.1修正：破裂音（クリック/ポップ）対策。
+  //   アタックは 0 から linearRamp で立ち上げ、低周波の波形断ち切りクリックを防ぐ。
+  //   末尾は exponential ではなく linearRampToValueAtTime で「実質ゼロ(0)」まで確実に落とし切る
+  //   （指数ランプは 0 に到達できず微小振幅が残り、stop で断ち切られて破裂音になっていた）。
+  var END=NOTE_LEN;                 // 振幅が 0 に到達する時刻
+  var STOP=t0+END+0.03;             // stop は無音到達後に置く
+  var env=c.createGain();
+  env.gain.setValueAtTime(0,t0);
+  env.gain.linearRampToValueAtTime(1.0,t0+0.015);              // 0→1 線形アタック（クリック防止）
+  env.gain.exponentialRampToValueAtTime(0.72,t0+0.20);        // サスティーンを高く維持
+  env.gain.exponentialRampToValueAtTime(0.50,t0+END*0.6);     // 緩やかに減衰
+  env.gain.exponentialRampToValueAtTime(0.02,t0+END*0.92);    // ここまで指数で自然に
+  env.gain.linearRampToValueAtTime(0,t0+END);                 // 最後は線形で完全な 0 へ
+  env.connect(lp);
+
+  // v4：1音=単一PeriodicWaveオシレータ。倍音構成は WAVE_IMAG に畳み込み済み（音色不変）。
+  //   個別倍音ゲイン(g)を撤廃 → ノード数を 1音5個(osc/env/lp/hp/out)・1問10個へ削減。
+  //   旧版の「倍音ごとの個別減衰(指弾きのピック感)」は、LPスイープ 3200→2500Hz が
+  //   担う「アタック明るい→サスティーンまろやか」と役割が重複するため、ここでは省略。
+  var o=c.createOscillator();
+  o.setPeriodicWave(bassWave());
+  o.frequency.value=f;
+  o.connect(env);                  // osc → env → lp → hp → out → MASTER
+  o.__startAt=t0;                  // stopAll が start 前 stop を避けるための記録
+  o.start(t0); o.stop(STOP);       // env が END で完全0のため、STOPで断ち切りクリックは出ない
+  activeNodes.push(o);
+
+  activeNodes.push(out,lp,hp,env);
+}
+
+function stopAll(){
+  playToken++;
+  if(!AC) return;
+  var now=ac().currentTime;
+  var FADE=0.03;   // v4：0.02→0.03。停止境界の切断クリックを更に抑制（ノード減で安全に伸ばせる）
+  // v2.4：ポップ音対策の見直し。
+  //   旧実装は各 GainNode の「現在の瞬間値(n.gain.value)」を基準にフェードしていたが、
+  //   各オシレータの g.gain は setValueAtTime(gain, t0)（未来の t0）でスケジュールされるため、
+  //   発音前(now<t0)だと瞬間値が食い違い、フェードが効かずに stop でプチッと切れていた。
+  //   また 1秒リード中や2音目発音前に stopAll が来ると、o.stop が o.start より前になり
+  //   ブラウザによってポップ/不整合の原因になっていた。
+  //   対策：
+  //   (1) 全 GainNode を cancelScheduledValues → 現在値固定 → 0 へ linearRamp（未来スケジュールを破棄）
+  //   (2) o.stop は「now+FADE」と「その osc の start 時刻以降」の遅い方に置く（start前 stop を回避）
+  activeNodes.forEach(function(n){
+    try{
+      if(n.gain && n.gain.cancelScheduledValues){
+        n.gain.cancelScheduledValues(now);
+        // setValueAtTime に現在値を置く前に、value を読むと未スケジュール分は初期値だが、
+        // cancel 後に現在の実効値で固定するため setTargetAtTime で滑らかに 0 へ寄せる。
+        n.gain.setValueAtTime(n.gain.value, now);
+        n.gain.linearRampToValueAtTime(0, now+FADE);   // 完全な 0 へ（0.0001 ではなく 0）
+      }
+    }catch(e){}
+  });
+  activeNodes.forEach(function(n){
+    try{
+      if(n.stop){
+        // start 前に stop すると不整合になるため、start 時刻が記録されていればそれ以降に。
+        var st=(typeof n.__startAt==='number')?n.__startAt:now;
+        var stopAt=Math.max(now+FADE+0.01, st+0.001);
+        n.stop(stopAt);
+      }
+    }catch(e){}
+  });
+  activeNodes=[];
+  playing=false;
+  // ※カウントダウンタイマーは stopAll では止めない。
+  //   聴き直し（playQuestion→stopAll）でも制限時間は減り続ける設計のため。
+  //   破棄は画面遷移・回答確定・「次へ」側で stopTimer() を明示的に呼ぶ。
+}
+
+// ══════════════════════════════════════════
+// 修正C：制限時間カウントダウン
+//  採点用 elapsed と完全同一の基準（s.timerBase＝2音目再生終了時刻）で動く。
+//  二重時計を作らず、バー表示も answer() の elapsed も同じ式から算出する。
+// ══════════════════════════════════════════
+var timerRaf=null;
+function stopTimer(){
+  if(timerRaf!==null){ cancelAnimationFrame(timerRaf); timerRaf=null; }
+}
+function startTimer(){
+  stopTimer();
+  var fill=document.getElementById('timer-fill');
+  var num=document.getElementById('timer-num');
+  function tick(){
+    var s=state;
+    if(!s || s.answered){ timerRaf=null; return; }   // 回答確定後は止める
+    var maxSec=s.cur.cfg.maxSec;
+    // 採点と同一基準：2音目再生終了(s.timerBase)からの経過秒。
+    var elapsed=(performance.now()-s.timerBase)/1000;
+    if(elapsed<0) elapsed=0;                          // 再生中はバー満タンで待機
+    var remain=maxSec-elapsed;
+    if(remain<0) remain=0;
+    var ratio=remain/maxSec;                          // 1(満タン)→0
+    if(fill){
+      fill.style.width=(ratio*100)+'%';
+      // v3.1：warn(黄)を「経過 maxSec×WARN_FRAC（簡単8/普通6/難しい4秒）」で発動。
+      //   ＝残り時間で remain<=maxSec*(1-WARN_FRAC)。速度ボーナスの満点区切りと同一基準。
+      //   danger(赤)は従来どおり残り3秒。
+      fill.className=(remain<=3?'danger':(remain<=maxSec*(1-WARN_FRAC)?'warn':''));
+    }
+    if(num) num.textContent=Math.ceil(remain);
+    if(remain<=0){
+      // 時間切れ＝自動不正解（正解2音再生＋「次へ」フィードバックへ）
+      timerRaf=null;
+      answer(null,null);
+      return;
+    }
+    timerRaf=requestAnimationFrame(tick);
+  }
+  timerRaf=requestAnimationFrame(tick);
+}
+
+function setPlayBtn(isPlaying){
+  var b=document.getElementById("btn-play");
+  if(!b) return;
+  if(isPlaying){ b.textContent=t("playing"); b.classList.add("playing"); b.disabled=true; }
+  else { b.textContent=t("replay"); b.classList.remove("playing"); b.disabled=false; }
+}
+
+// 出題（または聴き直し）を1回再生。常に既存音を止めてから鳴らす。
+// v2修正2：lead（秒）を指定すると、その分だけ待ってから1音目を鳴らす。
+//   新規出題（画面遷移直後／次の問い）では lead=1.0 を渡し、
+//   ページ表示の瞬間ではなく1秒後に再生を始める。聴き直し・不正解再生は lead=0。
+function playQuestion(q, lead){
+  if(!q) return;
+  var c=ac(); if(c.resume) c.resume();
+  // v4：連打デバウンス。聴き直し/「次へ」連打で stopAll→start が密集し、
+  //   停止しきる前に次が始まってポップ化するのを防ぐ。新規出題(lead>0)は対象外。
+  var nowMs=(performance&&performance.now)?performance.now():Date.now();
+  var isReplay=!(typeof lead==='number'&&lead>0);
+  if(isReplay && (nowMs-lastPlayAt)<140) return;
+  lastPlayAt=nowMs;
+  stopAll();
+  var L=(typeof lead==='number'&&lead>0)?lead:0;
+  var myToken=++playToken;
+  playing=true; setPlayBtn(true);
+  // v2.3：1音目・2音目で共通の基準時刻を使う。
+  //   さらに +0.06 秒の先読みマージンを置き、スケジューリングが現在時刻に間に合わず
+  //   発音頭が詰まってクリックになるのを防ぐ（特にスマホ／iOS Safari）。
+  var base=c.currentTime+0.06;
+  bassNote(q.rootMidi,  L,      base);
+  bassNote(q.targetMidi, L+GAP, base);
+  // 2音目の発音終了時刻 = lead + GAP + NOTE_LEN（秒）（+マージンは僅少なので無視）
+  var totalMs=(L+GAP+NOTE_LEN)*1000;
+  setTimeout(function(){
+    if(myToken!==playToken) return;
+    playing=false; setPlayBtn(false);
+  },totalMs);
+  return L;   // 呼び出し側がタイマー基準計算に使う
+}
+
+// ══════════════════════════════════════════
+// 出題ロジック（修正2：全音 MIDI≥28 を保証）
+// ══════════════════════════════════════════
+function buildQuestion(diff){
+  var cfg=DIFFICULTY[diff];
+  var semi=cfg.pool[Math.floor(Math.random()*cfg.pool.length)];
+  var dir=cfg.dir[Math.floor(Math.random()*cfg.dir.length)];
+  // 下限ガード：下行(down)では targetMidi=root-semi ≥ MIN_MIDI を保証するため
+  // ルート下限を semi 分持ち上げる。上行はルート下限 ROOT_LO のまま。
+  var rootLo = (dir==="down") ? (MIN_MIDI + semi) : ROOT_LO;
+  var rootHi = ROOT_HI;
+  if(rootLo>rootHi) rootHi=rootLo;     // semi が大きい下行でも空にならないよう保険
+  var span = rootHi - rootLo + 1;
+  var rootMidi = rootLo + Math.floor(Math.random()*span);
+  var targetMidi = (dir==="up") ? rootMidi+semi : rootMidi-semi;
+  return {semi:semi,dir:dir,rootMidi:rootMidi,targetMidi:targetMidi,cfg:cfg};
+}
+function optionSet(diff,answerSemi){
+  var pool=DIFFICULTY[diff].pool.filter(function(s,i,a){ return a.indexOf(s)===i && s!==answerSemi; });
+  var picks=[answerSemi];
+  while(picks.length<4 && pool.length){ var i=Math.floor(Math.random()*pool.length); picks.push(pool.splice(i,1)[0]); }
+  for(var s=0;picks.length<4;s++){ if(picks.indexOf(s)<0 && INTERVALS[s]) picks.push(s); }
+  return picks.sort(function(){ return Math.random()-0.5; });
+}
+
+// ══════════════════════════════════════════
+// 進行
+// ══════════════════════════════════════════
+var state=null;
+function showScreen(name){
+  document.getElementById('screen-start').style.display  = name==='start'  ? 'block' : 'none';
+  document.getElementById('screen-quiz').style.display   = name==='quiz'   ? 'block' : 'none';
+  document.getElementById('screen-result').style.display = name==='result' ? 'block' : 'none';
+}
+
+function startGame(diff){
+  stopTimer();   // 前回のタイマーを確実に破棄（リトライ・難易度再選択の多重発火防止）
+  // v4：ユーザー操作起点でAudioContextを先に起動し、PeriodicWaveも事前生成しておく。
+  //   START_LEAD(1秒)の間に state を 'running' へ移行させ、初回出題の頭クリックを防ぐ。
+  try{ var c=ac(); if(c.resume) c.resume(); bassWave(); }catch(e){}
+  state={diff:diff,idx:0,raw:0,correct:0,times:[],wrongBySemi:{},q:DIFFICULTY[diff].q,cur:null,answered:false,timerBase:0};
+  var badge=document.getElementById("q-diff");
+  badge.textContent=diffNameText(diff);
+  badge.className="badge b-"+diff;
+  showScreen('quiz');
+  nextQuestion();
+}
+function nextQuestion(){
+  var s=state; if(!s) return;
+  if(s.idx>=s.q){ finish(); return; }
+  s.cur=buildQuestion(s.diff);
+  s.answered=false;
+  document.getElementById("q-count").textContent=(s.idx+1)+" / "+s.q;
+  document.getElementById("q-prog").style.width=((s.idx)/s.q*100)+"%";
+  var opts=optionSet(s.diff,s.cur.semi);
+  var box=document.getElementById("opts"); box.innerHTML="";
+  opts.forEach(function(semi){
+    var b=document.createElement("button");
+    b.className="opt"; b.textContent=INTERVALS[semi][window.BS_LANG||'zh']; b.dataset.semi=semi;
+    b.onclick=function(){ answer(semi,b); }; box.appendChild(b);
+  });
+  document.getElementById("fb").classList.remove("on");
+  // カウントダウンバーを満タンにリセット（次問の頭）
+  var fill=document.getElementById('timer-fill');
+  if(fill){ fill.style.width='100%'; fill.className=''; }
+  var num=document.getElementById('timer-num');
+  if(num) num.textContent=DIFFICULTY[s.diff].maxSec;
+  playQuestion(s.cur, START_LEAD);
+  // v2修正2：タイマー基準＝2音目が鳴り終わった時刻
+  //   ＝（リード START_LEAD 秒 ＋ 発音間隔 GAP 秒 ＋ 音長 NOTE_LEN 秒）。
+  //   リード中・再生中はバー満タンで待機し、再生終了と同時に減り始める。
+  s.timerBase=performance.now()+(START_LEAD+GAP+NOTE_LEN)*1000;
+  startTimer();
+}
+function answer(semi,btn){
+  var s=state; if(!s||s.answered) return; s.answered=true;
+  stopTimer();   // 回答確定（または時間切れ）でカウントダウン停止
+  var lang=window.BS_LANG||'zh';
+  var elapsed=Math.max(0,(performance.now()-s.timerBase)/1000);
+  var sec=Math.min(elapsed,s.cur.cfg.maxSec);
+  var correct=(semi===s.cur.semi);
+  s.times.push(sec);
+  s.raw+=questionScore(correct,sec,s.cur.cfg.maxSec);
+  if(correct) s.correct++; else s.wrongBySemi[s.cur.semi]=(s.wrongBySemi[s.cur.semi]||0)+1;
+  document.querySelectorAll(".opt").forEach(function(b){
+    b.disabled=true; var v=Number(b.dataset.semi);
+    if(v===s.cur.semi) b.classList.add("correct");
+    if(b===btn && !correct) b.classList.add("wrong");
+  });
+  var rootName=NOTE_NAMES[((s.cur.rootMidi%12)+12)%12], tgtName=NOTE_NAMES[((s.cur.targetMidi%12)+12)%12];
+  var arrow=s.cur.dir==="up"?"↑":"↓";
+  var res=document.getElementById("fb-res"), det=document.getElementById("fb-detail");
+  if(correct){
+    res.className="res ok"; res.textContent=t("ok");
+    det.innerHTML="<b>"+INTERVALS[s.cur.semi][lang]+"</b>（"+rootName+" "+arrow+" "+tgtName+"）";
+  }else{
+    res.className="res ng";
+    if(semi===null){
+      // 時間切れ（自動不正解）：あなたの回答は出さず、時間切れ表記＋正解を表示
+      res.textContent=t("timeup");
+      det.innerHTML=t("ans")+"：<b>"+INTERVALS[s.cur.semi][lang]+"</b>（"+rootName+" "+arrow+" "+tgtName+"）";
+    }else{
+      res.textContent=t("ng");
+      det.innerHTML=t("you")+"："+INTERVALS[semi][lang]+" ／ "+t("ans")+"：<b>"+INTERVALS[s.cur.semi][lang]+"</b>（"+rootName+" "+arrow+" "+tgtName+"）";
+    }
+    playQuestion(s.cur);   // 不正解時のみ正しい響きを自動再生
+  }
+  document.getElementById("fb").classList.add("on");
+  var nb=document.getElementById("btn-next");
+  var isLast=(s.idx+1>=s.q);
+  nb.setAttribute("data-i18n", isLast?"nextLast":"next");
+  nb.textContent=t(isLast?"nextLast":"next");
+  document.getElementById("q-prog").style.width=((s.idx+1)/s.q*100)+"%";
+}
+
+function finish(){
+  stopTimer();
+  stopAll();
+  var s=state;
+  var score=toScore100(s.raw,s.q);
+  var avg=s.times.length? (s.times.reduce(function(a,b){return a+b;},0)/s.times.length):0;
+  // 弱点の度数（最多誤答）を記録
+  var worst=null,wc=0; for(var k in s.wrongBySemi){ if(s.wrongBySemi[k]>wc){wc=s.wrongBySemi[k];worst=Number(k);} }
+  window.gameResult={diff:s.diff,score:score,correct:s.correct,q:s.q,avg:avg,worst:worst};
+  renderResult();
+  showScreen('result');
+  renderQR();
+  // ── 結果演出（到達時1回・言語切替の renderResult では発動させない）──
+  if(window.BS_RESULT){
+    var _idx=titleIdxOf(score), _tier=_idx+1;
+    BS_RESULT.reveal({
+      host:      document.getElementById('bs-share-capture'),
+      valueEl:   document.getElementById('res-score'),
+      titleEl:   document.getElementById('res-rank-name'),
+      value:     score,
+      decimals:  1,
+      title:     titleOf(s.diff, score),
+      isTopTier: _tier>=10,              // Lv10以上（绝对音感疑い含む）で別格演出
+      scoreRatio: score/100,
+      accent:    LV_COLORS[_idx],
+      // カウント完了後にフェードイン表示（評価コメント・カラーバー）
+      revealEls: ['res-comment', 'color-bar']
+    });
+  }
+}
+
+function renderResult(){
+  var g=window.gameResult; if(!g) return;
+  var lang=window.BS_LANG||'zh';
+  var idx=titleIdxOf(g.score);              // 0..10 → tier(1..11)=idx+1
+  var tier=idx+1;
+  var c=LV_COLORS[idx];
+  var cap=document.getElementById('bs-share-capture');
+  if(cap) cap.classList.toggle('tier-robot', tier===11);  // 最上位段は特別演出
+  // 称号・コメント
+  var nameEl=document.getElementById('res-rank-name');
+  nameEl.textContent=titleOf(g.diff,g.score); nameEl.style.color=c;
+  document.getElementById('res-comment').textContent=commentOf(g.score);
+  // 結果キャラ（測定難易度連動）＋難易度名
+  var resChar=document.getElementById('res-char'); if(resChar) resChar.src=diffCharSrc(g.diff);
+  document.getElementById('res-diff-label').textContent=diffNameText(g.diff);
+  // 評分
+  var scEl=document.getElementById('res-score');
+  scEl.textContent=g.score.toFixed(1); scEl.style.color=c;
+  document.getElementById('res-correct').textContent=g.correct+"/"+g.q;
+  document.getElementById('res-speed').textContent=g.avg.toFixed(1)+"s";
+  // 弱点
+  var weakEl=document.getElementById('res-weak');
+  if(g.worst!==null && INTERVALS[g.worst]){ weakEl.style.display="block"; weakEl.textContent=t("weak")+INTERVALS[g.worst][lang]; }
+  else { weakEl.style.display="block"; weakEl.textContent=t("perfect"); }
+  // カラーバー（11段・tier段まで点灯）
+  var bar=document.getElementById('color-bar'); bar.innerHTML='';
+  for(var i=0;i<11;i++){
+    var seg=document.createElement('div');
+    seg.className='color-bar-seg'+(i<tier?' filled':'');
+    seg.style.background=LV_COLORS[i];
+    bar.appendChild(seg);
+  }
+}
+
+// ══════════════════════════════════════════
+// シェアQR（動的SVG生成・GAME_URL=入口HTML経由）
+// ══════════════════════════════════════════
+var GAME_URL='https://bassshow.rocks/pitch.html';
+function renderQR(){
+  var box=document.getElementById('shareQrBox');
+  if(!box) return;
+  var svg;
+  try{
+    var qr=qrcode(0,'M'); qr.addData(GAME_URL); qr.make();
+    svg=qr.createSvgTag({cellSize:4, margin:2, scalable:true});
+  }catch(e){
+    svg='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#111;font-size:8px;word-break:break-all;padding:2px;box-sizing:border-box;text-align:center">'+GAME_URL+'</div>';
+  }
+  box.innerHTML=svg;
+}
+
+// ══════════════════════════════════════════
+// シェアボタン
+// ══════════════════════════════════════════
+document.getElementById('btn-screenshot').addEventListener('click', function(){
+  alert(t('screenshot_hint'));
+});
+document.getElementById('btn-copy-text').addEventListener('click', function(){
+  var g=window.gameResult; if(!g) return;
+  var lang=window.BS_LANG||'zh';
+  var rname=titleOf(g.diff,g.score);
+  var text=t('share_head')+'\n'+
+    rname+' / '+t('share_score_label')+' '+g.score.toFixed(1)+'\n'+
+    t('stCorrect')+' '+g.correct+'/'+g.q+' · '+diffNameText(g.diff)+'\n'+
+    t('share_cta')+' '+GAME_URL+'\n'+
+    t('share_tags');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      var btn=document.getElementById('btn-copy-text'); btn.textContent=t('copied');
+      setTimeout(function(){ btn.textContent=t('btn_copy'); },2000);
+    }).catch(function(){ fallbackCopy(text); });
+  }else{ fallbackCopy(text); }
+});
+function fallbackCopy(text){
+  var ta=document.createElement('textarea'); ta.value=text;
+  ta.style.cssText='position:fixed;left:-9999px;top:-9999px;opacity:0;';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{
+    document.execCommand('copy');
+    var btn=document.getElementById('btn-copy-text'); btn.textContent=t('copied');
+    setTimeout(function(){ btn.textContent=t('btn_copy'); },2000);
+  }catch(e){ alert(t('copy_manual')+'\n\n'+text); }
+  document.body.removeChild(ta);
+}
+
+// ══════════════════════════════════════════
+// ボタン配線
+// ══════════════════════════════════════════
+document.getElementById("btn-next").onclick=function(){ stopAll(); state.idx++; nextQuestion(); };
+document.getElementById("btn-play").onclick=function(){ if(state&&state.cur) playQuestion(state.cur); };
+document.getElementById("btn-again").onclick=function(){ if(window.BS_RESULT) BS_RESULT.stop(); stopAll(); if(window.gameResult) startGame(window.gameResult.diff); };
+document.getElementById("btn-home").onclick=function(){ if(window.BS_RESULT) BS_RESULT.stop(); stopTimer(); stopAll(); showScreen('start'); };
+document.querySelectorAll(".diff-card").forEach(function(c){ c.onclick=function(){ startGame(c.dataset.diff); }; });
+
+// 公众号カード：タップでQR開閉
+document.getElementById('gzh-card').addEventListener('click', function(){
+  var w=document.getElementById('gzh-qr-wrap');
+  var open=w.classList.toggle('show');
+  document.getElementById('gzh-arrow').textContent=open?'⌄':'›';
+});
+
+// ══════════════════════════════════════════
+// 共通アセット注入
+// ══════════════════════════════════════════
+// v2修正: shared-assets.js 未読込（単体プレビュー等）でも以降の処理（ゲーム専用アイコン適用含む）が
+//   止まらないよう、BS_ASSETS をガードする。実環境では shared-assets.js が GZH_QR 等を供給する。
+var gq=document.getElementById('gzhQrImg'); if(gq && window.BS_ASSETS && window.BS_ASSETS.GZH_QR) gq.src=window.BS_ASSETS.GZH_QR;
+(function(){
+  var A=window.BS_ASSETS||{};
+  ['bs-banner-top','bs-banner-game','bs-banner-res'].forEach(function(id){
+    var n=document.getElementById(id); if(n && A.LOGO_BANNER) n.src=A.LOGO_BANNER;
+  });
+  // v2修正5：ゲーム専用アイコンに差し替え（旧：汎用LOGOプレースホルダー）
+  var hero=document.getElementById('bs-hero-pitch'); if(hero) hero.src=PITCH_ICON;
+  var shareIcon=document.getElementById('share-game-icon'); if(shareIcon) shareIcon.src=PITCH_ICON;
+  var fav=document.getElementById('fav'); if(fav) fav.href=PITCH_ICON;
+  // 難易度キャラを各カード内に表示（简单=A / 普通=B / 困难=C）
+  var cE=document.getElementById('d-char-easy');   if(cE) cE.src=diffCharSrc('easy');
+  var cN=document.getElementById('d-char-normal'); if(cN) cN.src=diffCharSrc('normal');
+  var cH=document.getElementById('d-char-hard');   if(cH) cH.src=diffCharSrc('hard');
+  document.querySelectorAll('.bs-logo-asset').forEach(function(n){ if(A.LOGO) n.src=A.LOGO; });
+})();
+
+// ══════════════════════════════════════════
+// i18n（zh/ja/en）
+// 注意：値を動的に入れる要素（res-score/res-correct 等）は data-i18n を持たない
+//      別要素に分離してある（Demo v3 の結果画面破壊バグ対策）。
+// ══════════════════════════════════════════
+var BS_I18N={
+  title:{zh:"相对音感测试",ja:"相対音感テスト",en:"Relative Pitch Test"},
+  howtoTitle:{zh:"玩法",ja:"遊び方",en:"How to play"},
+  howtoBody:{zh:"先播放基准音（根音），再播放第二个音。听出两音的「音程（度数）」，四选一作答。根音一定先响，新手也友好。",
+             ja:"基準音（ルート）→ 続けて2音目が鳴ります。2音の「音程の幅（度数）」を4択で当てよう。ルートが必ず先に鳴るので初心者にも親切。",
+             en:"The root plays first, then a second note. Identify the interval (degree) between them and pick from 4 options. The root always comes first — beginner-friendly."},
+  benefitTitle:{zh:"训练效果",ja:"トレーニング効果",en:"What it trains"},
+  benefitBody:{zh:"训练从根音起跳的听感，直接提升扒带、即兴和贝斯线创作能力，锻炼贝斯手实战的相对音感。",
+               ja:"ルートからの跳躍を聴き取る耳が育ちます。耳コピ・アドリブ・ライン作りに直結。ベーシストの実戦的な相対音感が鍛えられます。",
+               en:"Trains your ear to catch leaps from the root — directly boosting ear-copying, improvisation and bass-line writing. Builds a bassist's practical relative pitch."},
+  scoreTitle:{zh:"计分规则",ja:"得点ルール",en:"Scoring"},
+  scoreBody:{zh:"答对得分，答得越快分数越高（含速度奖励）。答错则为 0 分，所以别乱猜。在限定时间内作答，比拼最高分。",
+             ja:"正解で得点。速く答えるほど高得点（速度ボーナス）。不正解は0点なので当てずっぽうは禁物。制限時間内に答えてハイスコアを競おう。",
+             en:"Score by answering correctly — the faster, the higher (speed bonus). A wrong answer is 0, so don't just guess. Answer within the time limit and beat your high score."},
+  tipTitle:{zh:"小建议",ja:"アドバイス",en:"Tips"},
+  tipBody:{zh:"戴上耳机会更容易听清音高。如果光靠耳朵很难判断，不妨实际拿起乐器把音找出来——这也是很好的训练。",
+           ja:"イヤホンを付けて聴くと音程が聞き取りやすくなります。耳だけで判断が難しいときは、実際に楽器を鳴らして音を探してみるのも良いトレーニングになります。",
+           en:"Listening with earphones makes the pitch much easier to catch. When your ears alone aren't enough, try finding the note on your instrument — that's great training too."},
+  timeLeft:{zh:"剩余",ja:"残り",en:"Time left"},
+  timeUnit:{zh:"秒",ja:"秒",en:"s"},
+  diff_label:{zh:"选择难度",ja:"難易度をえらぶ",en:"Choose difficulty"},
+  easyName:{zh:"简单",ja:"かんたん",en:"Easy"},
+  easyDesc:{zh:"根音·五度·八度·三度，从这里开始。",ja:"ルート・5度・オクターブ・3度。まずはここから。",en:"Root, 5th, octave, 3rd. Start here."},
+  normalName:{zh:"普通",ja:"ふつう",en:"Normal"},
+  normalDesc:{zh:"三度·四度·五度·六度·七度。乐队耳朵。",ja:"3度・4度・5度・6度・7度まで。バンドマンの耳。",en:"3rd–7th. A band player's ear."},
+  hardName:{zh:"困难",ja:"むずかしい",en:"Hard"},
+  hardDesc:{zh:"全音程＋上行下行＋更快。只有超人能登顶。",ja:"全度数＋上行下行＋速め。超人だけが頂点へ。",en:"All intervals, up & down, faster."},
+  playing:{zh:"♪ 播放中…",ja:"♪ 再生中…",en:"♪ Playing…"},
+  replay:{zh:"🔁 再听一次",ja:"🔁 もう一度聞く",en:"🔁 Replay"},
+  askText:{zh:"刚才是几度？",ja:"今のは何度？",en:"What interval was that?"},
+  next:{zh:"下一题 ›",ja:"次へ ›",en:"Next ›"},
+  nextLast:{zh:"查看结果 ›",ja:"結果を表示 ›",en:"See result ›"},
+  score:{zh:"评分",ja:"スコア",en:"Score"},
+  lvTop:{zh:"顶级",ja:"頂点",en:"Top"},
+  stCorrect:{zh:"正确",ja:"正答",en:"Correct"},
+  stSpeed:{zh:"平均速度",ja:"平均速度",en:"Avg speed"},
+  again:{zh:"再测一次",ja:"もう一度挑戦",en:"Try again"},
+  home:{zh:"重新选择难度",ja:"難易度をえらび直す",en:"Change difficulty"},
+  ok:{zh:"正确！⭕",ja:"正解！⭕",en:"Correct! ⭕"},
+  ng:{zh:"错误 ❌",ja:"不正解 ❌",en:"Wrong ❌"},
+  timeup:{zh:"时间到 ⏱",ja:"時間切れ ⏱",en:"Time's up ⏱"},
+  you:{zh:"你的回答",ja:"あなた",en:"You"},
+  ans:{zh:"正解",ja:"正解",en:"Answer"},
+  weak:{zh:"你的弱点：",ja:"あなたの弱点：",en:"Your weak spot: "},
+  perfect:{zh:"全部正确！没有弱点 🎉",ja:"全問正解！弱点なし 🎉",en:"All correct! No weak spots 🎉"},
+  share_badge:{zh:"扫码挑战",ja:"QRで挑戦",en:"Scan to Try"},
+  share_title:{zh:"你的耳朵能听出几度？",ja:"あなたの耳は何度を聴き分けられる？",en:"What interval can your ear catch?"},
+  share_card_sub:{zh:"BASS SHOW · 音感测试",ja:"BASS SHOW · 相対音感テスト",en:"BASS SHOW · Relative Pitch Test"},
+  btn_screenshot:{zh:"截图分享给你的朋友",ja:"スクショして友達にシェア",en:"Screenshot & Share"},
+  btn_copy:{zh:"复制文字",ja:"テキストをコピー",en:"Copy Text"},
+  promo_title:{zh:"加入贝斯手社区",ja:"ベーシストコミュニティに参加",en:"Join the Bassist Community"},
+  promo_gzh_name:{zh:"加入贝斯手交流群",ja:"ベーシスト交流グループに参加",en:"Join the Bassist Group"},
+  promo_gzh_desc:{zh:"扫码关注公众号 · 回复「入群」即可进群",ja:"QRで公式アカウントをフォロー→「入群」と返信で参加",en:"Scan to follow, reply \"入群\" to join"},
+  promo_gzh_steps:{zh:"① 微信扫码关注 → ② 回复「入群」→ ③ 收到进群方式",ja:"①WeChatでQRフォロー→②「入群」と返信→③参加方法が届く",en:"① Scan on WeChat → ② Reply \"入群\" → ③ Get the invite"},
+  promo_bili_name:{zh:"Bilibili · 在华日本音乐人MASATO",ja:"Bilibili · 在中日本人ミュージシャンMASATO",en:"Bilibili · MASATO, Japanese musician in China"},
+  promo_bili_desc:{zh:"贝斯教学视频 · BASS SHOW系列<br>6,700+ 粉丝 · 3万获赞",ja:"ベース教則動画 · BASS SHOWシリーズ<br>フォロワー6,700+ · いいね3万",en:"Bass lessons · BASS SHOW series<br>6,700+ followers · 30k likes"},
+  demo_tag:{zh:"Demo 体验版",ja:"Demo 体験版",en:"Demo"},
+  platform_desc:{zh:"贝斯手专属平台<br>乐谱・器材・社区一站式",ja:"ベーシスト専用プラットフォーム<br>楽譜・機材・コミュニティのワンストップ",en:"Bassist platform<br>Scores, gear & community in one"},
+  promo_games_name:{zh:"BASS SHOW 小游戏合集",ja:"BASS SHOW ミニゲーム集",en:"BASS SHOW Mini-Games"},
+  promo_games_desc:{zh:"更多贝斯手测试 · 性格诊断・实力训练",ja:"ベーシスト診断もっと · 性格診断・実力トレーニング",en:"More tests · personality & skill"},
+  // 動的（alert等）
+  screenshot_hint:{zh:"请长按上方卡片图片保存📸\n或截图保存后分享！",ja:"上のカードを長押しで保存📸\nまたはスクショして共有してください！",en:"Long-press the card above to save 📸\nor take a screenshot to share!"},
+  share_head:{zh:"【BASS SHOW 音感测试】",ja:"【BASS SHOW 相対音感テスト】",en:"[BASS SHOW Relative Pitch Test]"},
+  share_score_label:{zh:"评分",ja:"スコア",en:"Score"},
+  share_cta:{zh:"你也来测一测 👉",ja:"あなたも測ってみて 👉",en:"Try it yourself 👉"},
+  share_tags:{zh:"#BASSSHOW #音感测试 #贝斯",ja:"#BASSSHOW #相対音感テスト #ベース",en:"#BASSSHOW #PitchTest #Bass"},
+  copied:{zh:"已复制！",ja:"コピーしました！",en:"Copied!"},
+  copy_manual:{zh:"请手动复制：",ja:"手動でコピーしてください：",en:"Please copy manually:"}
+};
+function t(k){
+  var lang=window.BS_LANG||'zh';
+  var d=BS_I18N[k];
+  if(!d) return k;
+  return d[lang]||d.zh;
+}
+function bsApplyLang(lang){
+  window.BS_LANG=lang;
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var key=el.getAttribute('data-i18n');
+    var dict=BS_I18N[key];
+    if(dict && dict[lang]!==undefined) el.innerHTML=dict[lang];
+  });
+  document.querySelectorAll('.bs-lang-switch button').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-lang')===lang);
+  });
+  document.documentElement.lang=(lang==='zh'?'zh-CN':lang);
+  // 再生ボタン表示も言語追従（再生中でなければreplay表記）
+  if(!playing) setPlayBtn(false);
+  // クイズ進行中：難易度バッジ・選択肢ラベルを言語追従
+  if(state){
+    var badge=document.getElementById('q-diff'); if(badge) badge.textContent=diffNameText(state.diff);
+    document.querySelectorAll('.opt').forEach(function(b){
+      var sv=Number(b.dataset.semi); if(INTERVALS[sv]) b.textContent=INTERVALS[sv][lang];
+    });
+  }
+  // 結果画面が表示中なら称号・コメント・弱点を引き直す（値要素は破壊しない）
+  if(window.gameResult && document.getElementById('screen-result').style.display!=='none'){
+    renderResult();
+  }
+}
+(function(){
+  var sw=document.getElementById('bs-lang-switch');
+  if(sw){
+    sw.addEventListener('click', function(e){
+      var b=e.target.closest('button[data-lang]'); if(!b) return;
+      bsApplyLang(b.getAttribute('data-lang'));
+    });
+  }
+  bsApplyLang('zh');   // 初期言語は中国語
+})();
+
+showScreen('start');
+</script>
+</body>
+</html>
