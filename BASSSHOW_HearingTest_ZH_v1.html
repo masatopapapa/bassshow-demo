@@ -167,7 +167,7 @@
   .bs-share-qr .sc-qrbox svg{width:100%;height:100%;display:block;}
   .bs-share-icon{width:72px;height:72px;flex-shrink:0;border-radius:8px;overflow:hidden;
     background:linear-gradient(155deg,var(--hi),var(--lo));display:flex;align-items:center;justify-content:center;}
-  .bs-share-icon svg{width:42px;height:42px;}
+  .bs-share-icon img{width:100%;height:100%;object-fit:cover;display:block;}
 
   /* 2ボタン行 */
   .share-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
@@ -192,6 +192,8 @@
   .promo-icon-bili{background:linear-gradient(135deg,#00A1D6,#0066CC);}
   .promo-icon-gzh{background:linear-gradient(135deg,#07C160,#0F6E56);}
   .promo-icon-games{background:linear-gradient(135deg,#E8552D,#B7841E);}
+  .promo-icon-bs{background:linear-gradient(135deg,#0F6E56,#534AB7);}
+  .promo-icon-bs img,.promo-icon-games img{width:100%;height:100%;object-fit:cover;display:block;}
   .promo-text{flex:1;}
   .promo-name{font-size:14px;font-weight:700;}
   .demo-tag{font-size:10px;font-weight:700;color:var(--amber);border:0.5px solid var(--amber);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
@@ -353,14 +355,7 @@
       <div class="res-note" id="res-note" data-i18n="res_note">※ 仅供娱乐，受设备与环境影响极大，非医学听力检查。</div>
 
       <div class="bs-share-foot">
-        <div class="bs-share-icon">
-          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22 50 Q22 32 40 32" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
-            <circle cx="24" cy="56" r="9" fill="#fff"/>
-            <path d="M58 30 Q78 30 78 50 L78 62 Q78 70 70 70" stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none"/>
-            <circle cx="76" cy="56" r="9" fill="#fff"/>
-          </svg>
-        </div>
+        <div class="bs-share-icon"><img id="bs-share-game-icon" alt="听力年龄测试"></div>
         <div class="bs-share-foot-text">
           <div class="bs-share-badge" data-i18n="share_badge">扫码挑战</div>
           <div class="bs-share-title" data-i18n="share_card_title">你的耳朵几岁？</div>
@@ -402,6 +397,14 @@
           <div class="promo-text">
             <div class="promo-name" data-i18n="bili_name">Bilibili · 在华日本音乐人MASATO</div>
             <div class="promo-desc" data-i18n="bili_desc">贝斯教学视频 · BASS SHOW系列<br>6,700+ 粉丝 · 3万获赞</div>
+          </div>
+          <div class="promo-arrow">›</div>
+        </div>
+        <div class="promo-card" onclick="window.open('https://bassshow.rocks/platform.html','_blank')">
+          <div class="promo-icon promo-icon-bs"><img class="bs-logo-asset" alt="BASS SHOW"></div>
+          <div class="promo-text">
+            <div class="promo-name">BASS SHOW<span class="demo-tag" data-i18n="demo_tag">Demo 体验版</span></div>
+            <div class="promo-desc" data-i18n="platform_desc">贝斯手专属平台<br>乐谱・器材・社区一站式</div>
           </div>
           <div class="promo-arrow">›</div>
         </div>
@@ -525,6 +528,8 @@
     gzh_ph:{zh:'[公众号 QR]<br>shared-assets.js<br>注入', ja:'[公式QR]<br>shared-assets.js<br>で注入', en:'[Official QR]<br>via shared-assets.js'},
     bili_name:{zh:'Bilibili · 在华日本音乐人MASATO', ja:'Bilibili · 在華日本音楽人MASATO', en:'Bilibili · MASATO, a Japanese Musician in China'},
     bili_desc:{zh:'贝斯教学视频 · BASS SHOW系列<br>6,700+ 粉丝 · 3万获赞', ja:'ベース教則動画 · BASS SHOWシリーズ<br>6,700+ フォロワー · 3万いいね', en:'Bass lessons · BASS SHOW series<br>6,700+ followers · 30k likes'},
+    demo_tag:{zh:'Demo 体验版', ja:'Demo 体験版', en:'Demo'},
+    platform_desc:{zh:'贝斯手专属平台<br>乐谱・器材・社区一站式', ja:'ベーシスト専用プラットフォーム<br>楽譜・機材・コミュニティのワンストップ', en:'Bassist platform<br>Scores, gear & community in one'},
     games_name:{zh:'BASS SHOW 小游戏合集', ja:'BASS SHOW ミニゲーム集', en:'BASS SHOW Mini-Games'},
     games_desc:{zh:'更多贝斯手测试 · 性格诊断・实力训练', ja:'もっとベーシスト診断 · 性格診断・実力トレーニング', en:'More bassist tests · personality & skill training'},
     btn_again:{zh:'再测一次', ja:'もう一度', en:'Try Again'}
@@ -684,6 +689,11 @@
 
   // 1音をスケジュール再生。sine純音・両端にレイズドコサインFADE。
   // freq別にFADE長を変える：低音は1波長以上＆下端は長め（HANDOFF）。
+  // ※測定純音(sine)＋レイズドコサインFADEは測定妥当性の生命線なので維持。
+  //   クリック/プツ音対策は PitchTest v4 の知見を適用：
+  //   (1) t0重複イベントの解消（setValueCurveAtTime が先頭0で立ち上げるので
+  //       直前の setValueAtTime(0,t0) は同一時刻競合の原因。撤去する）
+  //   (2) 再生後 osc.onended で osc/gain を disconnect（Android GC由来ポップ対策）
   function playTone(freq, startAt, dur){
     var ctx = getCtx();
     var osc = ctx.createOscillator();
@@ -708,11 +718,12 @@
     var t0 = startAt;
     var t1 = startAt + dur;
 
-    // ゲイン包絡：0→PEAK(fade in)→hold→0(fade out) をレイズドコサインで
-    gain.gain.setValueAtTime(0, t0);
+    // ゲイン包絡：0→PEAK(fade in)→hold→0(fade out) をレイズドコサインで。
+    //   v4知見：先頭0は setValueCurveAtTime の第1要素(=0)が担うため、
+    //   同一時刻 t0 の setValueAtTime(0,t0) は競合を生むので置かない。
     var up = makeFadeCurve(fSamp, true);
     for(var i=0;i<fSamp;i++){ up[i] *= PEAK; }
-    gain.gain.setValueCurveAtTime(up, t0, fade);
+    gain.gain.setValueCurveAtTime(up, t0, fade);   // 先頭=0 から立ち上げ（t0重複なし）
     gain.gain.setValueAtTime(PEAK, t0+fade);
     var down = makeFadeCurve(fSamp, false);
     for(var j=0;j<fSamp;j++){ down[j] *= PEAK; }
@@ -722,6 +733,8 @@
     osc.start(t0);
     osc.stop(t1 + 0.02);
     // start前stopガード：stopは必ずstartより後
+    // v4知見：再生後にノードを切り離す（GC待ちのまま残るとAndroidでポップの一因）。
+    osc.onended = function(){ try{ osc.disconnect(); gain.disconnect(); }catch(e){} };
     return {osc:osc, gain:gain};
   }
 
@@ -730,7 +743,7 @@
   // ══════════════════════════════════════════
   var FRAME_DUR = 0.7;   // 各枠の長さ
   var GAP = 0.35;        // 枠間の無音
-  var LEAD = 0.25;       // 開始までのリード
+  var LEAD = 0.30;       // 開始までのリード（v4知見：resume完了前の先頭欠け/ポップ防止に余裕を持たせる 0.25→0.30）
 
   var state = {
     axis:'hi',          // 'hi' | 'lo'
@@ -1003,32 +1016,114 @@
     }
   }
 
+  // ══════════════════════════════════════════
+  // ベース音色エンジン（PitchTest v4 から参考流用）
+  //   v1の素朴な「基音31Hz最強調(amp1.0)×8 sine」はスマホで再生不能/低域歪み→濁る原因。
+  //   v4の確定実装に揃える：
+  //     ・固定倍音シェイプ BASS_HARMONICS（指弾きエレキベース）＋三角芯を
+  //       単一 PeriodicWave に畳み込み（1音=オシレータ1本／音色不変／PeriodicWave統合）
+  //     ・loudnessGain で帯域エネルギー正規化（同位相ピーク≦1.0＝歪み厳禁）
+  //     ・固定 highpass 78Hz（再生不能な超低域の基音を捨て、ピッチは倍音列が運ぶ
+  //       ＝missing fundamental）＋ lowpass 3200→2500Hz スイープ
+  // ══════════════════════════════════════════
+  var BASS_HARMONICS=[ {m:1,a:1.00},{m:2,a:0.72},{m:3,a:0.52},{m:4,a:0.34},
+                       {m:5,a:0.22},{m:6,a:0.14},{m:7,a:0.09},{m:8,a:0.06} ];
+  // 三角芯を奇数倍音として畳み込んだ「実際に鳴る」倍音振幅（v4の WAVE_IMAG と同一）
+  var BASS_WAVE_IMAG=(function(){
+    var TRI_A=0.10, c8=8/(Math.PI*Math.PI);
+    var arr=[0];                                   // index0 = DC
+    for(var k=1;k<=8;k++){
+      var s=0;
+      BASS_HARMONICS.forEach(function(h){ if(h.m===k) s+=h.a; });
+      if(k%2===1){ var sign=(k%4===1)?1:-1; s += TRI_A*c8*sign/(k*k); }
+      arr[k]=s;
+    }
+    return arr;
+  })();
+  var _bassWave=null;
+  function bassWave(ctx){
+    if(!_bassWave){
+      var n=BASS_WAVE_IMAG.length;                 // 9 (index 0..8)
+      var real=new Float32Array(n);                // cos成分=0
+      var imag=new Float32Array(n);                // sin成分＝倍音振幅（位相0）
+      for(var k=0;k<n;k++){ imag[k]=BASS_WAVE_IMAG[k]; }
+      _bassWave=ctx.createPeriodicWave(real, imag, {disableNormalization:true});
+    }
+    return _bassWave;
+  }
+  // フィルタ振幅応答（正規化計算用の近似）：HP78×1段, LP2600×~2pole
+  function _hpMag(hz){ var r=hz/78;   return r/Math.sqrt(1+r*r); }
+  function _lpMag(hz){ var r=hz/2600; return 1/Math.sqrt(1+Math.pow(r,4)); }
+  // A特性近似（v4 audWeight 相当の簡易ラウドネス重み）
+  function _audWeight(f){
+    var f2=f*f, f4=f2*f2;
+    var num=12200*12200*f4;
+    var den=(f2+20.6*20.6)*Math.sqrt((f2+107.7*107.7)*(f2+737.9*737.9))*(f2+12200*12200);
+    return num/den;
+  }
+  function _noteLoudness(f){
+    var s=0;
+    for(var k=1;k<=8;k++){
+      var hz=f*k, a=Math.abs(BASS_WAVE_IMAG[k])*_hpMag(hz)*_lpMag(hz)*_audWeight(hz);
+      s+=a*a;
+    }
+    return Math.sqrt(s);
+  }
+  var _LG_REF=_noteLoudness(110.0);                // 基準 A2(110Hz) を相対ゲイン≒1 に
+  var _LG_MIN=0.45, _LG_MAX=2.7, _LG_OUT=0.16;     // 低音持ち上げ上限/高音下げ下限/全体スケール(ピーク≦1.0)
+  function _loudnessGain(f){
+    var rel=_LG_REF/_noteLoudness(f);
+    rel=Math.max(_LG_MIN, Math.min(_LG_MAX, rel));
+    return rel*_LG_OUT;
+  }
+
   // 答え合わせ：本物のベース音（演出専用＝採点には使わない）
   // missing fundamentalを逆手に取り「豊かなベース音」を聴かせる。
+  // ※clampは呼び出し側で完了済み（revealPlayFreq）。ここは渡された freq を v4音色で鳴らすだけ。
   function playRealBass(freq){
     var ctx = getCtx();
     var dur = 1.4;
+    var END = dur;
     var t0 = ctx.currentTime + 0.05;
-    var partials = [1,2,3,4,5,6,7,8];
-    var amps     = [1.0,0.6,0.45,0.3,0.22,0.16,0.11,0.08];
-    var master = ctx.createGain();
-    master.gain.setValueAtTime(0, t0);
-    master.gain.linearRampToValueAtTime(0.22, t0+0.02);
-    master.gain.setValueAtTime(0.22, t0+dur-0.25);
-    master.gain.linearRampToValueAtTime(0, t0+dur);
-    master.connect(ctx.destination);
-    var nodes=[];
-    for(var i=0;i<partials.length;i++){
-      var o=ctx.createOscillator();
-      var g=ctx.createGain();
-      o.type='sine';
-      o.frequency.value=freq*partials[i];
-      g.gain.value=amps[i];
-      o.connect(g).connect(master);
-      o.start(t0);
-      o.stop(t0+dur+0.05);
-      nodes.push(o);
-    }
+    var STOP = t0 + END + 0.03;
+
+    // out（音域別ラウドネス正規化）→ destination
+    var out = ctx.createGain();
+    out.gain.value = _loudnessGain(freq);
+    out.connect(ctx.destination);
+
+    // highpass 78Hz：再生不能な超低域の基音を捨てる（ピッチは倍音列で保持）
+    var hp = ctx.createBiquadFilter();
+    hp.type='highpass'; hp.frequency.value=78; hp.Q.value=0.6;
+    hp.connect(out);
+
+    // lowpass 3200→2500Hz スイープ（アタック明るい→サスティーンまろやか・全音共通）
+    var lp = ctx.createBiquadFilter();
+    lp.type='lowpass';
+    lp.frequency.setValueAtTime(3200, t0);
+    lp.frequency.exponentialRampToValueAtTime(2500, t0+END*0.5);
+    lp.Q.value=0.7;
+    lp.connect(hp);
+
+    // エンベロープ（v4：先頭0→線形アタック→指数減衰→末尾linearで完全0）
+    var env = ctx.createGain();
+    env.gain.setValueAtTime(0, t0);
+    env.gain.linearRampToValueAtTime(1.0, t0+0.015);
+    env.gain.exponentialRampToValueAtTime(0.72, t0+0.20);
+    env.gain.exponentialRampToValueAtTime(0.50, t0+END*0.6);
+    env.gain.exponentialRampToValueAtTime(0.02, t0+END*0.92);
+    env.gain.linearRampToValueAtTime(0, t0+END);
+    env.connect(lp);
+
+    // 1音=単一PeriodicWaveオシレータ（倍音は WAVE_IMAG に畳み込み済み）
+    var o = ctx.createOscillator();
+    o.setPeriodicWave(bassWave(ctx));
+    o.frequency.value = freq;
+    o.connect(env);
+    o.start(t0);
+    o.stop(STOP);
+    // 再生後に切り離し（Android GC由来ポップ対策）
+    o.onended = function(){ try{ o.disconnect(); env.disconnect(); lp.disconnect(); hp.disconnect(); out.disconnect(); }catch(e){} };
   }
 
   // ══════════════════════════════════════════
@@ -1174,12 +1269,16 @@
     // 公众号QR：本番は shared-assets.js の GZH_QR を注入。data-i18n を持たないため言語切替で消えない。
     var gq=$('gzhQrImg'); if(gq && window.BS_ASSETS && window.BS_ASSETS.GZH_QR) gq.src=window.BS_ASSETS.GZH_QR;
     setImg('bs-hero-img','ICON_HEARING','');
+    setImg('bs-share-game-icon','ICON_HEARING','');   // シェアカードのゲームアイコン（旧inline SVG→既存アセット画像に統一）
     setImg('card-hi-img','CHAR_HEAR_HI',CHAR_HEAR_HI_FB);
     setImg('card-lo-img','CHAR_HEAR_LO',CHAR_HEAR_LO_FB);
     setImg('card-both-hi-img','CHAR_HEAR_HI',CHAR_HEAR_HI_FB);
     setImg('card-both-lo-img','CHAR_HEAR_LO',CHAR_HEAR_LO_FB);
     setImg('res-hi-img','CHAR_HEAR_HI',CHAR_HEAR_HI_FB);
     setImg('res-lo-img','CHAR_HEAR_LO',CHAR_HEAR_LO_FB);
+    // BASS SHOW プラットフォーム枠のロゴ（他ゲーム共通アセット LOGO を流用）
+    var A=window.BS_ASSETS||{};
+    document.querySelectorAll('.bs-logo-asset').forEach(function(n){ if(A.LOGO) n.src=A.LOGO; });
   })();
 
   (function(){
