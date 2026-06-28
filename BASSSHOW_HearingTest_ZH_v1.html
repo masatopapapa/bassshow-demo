@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>听力年龄测试 · BASS SHOW</title>
+<style>
+  :root{
+    --bg:#0A0A0F;--bg2:#13131A;--bg3:#1C1C26;
+    --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+    --text:#F0EFF8;--text2:#9896B0;--text3:#5A5870;
+    --teal:#1D9E75;--amber:#EF9F27;--coral:#F0997B;--purple:#534AB7;
+    --accent:#ff5a36;--accent-2:#ffb02e;
+    /* 聴力テスト二軸トークン：高音=昇る(シアン)/低音=降りる(紫青) */
+    --hi:#3DC8E8;--hi-d:#1E6E88;
+    --lo:#7B6BE6;--lo-d:#3E3578;
+    --bad:#ff4d6d;
+    --r:12px;--rs:8px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    overscroll-behavior:none;}
+  .wrap{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;}
+
+  /* ===== UI統一テンプレ（FingerSpeed踏襲） ===== */
+  .bs-topbar{display:flex;justify-content:center;margin:14px 0 4px;}
+  .bs-logo-fallback{font-size:15px;font-weight:900;letter-spacing:3px;color:var(--accent);}
+  .bs-hero{width:128px;height:128px;margin:8px auto 6px;border-radius:18px;overflow:hidden;
+    background:var(--bg2);border:0.5px solid var(--border);}
+  .bs-hero img{width:100%;height:100%;object-fit:cover;display:block;}
+  .bs-game-title{text-align:center;font-size:25px;font-weight:800;color:var(--text);margin:8px 0 4px;letter-spacing:.5px;}
+  /* 言語切替 */
+  .bs-lang-switch{position:absolute;top:10px;right:10px;display:flex;gap:2px;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:2px;z-index:10;}
+  .bs-lang-switch button{background:transparent;border:none;color:var(--text3);font-size:12px;font-weight:700;padding:4px 9px;border-radius:6px;cursor:pointer;line-height:1;}
+  .bs-lang-switch button.active{background:var(--accent);color:#fff;}
+
+  .screen{flex:1;display:none;flex-direction:column;padding:18px 18px 26px;}
+  .screen.active{display:flex;}
+
+  .lead{color:var(--text2);font-size:14px;line-height:1.7;margin:10px 0;}
+  .lead b{color:var(--text);}
+
+  /* 環境チェック警告 */
+  .warn-box{background:linear-gradient(155deg,rgba(123,107,230,.14),rgba(61,200,232,.10));
+    border:0.5px solid var(--border2);border-radius:14px;padding:15px;margin:10px 0;font-size:13px;line-height:1.8;color:var(--text2);}
+  .warn-box b{color:var(--text);}
+  .warn-box .em{color:var(--hi);font-weight:700;}
+
+  .rule{background:var(--bg2);border:0.5px solid var(--border);border-radius:14px;
+    padding:14px;font-size:12.5px;color:var(--text2);line-height:1.8;margin-top:6px;}
+  .rule b{color:var(--text);}
+
+  .btn{display:block;width:100%;border:none;border-radius:14px;padding:14px;
+    font-size:17px;font-weight:800;color:#fff;cursor:pointer;margin-top:12px;
+    transition:.15s;letter-spacing:1px;
+    background:linear-gradient(100deg,var(--lo),var(--hi));}
+  .btn:active{transform:scale(.98);}
+  .btn.ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);
+    font-size:15px;font-weight:600;}
+  .btn:disabled{opacity:.4;}
+
+  /* ===== 軸選択カード ===== */
+  .axis-cards{display:flex;flex-direction:column;gap:12px;margin:14px 0 4px;}
+  .axis-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:16px;
+    padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:.15s;}
+  .axis-card:active{transform:scale(.99);}
+  .axis-card .ic{width:72px;height:72px;border-radius:15px;flex-shrink:0;display:flex;
+    align-items:center;justify-content:center;font-size:26px;font-weight:900;}
+  .axis-card.hi .ic{background:linear-gradient(155deg,var(--hi),var(--hi-d));color:#04222b;}
+  .axis-card.lo .ic{background:linear-gradient(155deg,var(--lo),var(--lo-d));color:#0c0820;}
+  .axis-card.both .ic{background:linear-gradient(155deg,var(--hi),var(--lo));color:#fff;font-size:20px;}
+  .axis-card .tx{flex:1;}
+  .axis-card .nm{font-size:16px;font-weight:800;}
+  .axis-card .ds{font-size:11.5px;color:var(--text2);margin-top:3px;line-height:1.5;}
+  .axis-card .ar{color:var(--text3);font-size:20px;}
+  .axis-card .ic.char{overflow:hidden;background:var(--bg2);padding:0;}
+  .axis-card .ic.char img{width:100%;height:100%;object-fit:cover;display:block;}
+  /* 完整测试：高音・低音キャラを2枚並べ */
+  .axis-card .ic.char-pair{width:auto;background:transparent;display:flex;gap:5px;border-radius:0;}
+  .axis-card .ic.char-pair img{width:72px;height:72px;border-radius:15px;object-fit:cover;background:var(--bg2);display:block;}
+
+  /* ===== プレイ画面（2IFC） ===== */
+  #s-play{justify-content:flex-start;}
+  .play-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .play-axis{font-size:13px;font-weight:700;}
+  .play-axis.hi{color:var(--hi);} .play-axis.lo{color:var(--lo);}
+  .play-prog{font-size:13px;color:var(--text2);font-variant-numeric:tabular-nums;}
+  .prog-bar{height:6px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-bottom:22px;}
+  .prog-bar>i{display:block;height:100%;width:0;transition:width .3s ease;
+    background:linear-gradient(90deg,var(--lo),var(--hi));}
+
+  .play-q{text-align:center;color:var(--text2);font-size:14px;margin-bottom:4px;min-height:1.3em;}
+  .play-instr{text-align:center;font-size:20px;font-weight:800;margin-bottom:22px;min-height:1.4em;}
+
+  /* A/B統合カード：再生枠＝選択ボタン。両カードとも完全同一の見た目（視覚手がかりゼロ＝測定の鉄則） */
+  .ab-cards{display:flex;gap:14px;margin-bottom:18px;}
+  .ab-card{flex:1;aspect-ratio:1/1;border-radius:20px;background:var(--bg2);
+    border:1.5px solid var(--border);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:10px;cursor:pointer;
+    color:var(--text);transition:transform .05s,filter .1s,border-color .1s,background .1s;
+    -webkit-tap-highlight-color:transparent;}
+  /* playing状態：どちらのカードでも全く同じ。音の有無で見た目を変えない */
+  .ab-card.playing{border-color:var(--border2);background:var(--bg3);}
+  .ab-card:not(:disabled):active{transform:scale(.97);}
+  .ab-card.answerable:not(:disabled){border-color:var(--border2);}
+  .ab-card.answerable:not(:disabled):hover{filter:brightness(1.15);}
+  .ab-card:disabled{cursor:default;}
+  .ab-card .ab-label{font-size:48px;font-weight:900;line-height:1;}
+  .ab-card .ab-state{font-size:12px;color:var(--text3);height:1.2em;font-weight:600;}
+  .ab-card.playing .ab-state{color:var(--text2);}
+  .ab-card.answerable .ab-state{color:var(--text2);}
+
+  /* 中間ページ（高音→低音） */
+  .interlude-char{display:flex;justify-content:center;margin:6px 0;}
+  .interlude-char img{width:140px;height:140px;border-radius:18px;object-fit:cover;background:var(--bg2);border:0.5px solid var(--border);}
+  .spacer-flex{flex:1;}
+
+  .replay-row{text-align:center;margin-top:14px;}
+  .replay-btn{background:transparent;border:0.5px solid var(--border2);color:var(--text2);
+    font-size:13px;font-weight:600;padding:9px 20px;border-radius:99px;cursor:pointer;}
+  .replay-btn:disabled{opacity:.4;}
+
+  .streak-dots{display:flex;gap:8px;justify-content:center;margin-top:18px;}
+  .streak-dot{width:10px;height:10px;border-radius:99px;background:var(--bg3);border:1px solid var(--border2);}
+  .streak-dot.on{background:var(--hi);border-color:var(--hi);}
+  .streak-dot.lo.on{background:var(--lo);border-color:var(--lo);}
+
+  /* ===== 結果カード（スクショ対象1枚） ===== */
+  .bs-share-capture{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:18px 16px;margin-bottom:10px;}
+  .bs-reslogo{display:flex;justify-content:center;margin-bottom:6px;}
+  .bs-res-title{text-align:center;font-size:14px;font-weight:800;color:var(--text);margin-bottom:12px;letter-spacing:.5px;}
+
+  /* シグネチャ：二軸メーター（高音=天井↑ / 低音=床↓） */
+  .twin{display:flex;gap:12px;margin-bottom:14px;}
+  .twin-col{flex:1;background:var(--bg);border:0.5px solid var(--border);border-radius:14px;
+    padding:13px 10px;text-align:center;}
+  .twin-col .cap{font-size:11px;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
+  .twin-col.hi .cap{color:var(--hi);} .twin-col.lo .cap{color:var(--lo);}
+  .twin-col .big{font-size:30px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;}
+  .twin-col .bu{font-size:12px;color:var(--text2);margin-top:2px;}
+  .twin-col .sm{font-size:10.5px;color:var(--text3);margin-top:6px;line-height:1.4;min-height:2.4em;}
+  .twin-col.skip{opacity:.4;}
+  .twin-char{display:flex;justify-content:center;margin-bottom:8px;}
+  .twin-char img{width:84px;height:84px;border-radius:16px;object-fit:cover;background:var(--bg2);}
+
+  .ladder{display:flex;flex-direction:column-reverse;gap:3px;margin:9px 0 2px;}
+  .rung{height:7px;border-radius:2px;background:var(--bg3);opacity:.3;}
+  .rung.fill{opacity:1;}
+  .twin-col.hi .rung.fill{background:var(--hi);}
+  .twin-col.lo .rung.fill{background:var(--lo);}
+
+  .res-comment{font-size:12.5px;color:var(--text2);line-height:1.6;text-align:center;
+    background:var(--bg);border:0.5px solid var(--border);border-radius:12px;padding:11px;margin-bottom:6px;}
+  .res-comment b{color:var(--text);}
+
+  .res-note{font-size:10.5px;color:var(--text3);line-height:1.5;text-align:center;margin-bottom:12px;}
+
+  /* 3カラムフッター */
+  .bs-share-foot{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:0.5px solid var(--border);}
+  .bs-share-foot-text{flex:1;}
+  .bs-share-badge{display:inline-block;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:3px;}
+  .bs-share-title{font-size:14px;font-weight:700;color:var(--text);line-height:1.3;}
+  .bs-share-desc{font-size:10px;color:var(--text3);margin-top:3px;}
+  .bs-share-qr{width:72px;height:72px;flex-shrink:0;background:#fff;border-radius:8px;padding:4px;box-sizing:border-box;}
+  .bs-share-qr .sc-qrbox{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
+  .bs-share-qr .sc-qrbox svg{width:100%;height:100%;display:block;}
+  .bs-share-icon{width:72px;height:72px;flex-shrink:0;border-radius:8px;overflow:hidden;
+    background:linear-gradient(155deg,var(--hi),var(--lo));display:flex;align-items:center;justify-content:center;}
+  .bs-share-icon svg{width:42px;height:42px;}
+
+  /* 2ボタン行 */
+  .share-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+  .share-btn{padding:11px 8px;border-radius:var(--rs);border:0.5px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;text-align:center;}
+  .share-btn.primary{background:var(--text);color:var(--bg);border-color:transparent;}
+
+  /* 答え合わせ（本物ベース音）演出 */
+  .reveal-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);
+    padding:14px;margin-bottom:10px;}
+  .reveal-box .rt{font-size:13px;font-weight:700;margin-bottom:8px;}
+  .reveal-box .rt .em{color:var(--lo);}
+  .reveal-box .rd{font-size:11.5px;color:var(--text2);line-height:1.6;margin-bottom:10px;}
+  .reveal-btn{width:100%;background:var(--bg3);border:0.5px solid var(--border2);color:var(--text);
+    font-size:13px;font-weight:700;padding:11px;border-radius:var(--rs);cursor:pointer;}
+
+  /* 三段ファネル */
+  .promo-section{margin-bottom:14px;margin-top:6px;}
+  .promo-title{font-size:11px;color:var(--text3);letter-spacing:2px;text-align:center;margin-bottom:10px;}
+  .promo-cards{display:flex;flex-direction:column;gap:8px;}
+  .promo-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+  .promo-icon{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .promo-icon-bili{background:linear-gradient(135deg,#00A1D6,#0066CC);}
+  .promo-icon-gzh{background:linear-gradient(135deg,#07C160,#0F6E56);}
+  .promo-icon-games{background:linear-gradient(135deg,#E8552D,#B7841E);}
+  .promo-text{flex:1;}
+  .promo-name{font-size:14px;font-weight:700;}
+  .demo-tag{font-size:10px;font-weight:700;color:var(--amber);border:0.5px solid var(--amber);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+  .promo-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.5;}
+  .promo-arrow{color:var(--text3);font-size:18px;}
+  .gzh-qr-wrap{display:none;flex-direction:column;align-items:center;gap:8px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:16px;margin-top:-2px;}
+  .gzh-qr-wrap.show{display:flex;}
+  .gzh-qr-wrap img{width:160px;height:160px;border-radius:8px;background:#fff;padding:6px;box-sizing:border-box;}
+  .gzh-qr-wrap p{font-size:11px;color:var(--text2);text-align:center;line-height:1.6;margin:0;}
+
+  .toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:#000;color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;z-index:99;}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 言語切替 -->
+  <div class="bs-lang-switch" id="bs-lang-switch">
+    <button data-lang="zh" class="active">中</button>
+    <button data-lang="ja">日</button>
+    <button data-lang="en">EN</button>
+  </div>
+
+  <!-- ===== START ===== -->
+  <section id="s-start" class="screen active">
+    <div class="bs-topbar"><span class="bs-logo-fallback">BASS SHOW</span></div>
+    <div class="bs-hero"><img id="bs-hero-img" alt="Hearing Test"></div>
+    <h1 class="bs-game-title" data-i18n="title">听力年龄测试</h1>
+    <p class="lead" data-i18n="lead">你的耳朵，<b>上能听多高</b>、<b>下能听多低</b>？<br>高音 = 耳朵年龄，低音 = 贝斯感度。两个数字，一次测出。</p>
+
+    <div class="warn-box">
+      <b data-i18n="warn_t">⚠ 测前必读</b><br>
+      <span data-i18n="warn_b">请<span class="em">戴上耳机或入耳式耳塞</span>。手机外放<b>放不出低音</b>，低音轴会全军覆没。安静环境、音量适中（别太大伤耳）。</span>
+    </div>
+
+    <div class="rule" data-i18n="rule">
+      <b>玩法：</b>每个音会在「①」和「②」两个框里各响一次——但<b>只有一个框真的有声音</b>，另一个是无声。你来选「<b>哪个框响了？</b>」。<br>听得到就能选对；听不到只能靠猜（50%）。同一频率连对 3 次才算「听得到」，进入更难的频率。
+    </div>
+
+    <button class="btn" id="btn-to-select" data-i18n="btn_next">下一步：选择测试</button>
+    <button class="btn ghost" id="btn-soundcheck" data-i18n="btn_soundcheck" style="margin-top:8px">🔊 先听一下测试音（确认有声音）</button>
+  </section>
+
+  <!-- ===== AXIS SELECT ===== -->
+  <section id="s-select" class="screen">
+    <div class="bs-topbar"><span class="bs-logo-fallback">BASS SHOW</span></div>
+    <h1 class="bs-game-title" data-i18n="sel_title">选择测试</h1>
+    <p class="lead" data-i18n="sel_lead">先单轴体验一下手感也行，或者两轴一起测出完整结果。</p>
+
+    <div class="axis-cards">
+      <div class="axis-card hi" data-axis="hi">
+        <div class="ic char"><img id="card-hi-img" alt=""></div>
+        <div class="tx">
+          <div class="nm" data-i18n="card_hi_n">高音 · 耳朵年龄</div>
+          <div class="ds" data-i18n="card_hi_d">从 8kHz 一路往上爬，看你的耳朵几岁。蚊子音挑战。</div>
+        </div>
+        <div class="ar">›</div>
+      </div>
+      <div class="axis-card lo" data-axis="lo">
+        <div class="ic char"><img id="card-lo-img" alt=""></div>
+        <div class="tx">
+          <div class="nm" data-i18n="card_lo_n">低音 · 贝斯感度</div>
+          <div class="ds" data-i18n="card_lo_d">从 82Hz 一路往下沉，到 20Hz 可听极限。低音猎人专属。</div>
+        </div>
+        <div class="ar">›</div>
+      </div>
+      <div class="axis-card both" data-axis="both">
+        <div class="ic char-pair">
+          <img id="card-both-hi-img" alt="">
+          <img id="card-both-lo-img" alt="">
+        </div>
+        <div class="tx">
+          <div class="nm" data-i18n="card_both_n">完整测试 · 两轴</div>
+          <div class="ds" data-i18n="card_both_d">高音 + 低音连续测，得到「耳龄 / 贝斯感度」两个数字。</div>
+        </div>
+        <div class="ar">›</div>
+      </div>
+    </div>
+
+    <div class="replay-row" style="margin-top:18px">
+      <button class="replay-btn" id="btn-back-start" data-i18n="btn_back">‹ 返回</button>
+    </div>
+  </section>
+
+  <!-- ===== PLAY ===== -->
+  <section id="s-play" class="screen">
+    <div class="play-head">
+      <span class="play-axis" id="play-axis-label">—</span>
+      <span class="play-prog" id="play-prog">—</span>
+    </div>
+    <div class="prog-bar"><i id="play-prog-bar"></i></div>
+
+    <div class="play-q" id="play-q" data-i18n="play_q">听好这两个框…</div>
+    <div class="play-instr" id="play-instr" data-i18n="play_listen">正在播放…</div>
+
+    <!-- 再生枠＝選択ボタン統合（A/B）。再生中は点灯、再生後タップで回答 -->
+    <div class="ab-cards">
+      <button class="ab-card" id="ab1" data-slot="1" disabled>
+        <span class="ab-label">A</span>
+        <span class="ab-state" id="ab1-state">&nbsp;</span>
+      </button>
+      <button class="ab-card" id="ab2" data-slot="2" disabled>
+        <span class="ab-label">B</span>
+        <span class="ab-state" id="ab2-state">&nbsp;</span>
+      </button>
+    </div>
+
+    <div class="replay-row">
+      <button class="replay-btn" id="btn-replay" disabled data-i18n="btn_replay">↻ 再听一次</button>
+    </div>
+
+    <div class="streak-dots" id="streak-dots">
+      <div class="streak-dot"></div><div class="streak-dot"></div><div class="streak-dot"></div>
+    </div>
+  </section>
+
+  <!-- ===== INTERLUDE（二軸通し時：高音→低音の区切り） ===== -->
+  <section id="s-interlude" class="screen">
+    <div class="bs-topbar"><span class="bs-logo-fallback">BASS SHOW</span></div>
+    <div class="interlude-char"><img id="interlude-char-img" alt=""></div>
+    <h1 class="bs-game-title" data-i18n="inter_title">高音测试结束</h1>
+    <p class="lead" id="interlude-lead" data-i18n="inter_lead">前半完成！接下来是<b>低音 · 贝斯感度</b>测试。<br>这次声音会<b>越来越低</b>——确认你戴着耳机，然后开始。</p>
+    <div class="warn-box">
+      <span data-i18n="inter_warn">⚠ 低音对设备极度敏感：手机外放几乎放不出低音，<b>请务必使用耳机</b>，否则低音轴会全军覆没。</span>
+    </div>
+    <div class="spacer-flex"></div>
+    <button class="btn" id="btn-to-low" data-i18n="inter_btn">继续：开始低音测试 ↓</button>
+  </section>
+
+  <!-- ===== RESULT ===== -->
+  <section id="s-result" class="screen">
+    <div class="bs-share-capture" id="bs-share-capture">
+      <div class="bs-reslogo"><span class="bs-logo-fallback">BASS SHOW</span></div>
+      <div class="bs-res-title" data-i18n="result_sub">听力年龄测试</div>
+
+      <!-- シグネチャ：二軸メーター -->
+      <div class="twin">
+        <div class="twin-col hi" id="twin-hi">
+          <div class="twin-char"><img id="res-hi-img" alt=""></div>
+          <div class="cap" data-i18n="twin_hi_cap">↑ 耳朵年龄</div>
+          <div class="ladder" id="ladder-hi"></div>
+          <div class="big" id="hi-age">—</div>
+          <div class="bu" data-i18n="twin_hi_unit">岁的耳朵</div>
+          <div class="sm" id="hi-freq">—</div>
+        </div>
+        <div class="twin-col lo" id="twin-lo">
+          <div class="twin-char"><img id="res-lo-img" alt=""></div>
+          <div class="cap" data-i18n="twin_lo_cap">↓ 贝斯感度</div>
+          <div class="ladder" id="ladder-lo"></div>
+          <div class="big" id="lo-rank">—</div>
+          <div class="bu" data-i18n="twin_lo_unit">级低音感度</div>
+          <div class="sm" id="lo-freq">—</div>
+        </div>
+      </div>
+
+      <div class="res-comment" id="res-comment">—</div>
+      <div class="res-note" id="res-note" data-i18n="res_note">※ 仅供娱乐，受设备与环境影响极大，非医学听力检查。</div>
+
+      <div class="bs-share-foot">
+        <div class="bs-share-icon">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 50 Q22 32 40 32" stroke="#fff" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="24" cy="56" r="9" fill="#fff"/>
+            <path d="M58 30 Q78 30 78 50 L78 62 Q78 70 70 70" stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <circle cx="76" cy="56" r="9" fill="#fff"/>
+          </svg>
+        </div>
+        <div class="bs-share-foot-text">
+          <div class="bs-share-badge" data-i18n="share_badge">扫码挑战</div>
+          <div class="bs-share-title" data-i18n="share_card_title">你的耳朵几岁？</div>
+          <div class="bs-share-desc" data-i18n="share_card_sub">BASS SHOW · 听力年龄测试</div>
+        </div>
+        <div class="bs-share-qr"><div id="shareQrBox" class="sc-qrbox"></div></div>
+      </div>
+    </div>
+
+    <div class="share-btn-row">
+      <button class="share-btn primary" id="btn-screenshot" data-i18n="btn_screenshot">截图分享给你的朋友</button>
+      <button class="share-btn" id="btn-copy" data-i18n="btn_copy">复制文字</button>
+    </div>
+
+    <!-- 答え合わせ：本物ベース音（演出専用・採点には未使用） -->
+    <div class="reveal-box" id="reveal-box">
+      <div class="rt" data-i18n="reveal_t">🎸 <span class="em">答案揭晓</span></div>
+      <div class="rd" id="reveal-d" data-i18n="reveal_d">你刚才测的最低纯音 41Hz，就是四弦贝斯的开放 E 弦。听听真正的贝斯音色——这就是你听力的边界。</div>
+      <button class="reveal-btn" id="btn-reveal" data-i18n="reveal_btn">▶ 播放真实贝斯音 (合成)</button>
+    </div>
+
+    <div class="promo-section">
+      <div class="promo-title" data-i18n="promo_title">加入贝斯手社区</div>
+      <div class="promo-cards">
+        <div class="promo-card" id="gzh-card">
+          <div class="promo-icon promo-icon-gzh">📱</div>
+          <div class="promo-text">
+            <div class="promo-name" data-i18n="gzh_name">加入贝斯手交流群</div>
+            <div class="promo-desc" data-i18n="gzh_desc">扫码关注公众号 · 回复「入群」即可进群</div>
+          </div>
+          <div class="promo-arrow" id="gzh-arrow">›</div>
+        </div>
+        <div class="gzh-qr-wrap" id="gzh-qr-wrap">
+          <img id="gzhQrImg" alt="BASS SHOW 公众号 QR">
+          <p data-i18n="gzh_steps">① 微信扫码关注 → ② 回复「入群」→ ③ 收到进群方式</p>
+        </div>
+        <div class="promo-card" onclick="window.open('https://b23.tv/CGkvQc4','_blank')">
+          <div class="promo-icon promo-icon-bili">📺</div>
+          <div class="promo-text">
+            <div class="promo-name" data-i18n="bili_name">Bilibili · 在华日本音乐人MASATO</div>
+            <div class="promo-desc" data-i18n="bili_desc">贝斯教学视频 · BASS SHOW系列<br>6,700+ 粉丝 · 3万获赞</div>
+          </div>
+          <div class="promo-arrow">›</div>
+        </div>
+        <div class="promo-card" onclick="window.open('https://bassshow.rocks/minigames.html','_blank')">
+          <div class="promo-icon promo-icon-games">🎮</div>
+          <div class="promo-text">
+            <div class="promo-name" data-i18n="games_name">BASS SHOW 小游戏合集</div>
+            <div class="promo-desc" data-i18n="games_desc">更多贝斯手测试 · 性格诊断・实力训练</div>
+          </div>
+          <div class="promo-arrow">›</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn ghost" id="btn-again" data-i18n="btn_again">再测一次</button>
+  </section>
+
+</div>
+
+<!-- 共有アセット（ICON_HEARING / qrcode ライブラリ / BS_QR 等を window に供給） -->
+<script src="shared-assets.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // デバッグモード：URLに ?debug=1 で実際の周波数とA/B正解を画面表示（高音60歳問題の切り分け用）
+  var DEBUG = /[?&]debug=1/.test(window.location.search);
+
+  // ══════════════════════════════════════════
+  // アセット（ICON_HEARING=shared-assets.js経由 / CHAR_HEAR_HI・LO=本HTML直埋め＝案B）
+  // window.BS_ASSETS.ICON_HEARING を優先参照。CHAR_HEAR_HI/LO は BS_ASSETS 未登録のため埋め込み値が使われる。
+  // ══════════════════════════════════════════
+  var CHAR_HEAR_HI_FB = "data:image/webp;base64,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";
+  var CHAR_HEAR_LO_FB = "data:image/webp;base64,UklGRlg6AABXRUJQVlA4IEw6AACwrwCdASoAAQABPm0qkUWkIqGYXTUkQAbEsTdurqSZ3u+Q9+T/MD2uLF/cfxJ+Uvyq8PounaT+7+235o/7H1UfqX2Av1M/3H+C/IXuc/tz6h/6N/k/+l/qPeW/2X7M+6v+/f639evgD/o3+N6yL9wPYH/mf+m9Nv9y/g9/sv/F/bb4Ev2R//PsAegB0//XL/I+gHwE/R+EP5J9L/kvzJ/xXuE40/SP6zzJ/k34B/h/4Dz//6/gf8o/9b/GewL+Rf0L/X/mr7zH1XZB7x/qf+P/pvYF9j/qf+u/wv5Nel9/pf5D1M+yX/b9wD9ev9x5Z3gfej/9n3Av5t/cP+t/f/9N+5f0x/2f/w/0X+1/dv23fnn+e/83+e+Ar+Zf2T/n/4X2zP/Z7tfRm/ab/+Nod9N0IoYIHuXq0p32/JIcyfZIQNlcwPoZ5QSZ7LAxhzfxX2b7tg4JADrl0Cspz2U8h1AVBbWxLHhOKYCedaoXXwr00RfhJEudNEzc11RJ1jBMI7BksVBRMKfRJDZIrnQNk+mT2FNVk5bgEfxtD01mPhGdRJ/Vlvskevfhiq9SzVGarshvi9TAsua1nLm8sXtaMOXJ3fvgeqqV3gxwRQpPudddDBPCIA7uE8QCQYLiZo1liPARSiddzbNJfpq1A6ZzQx9HMGBU0mS1mg9XUQc1pFLEghpXV1hTrJzzQRl5u4MUxpXwFXVCZ53RZHuu6rVY0QygQ8XsGsIwH/RPdT7z/ebAN4Z0eYZTBe520+MF0HK3nDmp3KM2IIAnLkK9d0vgPJo85iJlEJssSTrjci19AgLEsWnMUr2v2Cvb/Zjw7hpuwat2cnCyCVYlFsJ4H7IwV7amXn+/6ali7bRkDyTUHmHtjftn7HixExOQ+rfbDqUG/u+W/eXY3HTZJdUZV/8FP0Mes2mytot89uP3iy+FWEa/GlA0PZB982Ue6ENzdBuT3+/nXeNjCEzPG3WOac8zHGsXTeBNpdu2B8/QiQmHSr4r7Ppw8gnqDXE6Y3tRsvvi2YcCYh/apiIk8fH2QIq77Y6lzDN8selOq64E7oSONidDLj/zpx5LhDOnXpm04wRxw1FNI+Zz/4rJ8+sPDOWNrKnmmIeuIiRq9KTANNYFL6l6GY5vdmwO1ad0CI4qqmnDGcxQyHjnr3F2ct10Ix7m+163KP6W+Zz2hYgdHqnuRSiu31hsnZNR7NRU60OvKMcFQex4VzaaLA2tY5ik+ee74SXkNF+DFMXxXoQedFILBc44auDZMGRrnMCCbSm3w0Mqumwt1qcGCzV/xjhL/fb4X0f/56OCpt6BSO3Dpm+t3tMnoqpUGyyJwUA9XPL+JQd5YFBBaR59CF1aRBCJ0iJVfjz8fzEOPpq49J4sHgkUYnpVOE9Sxvv3vi1WK0xOpSDwEaGfpBNqcLCDbmnp64kudVvPmYeHUN8utYU5kR48xvaRNZ4xn+q5l9x9IBE3xI1s0RofJ7SGubvUEuL3uM1hQS7njC8dzWU3Fcpz4GXXLLVW9RO0KBBfm0LY+CJ/50+2qVerKuVVW4PFAq0PR/JbLBJ2rV1MprjHs/YBnhi/u3Jaw1zYIuwDkHSfRM5BG59/lZNlys7O+OSYfs9S9m0oR3hJYOP3NwyORpiJD35ydj8mpjWdGR2t6P3bMvnVTLwdV5hB+uY9XRZt9+G1up18dpfEp+VQXRcRSmdjU/KGtDw8EL1/7Cf5i2TjzK9adazkOlYqbtuzcEaamvQM84PQByhlzaX2Bj3Mvle6rFj6vUEq6iz0wwFjU7NOFW9g4nLdyGU/0GYVd+jDUYuAfi3M5NUZP//nQER5BGYqOfun6BCV3juF32psKXbhMOjNBrozG/wu9fC2MpQvHRcXmnkFf3dNe2/7E8IsAP7+m1JRwIuvk0UBWxVhxuOPr3d8ufwkhkYlH7oRUfZ+ZS24H/FunPmBSAKfE3YM6jp7ra99is28GGxKnKQikAXFmqNx5ovSuf/+60YAmY8Uw3iLhdIPqqneXiKPvOBXSJCQWcHYzrk5l81Bj2F/LhIHpD7X2EUFJu8g30zqoz18606RxTWXbMAcNqlyzlDWL+tFJrCpLO4pIk62rDFtORhb5dzDnAHrpraVWoBLY1IH3s5wxmzja/sFX9T2Dl+m11qfikPdRJj10pkdnBUuUD9+uPdMgUr4aXqGfdr1CmnaTwYPEW+AN3eCiLGZJfgj5eddaO6pwG7CQjeCw6d141i2ALGKugalnPomdB/gJa21km9MruvNPBTSF8LK15E5qocLqBmDVcVQY9pIOUyrOzUO29c6ItSKKZrI+vpfJDbf1Mm5u7QlZc6RlmoQkdsUcuUMQCOiB72t5eIH+2wMzzofp1FqAGC/jsKDPVt9x9cKxRwxD7luiDHhdqQ+yjOZXlJxdjXuqd1uNdQMWYnSrdAACA2tkhnf1nFlnFlG0faJ66G2LRW2nkjjBdwqa9rxNd5HJAUgBE23EEnqvzo/dcq+9uR6TcnCAyGDcZv6+jY3TXE6bYOJQaukwgmi577MHQFdS7u/HKpSoWyofXyDqJsIfugznbH4+eLfxMrz2FraRS3u6Qed4C3nvxLrWiUXR88iCLNAgul7b9XCUHTtcZrAu1VcTai/SKpadmYgzkPvvKmyFRZ1MLp3w4cK/iDVxLCSsqK6QrzVlh7HP3QNk1dp7ZZPL9SIZ8H2iv2R+oDziiKouV02ImdqHN1YzwZ/pX8wUEDFE0zMFX+9PoCYf4nATY7Mh0+hPsU0zDa5kBtqr4qFEKAKFyYh+3mgJ0JCChWx8UP2cyoMh8A8CJPLJoDXdf/4r2LqtbuNq+FDu0/jDxxEuPyaI/dC99HP5BCxdEQBkH+Wvd21WZx1jy/JQurWIiOwKH9QOCsaLAc/VUWCFvLh6s5J2znn7hHLvNXHjjs5TS+Ba0YZqcLnopIE1Fo2dRH2xJMCYaFtyEEHMz6SN7wAGs/yNoYPZDEPGneiPjoiVawowSsXqbGEKQohW1P+R6t6p7DQEXNkIcd5WFBB6ZwIwHr3murI4CHjzostT5jFzxhqA5jexZsUKR27Qbm8UGDZ3pBVI6lHweKCfa2rXdbLRmFkdg5ZHJN+59pqFJU78V57rNOmZeOIEKeJepMWGdin7n55duKPd51zifBlb9jy6KgZjtU1eLguposjjDCanhOE3czq2KTijOZvMCiDSeALThuPNPqwf2GY4IpX8YcOi68s4hauhRKhQed9W93AW8WXVudoEHOn2v8dAbThYCVTGpOQkMwjpT9lxDNaD+Bm0oawnrcxvuvdRSSryeX6xzLS/QqCJb1d9s1MdlGMe5sW/O/N/yp9f7nY1b0vcXSPRLXwUz4xhGedv0kficp1BkhLE38gijCcqZL080RmAzgd4QYxBmlTMwpGwm3j0Gqdr2Qg+guhejFAo5kJICcRtj6UR0fm4HFhrb2GyiCwJDZj+mflzuY1Z2rv7fA/zI+ZDJu/i0X06kdCCfEIsMTnx2uRdDSl6r2HZ4EJpNYEUJVLwYQnnmNt0KYsiZ71gLKS8A0zLenk7K2gjHp1QHQmeCNEBGx5XChe6BqxcyQLqdhY0tehwyczmXKQY8ZYopIcl01BkX4glO0TIDuF88ln3aDbtRuo3VRCUX+f9EuCaDvRdV2ayoZG0rJS9YbPPtLBAy9qS4eiAwpKn4s3MrouRtHrkTTL7XGCA2SuMmEn0yHk4hM/oXnIJysoMIjUl//tQCbz1/AWFjjW4MqQepH5zOO8yRW76OT0lPLmv7i7mvFX+vMkeB2Q3UyGS88vKcDlbbZIXkOhUeAziIZj7B5aIAM8ax++qibBcWZ0hLfteCRX5R8GMcFwLdI2bxu75JU+YxZ0oxzwcXZdsqaiAr6BCU1r/Twi9uA23lNaeGmPyhXtM0oSBnuu28SMY5bF+Uh6wFd1FQTqSPJzaQBc1hFou0dV7R9uyF8lvQsURwNqCvRx02hbQhflKMhFJOEmwIs//XdinTE+USyG2dgsblC5wLFOATR0MNqav+tbBqvNMKsfNe3bdoemyfDPlKpKdTlv/CjfXPg+HHerh0jN7zOn/9Yf/wCxGZ9KCK3ZTCkRV2sXTbzhhHMUP6DcDETNPIf11DvYIir2+gvN/8604k+KoOYTsNI9R4hYwWBMpzxs3Qd8o4StvTr3oINRUw9k5Xwv1HjxQi8UlV70PUSJZwbog8UbMStJbd+Gksfo5MLYVMC3M5UejmlVOAFGLZ19A2uOL5Xiw+cePZCveAEGJQYEF+lmP7OLwK/1sYF+aPEyeIDFi2LLdqsm2hTYyzdv45Cqi+JL7VDJ2FNBm6B9UoRlHtmidUxk61BdiVgjpldSQqFI+1amJMhvYlbhz6hmBjHnMXFX8r7zGg2nZW9PALvgQlbVJSF1xdds/8QpY45Iv4V1iKwfGiOQEBcTfdtHgnOS+ixAAFl+DwOFsMqKKu3JgNP3yCMfJpW/JKiIA34zrba5xo4Bo/bCwGh3Dm6dNY/7tt7VFM2ezZxkZlQ8L7hD7lODiWQXRfiuM/OpbwOc+C+d2kdYVfQzDGUx0U6iRFjwQoldN3nOOQZaAYfIO6G8Mvotf8TIuVQGy7E3auEgO4wtI2i200Q6sVk6SWN16M7uzLxDOq3U2bWr78oKhBZcSTsG+1QaojCpzrcdv1mPedsytnmOMFCt0HYhJzViKnCZNXBuXi9eEc7gz4lG//BeKjZ01OePGaSgwKhZAaunpwYGYfJDN1luO1pDicsz4oSVMzHU7uGnuBDSlAY9F5OWTNo8r2oNaRjAfkDiGbvbIzojzySsSYyjku4aFhVdKuqtM3DUMXJ9Az0lIefHsReJ+bOmTLgvzvILKtI56Y3MW1XBmG7xvFi2GLIkck+aPyNviep7RrF55DMNYNaioIBW5H2h2dxw47Jo6eWrWHxLhSOFv5cGjDrMDqKMDYuyyheyqRwYaIi6OCFM1uVI3KWHX8gz7D2ogoQmoHbo/mYzzW5TXwb157DUDgE35SYP5J1tPRTuja/j99oJL8X59NK8EOeeXVN+9ccqbn109wWuihiDye7xxNGLmQ1xYOj+lfubP6iZkRyZK1PbArKh1Cjcp/YDAmj6ayqHLQCiTImAp4iloD4recUpv6FNeNbwk7v87k8vaZEGg8uG2QbxsH5iHNWqsb9sJjINQRcOnaHjerXtsgFjjXp0S6MiPz36szDzI5uQQwvdq2bqB9d+fDUUBdBg/PL9r7wO8d5BnKtjCwa8gHRogfyYArWE18ormt1ph8t/Dv9d4Wq3P6Iac+vOdKTAs7mMNsbYD9LcGbUEWYt+5UK7hK95sVlUJcweCyztkBIUud6paGOIfezywbfylSSm9DBV+7+C2OdUdAQtabS8GHPfzcIpa266ejmtFH5REKzBVw7OPVWHBdrh7gQKE0ZkAiAl7gf1PaRaO8Hw0L9+1zA7qqGkmMzA6A47G8TZlPO4t47UvWh3bcRGM8S/E05qRNRN22vjDn/WcxUmWVaQNKcDrjsj84FSMTdO8ZvFuwlwBmDnaUs43OmuUGKCR1zk3Xh6M6L8Baj7b0jAVvYX/1Unw/7wQYeu3doPyNrLVh2afrP9A/CckvGlqN2+IC35P+3cxDnmOUGhu3raxa9htfI8/ptzzcAE4T3Um090LmlfEnDxhpq+8Xtp0Hydpvnk/yzu16ZRH/QnjDe1dtoZDmpk0kP2Rrfruc4GDrgj2/EBbZnKzWK0vjw+70koFTARXFp20N7uLZr31idzWgQg8Uv5tmirtIm4dMTHk+mp33wJPIruD1MmUMC/EB9LI0EUpyBgLw7YfA7rIcDxZP4nh3fmpYTHfkTqGuT72tIgEPHto8pL3rK5/aJtFufKQYwQUU1hYWJS5jdGE06Aly2WmEsXx+MTxN5GTzh2pq9BKjCxRZt2prMGp3CpBI4GYfXZMXfjIYQ+P+gEU9QvWZOaT/K4ZjtRFTd1jIiOUqTcETgbXJ2v6tlgeeEOR6YQ+SHYCo9+LAn/5n/mJ9mO7R2whAbZUIliOv8lkNbNFgUZOSvL99zW8DbLExIESGKphgbBgIEPQb/hrjYB/kU4i/l9hVJDlwVuxlL52N6c7/pknrJOU7J7KSP3LUD1fel491YPlwfNfIcKOgULf2LFmkUsaXwsq7E4t5rtWbl7YdrS3cuWWkXe6Rp7o/T6yYppXlPgTv1784faEtsQwrxKcg8YhBP42VFoknkgpeTG1kk9GPv7Y7O2g97CxfiI6DMC9SgHiKArGJl8/ndgvjnR+AF/tuA2IALT17FcVyr9zzRINWk5vBz/b5rgrsWhVYpP8azkYPtAlTn8Jl22hw//Qanx00BvrKg7vgAPCWtSN4Ms1SxTyycrq7mcPrM6xwXnBBN3wseQE4OdMYyiG+WSC9B+7jCFQVYjbebW7CBHGGpOj04XKbNdbQRatGJR+KQUhMgVywfUD6uznimKiO2gu9eM477mZcaTLMOIHGWgQuxeD+llY7FNZtM4iY0oLO1Zg2zvuBoGgWdzdv8DdDLdLqztdlypFwL9jpJ/pJSYmWKKFBlj+PQoSha0mRAHjebDAXJijSYQegd9h4/NDe4dLbK8rksSH1YKQWzFA0Ln4eJryTF08XCa06QdIhMf94AZIK4TSDiV+PbxOCoGxAeyO1vEIQqy6qhMiHfgXHqPYUCaimjmUVHx385xuxE5DRepwYeuDeQ+mFz0KaNq9ZaeG/YQrXt3pCcZ2C4wRUhJ3N3WEEwdaHnAu6jn8hzM8dZ8C3MF74Fyh7vRDAXHMu3k2PRFMZL+CHtdSLVG3Kb8nlZDogAl7/F/h9El6ilrJb5zsjxN8E7RS6RSdlIskhp4Ts5f7B4cRuJqXXgRcvtHM5gr9GBg6EoqlOwxDAhTCTBw822AWN2Q3RXc/nTX0jtrR8/DqZymv90FvSKHusxvh0/WW2cpZtZ9OCNiapxiQkTpZAVRw273144e7DNmXmVdNrwRLrvapTFHaNhb2L8mLI/pAL1IgAhBnPNzTEfgJs6k75yZGyqOjP7CphYO992Ro9vw/9VkJ32HjKlJYebg8e/5o4ZKrhe/1+WB1uN8gRhDfC3IytyMqPAhyV7aWQ3bsAYvfwC1iuk3BMdFQnePffAiZCuvbeuZIEgaHnlKwAoO6zEirCMsp3SOe83jP/XcZN7qdXNa6Il2LM+U3ORFC6c/R6wfMXHr7bc7h7P0H6VhxL5pamt2erLLt48JNDKHbTTipuWpT55cMgq9XHoQ4BidVSu74lS/r9655d9BIPRV+I4lpxg77g6DtRhL1UnHB6CYEDIt/wqBJ23iXurv932CVL8Nw6Ibej7XeTSKS/PJKLha8tj6e8xTVrbg51akeqTdaBcm+uXS9NrEhdnPfCTZboUWfk6BPekbN3s5e/M8LvXIScPSeYNP0qCdm8gAm8KbgPfmKz3kRyPL45TDZDsO0brCukLYM1uyyJ/h3KO2omu+YNObjiWlKS7v4SLB6ReiQWn0yMlWTnc3n6CrzJXiX15SHA0yjbRbDgHUo+3hBep7unMNvc3ZpnvowVQFYckZynClAMH5LjrIpn7gfoRILWsk2yHaOurmmleRG4umNOtXq5gpiU7y6k/8zJ7T+0knfxlOpJXOQ1/XDjTmI9uNcG3xwF+VZvIIT+74vWA7O4eVvAiUlc3IBUF9KOMN4SD3uX5EBe+LZlLCdlioxPbaHUhh2vt2j/T1Pxpz9vT+8yNraKjQ7dgF+kNhqRe9y7X4rC9syhqVwlozbOxlW8b5ebm7HAU96gRDgYXe0wOUlS5cDcnLoxIbaQoB0WHML2L6+4Jm1ammnIjkrDDFsPQN3uPXRjUTfe6ijZ/7EmtW8qEqWv8U17oRveBM2G3vqxxLgErFLI4d0U3BoRoqUIDq4e5jfFBHOztlCn2471vYTb8Z6mKAd323xUPXO6qgJi7cOl976GsP+LcuyvWT30CKnTN8i0U+XhNTmINzXM0mvchp8lspMLHCVdoJEW+3ZpsqNHPOi2qDqx69Hq3zB5OyqFuYJwle7YM2fMHPALg4Hbc6lAOXA2BoYKLHeLxju5eXyVR8aT33KpIpvQEcNvqJmrEuZUSLZXLGMKuFtld+xOjCUPxkBAU6h/SZ4jC5doXqvE3v3F+9Y2nrfCOBiUMDbK7bOk2t07PTac5VW6c9+5aB34dRCc8YNG6VD7NHTgH8DRuZvBsSpkTE6jlMga2wanEzTMFy1Ow44Xdh6WChs2JL7amFMXfupKzDu5U54rCBPiR5l+XjIwR6Gcu3gkzOQI5WSH0nX1havulM9Ycr+FUhLDARyr4kLwbHcxrZi4DsZH3yXj91/KzXwlPZA5Mjq7Xy+Q4yFc3XbG46U91Ytn4wvhNJQz+gwxKM2Y7pFOUR4Shty3kJ08G9S/Ue9JO5ImWMntiDejBu3N3Cq+UvL6opWIgDLKaKsKzZfNkkkcbd6MLR1oaU+I/zNHE095UF36OI0EA3Jk6sRHMj3b6o3e+Kx4HISMoIT59P41Wi+2mcKME8ZNkA4nJuv67M1/mhuRLRx3P6a0GmgQQyawXMQYks6msdcFs+/dCiW5zfl8JpCXZO/3+FFrzENj2nHqgx3E5OT3oQSJivBqbx1TtFDMG7QRjIFxYY3RGgSXjEuQmE8fpSKGSf+c+skPrioAkaKB0toGOtSqXkdo1ED+ETitULmBac545WG86hb1Tam0FafalSX/VXXJvsektdk0I+2wYm2Dq+UmvTVL1dvjA/JinSb2CkwV0oGmv/Iuya859bFyQA+lVVjJyvK91+/zhXx903GwwFhxaeXEFO002kJ6khT1MSmJDctqDCgWyyTrP+ruGQwk03e7aa1xwayJB4ajsmDA1M7oZZbT8qU/t2H4E+VchR/cwSwBzT1yB5MSWFdaEF7aiSZ9s1DwgdpPGuzqkr1vWtQnVYbNF3KUEX/kXXuG1sJZ4NrqYKz2CyYx0qzjLZxxLtLeoncfT7djTVnmbEDhP6EMnvZ9UtEF9BrGMyDKuOrb05wKfclVmOgJYZcaWqQu88qiDlI0iSt5HF4jTUMF207+5/ZAa9oq1iz0UkpxIaz3nLCIx/ThqP7nhzwG+hcNDSy7T84OZEvlmnOFgL1mmjZKbr2kbQ9SECaeZoekrll4RcDnDgDvHmFZo9oMustAjfngh22CsHDJmOJqlxLxFRa2aYJbTplfX1OETdEgotJFlttY5/zKchKRDACQhqVSs4IJ8FvZD+dazgjvdHs+ZxKqNdy8SgGErzLJwwCa+SxCn9n8rLCjNQvpG9EdcVJObWFPqTt9B9lMTbkqOrbPfSW72UY2Buh45Ip1OBjy026GxxfVqrfkcW/atN1/8TAz7gs4GY/5AlAw2b0lAg0GJR8ropuGSbVbrCBogUrrtczbmRH7qdcZC5JgxDlU0Y6BOvAHmB1duQEuU2bIeEriLBisUNJQCqi1zeVxMVF3ures6XbJUhPLTUx+pMj2X6YNJkOFfwSGhVa0XVidY9y0nN8FLSsatnRa6JveA2tYDsmrq4fHte4yjJuSJ2q57PPd4Z5UZEaY5NoyLMLS9qM7+xkTknB1cfZ3c52gJEJtbYVCRDmswWWqZ7MkRa+F4VhIi1KrGfq0QbO2LhXaqxuBW8dh0919jRGJxMvm1eJd1Z5pAooQ9G4xcDFKEHgai5dFUO7HBsn+zOBiIMl+UU6RQ0TjY2MTijPoiFYrbLE6IjFgYiPt8FRx5DMBVkL0CSMlq1DVWzS25cksxw3/vCY+VtcQJcuqeW0+eQTHnzNKsD3VZH/5OFfUgDaqnSxLegavh6tquUMYuV7Auz3OXCzXTubPOHgnlyBcl+tnmF6ufKG1oNbh85A9+F8z1GYmtvPHZqVW4Xc26d935N2R8G+UTyJ/rnQuFkIzfAJx+dItsFwd9fH3jNDB2qrnHmkPMp3utJP3MIezXAOqsinvtRD1MtAaoQdi+C79ZeM/Omz/4yPmM9gCokLhn4eS5/a5QeXe42WBqZi1kDkrHaYeZSPr6MjL0Ex2WycB/7BQaVR3EjT1uYe5iV62+il5UiLlZPpKWecr/LSsKorqQZFieMUbSxRFmDMI3cpTd+kXdrQNQf8AaUfvOWuLln7rNsU0hCCcSxFA3kZkJYQrSjy2iaPCy+H0YWZ9cTK7KAan6EXvX5EVhD4voH1BwTlgr8na3SX4gF9xKwFpzF8/zEUmUVqjOyh5+5foLyTcYKYHbxzrExZZWzErnZYZ3DJN45oKgb82NJ2MsfXPKvZ2T/jcWff32ttPsdSKkiv10lNmMyEdTZE+McF6Ze1te4D5JbPIUWYOQqqlxHoa4jfCT8j6Sc946Gxqnpc5z9fFqnJLBO62102hU0OSXZpd9QKSqzX4qtQXZgYwgBNb8sJGl81hqtWKge8VSveXpjvHah2UKKvyb4eeUd+rLqDR+PzlY6dYKHRjrxdGrSaSgSc5/rWKBC9VWAqs3c1q2X9bTUBB8kUChM/KjMIwYnJWpZenTmD8MIBeGuWnlk4D/i8ECsnQofo5Z16waCp3k5pvHkuyhD3TAyz8j2q3WHp2o5daHObGSIKvIl/T/RVcMWAEWXz4ZqPg1BMHxfCbW2QPRxt4dfZwVQhmql1WolEshsJsA/HoAouuYyx+gmrhm7fHvNbRovIdX6NUP6F+WLyY/k4Gm0duaTaZeeosVheEbJ3Wkx+znWq1G6/gioFhS9m7V8sz5ollC00spn3yoK/owik94xm4S8DzZ+4Y8fLZzteaEs7nKk6ok2+uZEQJd+dyD7/nJHA6RxfTPvQUvRsLDA0iuYJNkKUAQM0iBRd5IDpOyGGBPuSCFdv+ZgJ1ZE63OSCyQMm6LEDuZV/gZ58h6CTF66EBNeYwUmZ07YUdbpketluunp5tOAkFY59ebQMPGhaRfAzcoh7AlLXqPMswnhxGXgLGsRDLeWiK/9iYseHwNap63pmA+g3IMmQ/nKR/zP1BPlsMdkDL6p1s0zhhYzp0sYNZfcQwyVFJDiSRZDo/vLIQbZKOkm5Xae5WTIBUEkgn9w8Xyky6A1rLlhVtOxU+oDD1iqfUM8UnVLgnIYFZ5aKcz9JdSMB8q1R7HPwwEo2qzE0wuIjiaheqmhES854NkKhT/CQf4EqZ6LTZfstq0bO7752xrvW+YJuGCSROVm3ctIrrG8TO3BWL4EjpFz2FQfWG/P+D+ZfJtR5111uV5vHCOEHGk3iTjxykytYyCmYP7a1SfJpmDB+E37vwvphe2uvyVa4MFI5y0avlMa15ywk1lnkiGmYo6mHO4QlG867vLZ9xLF2v9+rEuyKN2PieYH/DmBA6VcCNH1Ven67wpAQe1Bz0hKipOWZpxiMJP3laMtkd6h9rntx2qVqySZwx7zLOd103+sMR152mwR/X7D+EvCQZEp+IHUF3cLVPEBMp3Bl02Zqsk7c4Jseazln6xQPIHNUkR018InyVG4eHe62Y4L8A2tdaZU9GqMJdKgaulJWcI9YW74JGzdy3ExmBodKHcnC45PmJJVQHaDAIxD8++tGjpRFmn6zq1Lvql9r/fB5Jw+cMbMb0NwivCEMZAqe6ybk7nJVr5s1ITiYEcfUctnr6oS1k0NEoA+7R9sK6VTpCfrIBOZ2Cv0/hBKLfMnoeeMx2zuesjjWc509F90sRpR+VpM+cMDRTnAxlfDnt5s9M4DiW72hmu8i5mMOoyWC21Q8+tpOM4r9Xto9T0MAVt4+IYLr/IaABOB8t+ByXNZFdkKrCGroI4lDHThBfMbb0ot5DqGOQ8jnafkIQgfADW0DLGKNG6LOKKzA/u/lnmzzy1SY6KCvtDE1uhaudssjYK1jAUhEZk1CkrV9oQxN4fCb8s8dlD36qnB2+mLCoiziVL0JWcmKUw/u8iF7kcPcniuALWveZwtsu81w4OFmzAF3YJuZ5pIRsofkeeOlT1sjuVCk4l5Xm5WJ6paRrTNGYxAefAld96fXQ97RwIk3vZwu3PF/xJG1FtudJr6JE99kKghSB+B8g5RiOKlM6KNvjSEx+wiXj5/ehM+ekofKAOOj+ktQt7oG0w0P1Ky0BWJgEHrTwpXzOhz6zVSj69/b/3IWgeh+vbGGohklBrthZ0NXcMrzK/7ok3DLaogxyY0UDoyvLlwIkPATZwnP+s+LhIKFqxD5RVgbFWJVtpw3ZvkSJqtm7vxdeC5mPBRj6ZjOoHy6m77W5Gd7Y80N0TI45UbBUpoov5Q2eiLM5jof4gvywDVDQS2mwbb7599ASwRwCLBNXM3wh9uhh7RFoH5SR6lcsDq04QUskX2D5r+mYascoL4mQg85iN7UaJ263YHNvkMy2rdBQeKAXodsDRk61XFvikv2j26xSw2asr1a4RBMH7UQh49MkAHiueXRsm7uMLjK00o4ASxrAst1IJtYHDt4GbeSjRIJMnioyx0XKjcEiRr5Jprf/8oIPqvGzl/WsEEzM3z5HvTkhLfpKff9vT6fFOUuI1khYK7Vw3kpE1PC3ACOdcdqKdsWbYeSfr3aEWK07OpTc4eKzwEK2RFGw9+rHxXAR+WDQGGLBKcRqLjsvFkb4rVyMTZN1aET166+au/88i3Eh0TyJFu/S0igq82/DAR6PxsaSr0NxB1tV5onLgfAckEyggK1wKxA8MbguVuLw+PqfTN2OcjXxsisQKIkNjAslGA38RIBBmzcgUsPllQp5F8poaFlhq2/G5Wt1ZX9wdpcHICt/BZbJEOZco7Kz6RyigDKc5QM0Zkl6J/J4HdaNyhUxuYLhHzhX1RA6mIIDTCWlBplc8tWhQYS4z7Ym30cFqR3W1zUQv1ZUQl/h6P1F9O/CKs4fxk1KlibA4O/PL0rBShGtQkifnw7/O3eZko05Aq7iMazv6LTfgSsb17yleW40Wl9FLJjBd0dC+9zobS37CJLFazD1cLAObVRZSYwmYbqAObfJbbvtopeV6h3qzLvkDaQzW8vs5ioAd54etnFqjXesaTa3r9b3jWZm2cY88F1Phn3ztMsaH63mvcn0sg29kX7OY4oex//g/W1n1T4hcyIz/BdyqNx7IURufDvZEm9R5exkmL7eI3BV5aBTse3Iqr8eMj1gzigXbWnUOy6kbs1v4uT1jdxqW+eZ81Wq0j9vW8tuu7zGNXNjBKhwTpntVltNzoqEZXfmJub5v92JJ61BS4jbUEG/JX5lPD6jQsq4kM91Q6Hjkkke47AV7Wq1/dJQmomd3SS8Od427eqGBcz6potclpEeR5L/DTLlml/Bn586sdxpmQNUYg9F+zHS7APNtA0gPjgwXg4WKZH/t61afIqDkJ4jxDEzsxgpU+j7/o1niz2lzzRkD8T1kBPol3Q1A+k3NHE6E8cgOIl+l7JxNsaeesN8vFWphn2asmIfCZtSNn/DDg/mSoIjegH/pTsVAluWCgcpLcqA/lpYvyhCC5FqgLMYlAD8h7EzPfv6ofhSLrJn2eKRAgqk+V9Rswo6SY+KeWZCUR0B/OWJUmQbZHU0YxzTvZfQPomGxcmaEU7F2gWXpmQgE/+tJtqzKUcnKq9THIrmp9/Sw8n7kJik4OvClDlDoRt2ebB9PWBiRC6GAGpsGqVCOUF9D/1V2/1O3q0bnOZzGzm6DIEMOpRH6vk4tyetkEWPWrh+5nOyXFGy51JQ4smK46Wwexa5D24JmcLKzcCUFuXhGF7Gi61Ku/Dl/dFeFqdmFFxxCZSaHxMsLLj9m1DccrRlEvq4QS0dQbu7N6T7xvTcdUZJjmFvjEzcyV8WlReX5z67o3cihnstzKaLempKdsYg/7+Ku1jPkAOSPzrlRYbJ5eLYDZdqS1eNgw9W/SFtaII/CRUPwquoWxpBl1CtTIDVLwGJbBaXWlkgPnUG7+bqAAo3aMZejaUMzTWEqU7Lnc0khLqqnKfiBUiG6OPPPv5zZ2zakylM5pN0M5waljTQRdvhQvaSJs22sLsC3tu7bNDVQ0d5YPZdLlj9rDxUPHmxfKZS9VOykl4DMZ2Ds6w+zgpEO9phpDyX0q+IjkxayuFu1OXNRQ2QDIEaP52LAengC/PN/xNX5zqN9lYVC/IPz1xiP/t3M76bJgr2e8CJC2GnW1VInm5EfA8yWGm6sE+hBTnd2fSHpA89I8lgnVLoVTdZ/JKaZM7S/lL5aQoVcw2v9lToqxSIpEQsnxxXT9YHOU+4VfH03GqhCgNPTqy3TYbWQNP05RMJdzA1outRntRUxQ4kPJ5Vg5kVMTN85cP+abMhFFx7piNHQLjG08NAsh+zCiW9Do1U9S0MCeGVJ8UeC/rBQ5GRXbof28DpiuNPzhCUCmwNmvNOpeeRVKQ7bA0zlqHTeeB+S7jqMKRDA77kaZGJh05CZn1cYQoftW+3aBZWMDIgIjE6b19Z2Y9z2MeQICcM7+syJuXZe+nse8ibFGkC0cdmIoneHIACKTG6cFMcb3sMlxbLrOcIBD81uQ9Ral1hi+Hvwiz3z4MzlR7xYRerbRyeWTtfmrNLbshvGE4huYPUwABS+B5NU8kFF4UYKrqcSTm7V3HylDI78PklfD8xeFHQRBeri1HRDUMghfqImieZYIaaE6cyIWVomTBxWRaHoRh7Lft9ST/3WnU+7bR3r0C/y1ONcDxL4hhsAUYWIx8ghQfJQGQglburidP61o8Gn0W1eYICeC+ek8U5MJtgOcKYJV8hb18dECm2BFa5uRGfFsq2rmvN6pns71UioL00G+PUiR30VbIGJbMNzqQA26E093A/TQeg7UxLZNAGyDa+eM4MaheE9LApy8BMGuVMdtcPvZQzjms+/ODhP6vu0R+TqgZT5tSbmICxAMlx32fEtHgeoM1O3xfhs+at+PyMFwApfTwBlp6KrRNSMspbR9x3pm/dURccclcfDr9VQmcNdKa7MRfIXw78o0omG5ceLkzDtBTRHNRMAYRFWLBK10br90dYyJ/3Qb0Z8wsVpYLn0tg3LJJnE1N7gXUipXuD2t3BzfNtzz3PpRrYLvnLLJoWu6CP+S5cg69dYchUxtoA7at5Ei6pSSLwR1t8WB8W30QOfwjt4h+jaJiftqlqE+f5mm+xBBztrYeiOzUZlw0XLl/ZldU63i04oJ5eAB2CZml+okt+L9RTVu5tDp4LHvh4jQZGV90IMjOVIvK3AmWhaUMZIlhaw4ycbtJmgNmEuFCrabTMC+W9+QJ1STNe1Q4A/Y13tQyKfU+a0jI3AdFP9sfCaKquf7EOL/5suKaZFtRNUNYJQKAgvS8p0Sui2l51ylQ4xPCG4/SlXyKmSl8zeFMJpGOJ+xSgPr6PyUeY4dy4XFoknFwSB5/YthUM6Uzivn82IJPcPqHa7v6ZlemJcMd4AUADtiTOai2BSPnNB8gdzHFxkswqs5GaHDuZM6CD95kg//9X4i3Ub1pJ+LMrMFOk+AOMFVq2qgFWyzdpjmqOt95zmU9g8xMrVfED/EpWQ/N3fh4gLJmmeJQPoZFsA84aHlvpgeUjPJURthb1t2eW410S73SSWvaqWUVnCAPwlmWTxKilZmoka5+BJ/+VCqd3I9h0Mrj/wG6+kreiAVQUmbInvt8BtTw18GKE0G7xxgK/CF3jR8bSm9Ihp4zySRuRGvH3e7/GA9eLwgcBgmkJETS/W6qhuQnDoMoioSmJC46DTeiqDdv8TYD2f/G22zHEudLDNOLWP+t4QXf2X/Rfqcx6mA7fHbFzSrmbR24i19Y/d/fVoqIn3ffVSRmuSB0NU79PR09rqxJRiFxo4B3T+kHqyHWYGGTmGtEe7hnvs490z8jfhsnK4oyDxojd4uEnwcx041aX2UsOts2n2Inse02tvIKTd7NyP/LkbTQCQacj4rg7IzKxvcUamvz/m1Llvnc7qcE8lvQLOB8Ki7WYMaFALfOf12/g9Aoyxffq4rdk0xzkjswYuUWq9BKqcPAu0ta19G0OXwgkI+YA9IuKgAba/IFBm2kqd+tIOge7diXAssMMYjl+uOyLvg8+ExCm1hzH6YcXjec1BsJEZoUN/78lwk7+tuDvHWy7UmCjDKzO6v2Fuv9lpEkos4sz50zKGLIx4NKc3WCEoXsddlhH7GHa7d2zQ4fneCK3IGlYfH6gr8ntljbAv2r6CMfErD73FmHEDZe/V6IddQ9CRcmBUXulmvtYJxLf5zMRpbcUoSg+vCuQQyRUCVBGw4ToQr3iP5fFSxJ/gEbYETCXw42N3xb+z9cCpzzJzTe0FFVEnmB0w+E2msdRnMoTvmR2YDF8dvCxuNRBAmmUe7w9pwlGuy0s/yB/7MFIHhTq6xTj8RyQmHhg0tJ7CrQy315GUCGJn+9+ko1Q+SrEW3PvzGy+KBgnbL7ompBmwIfrJxspEivgUiOo/TzMuftlW0gE6S241SV+HhQfl7E8keP4XCMvSKZU7+Lp5jhm+oqfwXjMllux9+JhHtm434HE+zF1eDnipUSLxl8evwVmeHdiXC+J9WHU/OZYgTj7kYeJkNPiv0o3EhGzIEymu+0IkDVpEMLDloPRM9aEIu+6MAoocOk+4sjHg8dkGuZ26lOFcfCANgcOPVhjfU4NyS+smqdOEatyp7CgUegcDNMUSrxHehYjwOX6xGrDM9511qy086R3Zxg4UB1qj/b1zMS/Ku/uj3UQjnHsl/bDCiyVAHNrL0tWfZl/cDhjqqIeYFtKijpGZlrCGi/8417atPm0gKpJat5sBz8R97SoUmlUBLkMgxVfm4IT2UXC5cK5XdJFAhYgz8q17RZUPUwyEGwT7pjF76A2Xct73wy4QxkavTZohW6a3IVbzgIuSKKJmnCf0IcMveLrdubhVdCIZA0P4lAMTfPHQ+Ow1RMCiWQZrmPfufsy6lOS5jnhURHbT1acRqu5WLOXcnpWTXPI7AYJkVG24JjSifV8iouCQmZd0YqCYO+JthkrlrMg3u/4xhqisU/aiFGcQNokZRq0Jkr9eV7UpCvBObyrx7uABYcoptm7OEm9ZHH+Q/zDgUdFl4N031GY1lLmEV+bTxtlI2n9hoVTNK032lhhfePpxKvPWac9u53+JhTAlw97hpGtHWcvecwFRvYQS2m8rWInO5JVhMV/tIomWayGegzsk+LsekymS5TZcjKSBiC8+diYuePgz3JEikGS0TXCErVdtkRgm8IiOY64CKuaaJ51FfQXxu2ry/M/RC+l1SeigcqUJpp0fZVYyFr+kBo+AogPbcbMKRx8Nviy7c5z4Vo5rGyUW9MhxZ4yzKiTh8u4AVQhZD4MXPxqfqwl5ldfvLSui/DR2e1Wcw6V8t0A1Wiyb+X9mhTeBfIjwH+skz77XIGCTiTHKqoKi1I41gOZI17W+G3N1isZh+rAq7AxlF5F4Rb8cHeGfQfcNd5n7MFeoI44mkEZCXtOj6cx/Wib1gSpsmVeInAf9/J4PQoSCoc15lDMRlev9aURisDmfhAG9hcQpai9x6mkwxFGKlVR8G2gGTZAk5kBGb7BHGMbsSGModzafbmIlTXlNQHYjgqwYVoNaEZaUvGLFpJoeCMFprR7o5TAGdR8FMxYRcBr1lXxnH9ZObtupIHGtkKguXGiq/m/O9pbMXZAmaqqb0YhESbWCCoF6mhAPNYhGWE9MnkIg/SUxb/7TzW9XrznjQXjVkbLfA8WS2wHP+pogax0F/ql0F5sM7pYIULxlVuDOdVjaySqV/75MqHX6Vgqz4SxCwJMZHfG2OtcGv705Z8vpY9mUsfXxvO16auRQreRUG/UFyiBuLubJ78915xDg881RPRuDQd0pIACXco59KFtOLaoOj6jkG6v2w7xnfL/K3/f0fkuDJu3hZtmiAyCifJIWZsbw6ARc6tVsr29YFo3CED8aQaWcMMILWNtoEpcrC2aiVlOwuHOwg08ypuKtSsSduVuo6tSfdFjY9PuzGQ6fPCj1L9N7HxvDTIGG+OKIDqeAYKIYqc8pn9ITdV3B1aHIwz4Xy3t2cNBdg1lXMa2GKhUlgEfk8VH1HA02El39yrCV0ixcoUDUwwBYdaO1ZoSUyBfyGSVLAgKWtLzqKtd4zuirlInzQ9035GUaKF0QQ8ViZR2hcLDtD79YsHfbu3yJT1LyIT+4ntKda6x2rRz5pm87p5KmZqvGpIy2VAeHSz+xuqE3/j+LokTBJEnXEu2CaBCjoa+0QboNhGJugct/RZT1CYCOOEF4JH3sn2fsCyldSmxEFsijSwqW7PgRcAT7w/we/2ykvnPHwj29ni9qqe6jd4cdGhXI5x4aZ0Y+u/CEH4CB9ollyHeRxAlYH7df3u902bsBrn0sWspFnw999G5Krd2mZ5Mfr+B9AhRRCw2DSYxWx4EregJK9jM5mSfims0JjS5xpLmfFMt/+DlUXAUt4bp0+0RWHYOjLkXj4z6rkwzrRDLXoOPeuMFuudc3wuARTdKu31I9QMXOagXM1uBFA9s40KF/Ophw8n5/Sb1uZqQItkWtBcrCAwEuyZ2OSGRgyvY8P2G3TbolMoLfuI6L19W5CXu61iLEJScg9YeVY/muwGQK/z4cfESGAPbyMDSfPaxmwi1/sLJb3Rpjsp4rNd/ZtseUPQAa81LY7ozQptv7fGmK8CiSHMfwLCBeI0LZf7qVNvza+XY7Z6okeuAF3AAJVKd+cieuDkmpDIAYMAhQz4CwTGjldGH5IJX9myqlVELt6jiir72DBTa96wmBr5BTJn4yZgNqKrl1AFeFkUw8Elv55xPJJ2WNAO/yBAKzSPdX/WJqKisR5rMG09zm1OJJdZwWRjik9MJVePRYrip89fkzFRXOh/oioDBLYj7NhClfjtqIyTzaZq1dZVGhtqraI8mkNwRzH9InSpW9gEFGn/mhCvGsvvlfBjcV9GyE9u9eDZCKAi63kJedAn+dI1irpmSjT+ZGPQ2bQUlWl5Vp0Y3HKXGskpJTmyHkU641vWk5cKrs1EFMjtwszFErPDCn+eECQycLZsDVl5/3Ifd8MZn7/h8MquMjvEMhny6/vkuTl7bvDZwaIKH6cY28FY4B9UeXdFLw50hcFZn+CFWf5sQhBqQX+6njXppeiNKqZG+//zPAnwyE+bPypOENLpJ7hEk76EaRdxA70xod2TcfifdZR1Jo5PYWdKOIDCq5Q5cjn3RvzagDkkNDVrf42iECTMhxYeIbueWWUkTVh7MukLmLfJRAyssYzFIt4uk59bAWxbg++XFeAtHsKzVo0VBF9bn6AAGIALNRPMY4JVh/KVFtyDgntnJfn4N0qUgpMwR1NJTkk706CEcZwQuW+dXj4fMfzxcH18hkBivf8qsaKWrLhFz/jL2IyToviUiUV2rc2nlLmWkAu64mD49GIdl5Cmzg9TtcGJCua3Rg362w7yZd07YbQ/yGF+Ux8y3aP2offKiD/e9Doy1HSTjat1yVNrOuS0Nq+4AJQC3MeANaE9dHJ8CAe2YvWM3Qc3mkuDSwZ9O5Fd32vX9iEj7Y6y/fZKg3brG7rtlrDYalfvbpvBvFn25TYcj5g1QJSdz9hMR4OG5FfU78cYL8a9XIHFkoOycxs9Ku9rl6N14ZJoeepjw+lHTQMPG2AH2YbwcnXU7ROKV6JwL41yCohKoH7nGfcpDU7HtOjQZbZA5qo2B8j3GmjHdBLsgy8iIDnvggeiTCVQN2YhWSb632s8X2Z+7AnbQG40WrluDtwJzbNv2UfHdvX4vI3geu6HCHZEKP45vsL1Y2voBOo6cjRN744UWTDrxj4jVwhZoLSrZ29WG6hpQvAfIc+X9s+QHBjVHfmqrJlKI5pKLwcxy1Z3Run1A8ncA6GMPeGT/AM+NUCvlGmklgYvs3NawcPRz27RPa5PkeHy1aryy1vAftdEWztJ8tx5svb9mV/BSoHm5AkwX1vMVkTcC1RrsQhSX86kGVRvZjBDHRN5vo/eyRKCXv5u6BGFUz2uqHqEtMzqRdQM1TcaZl/aCwuSoS37IVelyElnsWyJoAAAA==";
+  function getAsset(key, fallback){
+    var A = window.BS_ASSETS || {};
+    return A[key] || fallback;
+  }
+
+  // ══════════════════════════════════════════
+  // 周波数テーブル（HANDOFF確定値）
+  // 低音：易→難＝下へ降りる。高音：易→難＝上へ昇る（10段提案）。
+  // ══════════════════════════════════════════
+  var LOW_FREQS  = [82,62,50,41,36,31,28,25,22,20];
+  var HIGH_FREQS = [8000,10000,12000,14000,15000,16000,17000,18000,19000,20000];
+
+  // 低音の音名対応（答え合わせ・結果表示用）
+  var LOW_NOTES = {
+    82:'E2', 62:'B1', 50:'G1', 41:'E1', 36:'D1', 31:'B0', 28:'A0', 25:'G0', 22:'F0', 20:'—'
+  };
+
+  // ══════════════════════════════════════════
+  // i18n辞書
+  // ══════════════════════════════════════════
+  var BS_I18N = {
+    title:{zh:'听力年龄测试', ja:'聴力年齢テスト', en:'Hearing Age Test'},
+    lead:{zh:'你的耳朵，<b>上能听多高</b>、<b>下能听多低</b>？<br>高音 = 耳朵年龄，低音 = 贝斯感度。两个数字，一次测出。',
+          ja:'あなたの耳、<b>上はどこまで高く</b>、<b>下はどこまで低く</b>聴こえる？<br>高音=耳年齢、低音=ベース感度。2つの数字で一発測定。',
+          en:'How <b>high</b> and how <b>low</b> can your ears hear?<br>Highs = ear age, lows = bass sensitivity. Two numbers, one test.'},
+    warn_t:{zh:'⚠ 测前必读', ja:'⚠ テスト前に必読', en:'⚠ Read before testing'},
+    warn_b:{zh:'请<span class="em">戴上耳机或入耳式耳塞</span>。手机外放<b>放不出低音</b>，低音轴会全军覆没。安静环境、音量适中（别太大伤耳）。',
+            ja:'必ず<span class="em">イヤホン／ヘッドホン</span>を。スマホ外部スピーカーは<b>低音が出ません</b>。静かな環境で、音量は控えめに（大きすぎ注意）。',
+            en:'Use <span class="em">earphones / headphones</span>. Phone speakers <b>can\'t reproduce bass</b>. Quiet room, moderate volume (don\'t blast it).'},
+    rule:{zh:'<b>玩法：</b>每个音会在「①」和「②」两个框里各响一次——但<b>只有一个框真的有声音</b>，另一个是无声。你来选「<b>哪个框响了？</b>」。<br>听得到就能选对；听不到只能靠猜（50%）。同一频率连对 3 次才算「听得到」，进入更难的频率。',
+          ja:'<b>遊び方：</b>各音は「①」「②」の2つの枠で順に再生——でも<b>本当に鳴るのは片方だけ</b>、もう片方は無音。「<b>鳴ったのはどっち？</b>」を当てます。<br>聴こえれば当たる／聴こえなければ勘（50%）。同じ周波数で3回連続正解で「聴こえた」判定、次の難しい周波数へ。',
+          en:'<b>How it works:</b> each tone plays in frames "①" and "②" — but <b>only one frame actually sounds</b>, the other is silent. Pick "<b>which frame played?</b>"<br>If you hear it you\'ll get it right; if not you\'re guessing (50%). 3 in a row = "you can hear it", move to a harder frequency.'},
+    btn_next:{zh:'下一步：选择测试', ja:'次へ：テストを選ぶ', en:'Next: choose a test'},
+    btn_soundcheck:{zh:'🔊 先听一下测试音（确认有声音）', ja:'🔊 テスト音を確認（音が出るかチェック）', en:'🔊 Hear a test tone (check sound)'},
+    soundcheck_run:{zh:'播放中… 1kHz → 8kHz → 12kHz', ja:'再生中… 1kHz → 8kHz → 12kHz', en:'Playing… 1kHz → 8kHz → 12kHz'},
+    soundcheck_done:{zh:'听到 1kHz 却听不到 8kHz？那是高音端的问题，可调大音量重试', ja:'1kHzは聴こえて8kHzが聴こえない？高域の問題です。音量を上げて再確認を', en:'Hear 1kHz but not 8kHz? That\'s a high-end issue — raise volume and retry'},
+    sel_title:{zh:'选择测试', ja:'テストを選ぶ', en:'Choose a test'},
+    sel_lead:{zh:'先单轴体验一下手感也行，或者两轴一起测出完整结果。',
+              ja:'まず単軸で手応えを試してもOK。二軸まとめて完全な結果も出せます。',
+              en:'Try one axis first for a feel, or run both for the full result.'},
+    card_hi_n:{zh:'高音 · 耳朵年龄', ja:'高音 · 耳年齢', en:'Highs · Ear Age'},
+    card_hi_d:{zh:'从 8kHz 一路往上爬，看你的耳朵几岁。蚊子音挑战。',
+               ja:'8kHzから上へ。あなたの耳は何歳？モスキート音チャレンジ。',
+               en:'Climb up from 8kHz — how old are your ears? The mosquito-tone challenge.'},
+    card_lo_n:{zh:'低音 · 贝斯感度', ja:'低音 · ベース感度', en:'Lows · Bass Sensitivity'},
+    card_lo_d:{zh:'从 82Hz 一路往下沉，到 20Hz 可听极限。低音猎人专属。',
+               ja:'82Hzから下へ、20Hzの可聴限界まで。低音ハンター専用。',
+               en:'Sink from 82Hz down to the 20Hz limit. For low-end hunters.'},
+    card_both_n:{zh:'完整测试 · 两轴', ja:'完全テスト · 二軸', en:'Full Test · Both Axes'},
+    card_both_d:{zh:'高音 + 低音连续测，得到「耳龄 / 贝斯感度」两个数字。',
+                 ja:'高音＋低音を連続測定、「耳年齢／ベース感度」の2数字。',
+                 en:'Highs + lows back to back → "ear age / bass sensitivity".'},
+    btn_back:{zh:'‹ 返回', ja:'‹ 戻る', en:'‹ Back'},
+    play_q:{zh:'听好这两个框…', ja:'2つの枠をよく聴いて…', en:'Listen to both frames…'},
+    play_listen:{zh:'正在播放…', ja:'再生中…', en:'Playing…'},
+    play_choose:{zh:'哪个响了？点它', ja:'鳴ったのは？タップ', en:'Which one? Tap it'},
+    inter_title:{zh:'高音测试结束', ja:'高音テスト終了', en:'High-end test done'},
+    inter_lead:{zh:'前半完成！接下来是<b>低音 · 贝斯感度</b>测试。<br>这次声音会<b>越来越低</b>——确认你戴着耳机，然后开始。',
+                ja:'前半完了！次は<b>低音 · ベース感度</b>テスト。<br>今度は音が<b>だんだん低く</b>なります——イヤホン装着を確認して開始。',
+                en:'First half done! Next: the <b>low-end / bass sensitivity</b> test.<br>Tones now go <b>lower and lower</b> — check your headphones, then start.'},
+    inter_warn:{zh:'⚠ 低音对设备极度敏感：手机外放几乎放不出低音，<b>请务必使用耳机</b>，否则低音轴会全军覆没。',
+                ja:'⚠ 低音は機器に極端に敏感：スマホ外部スピーカーは低音がほぼ出ません。<b>必ずイヤホンを</b>。でないと低音軸は全滅します。',
+                en:'⚠ Lows are extremely device-sensitive: phone speakers barely produce bass. <b>Use headphones</b>, or the low axis collapses.'},
+    inter_btn:{zh:'继续：开始低音测试 ↓', ja:'続ける：低音テスト開始 ↓', en:'Continue: start low-end test ↓'},
+    choice_was:{zh:'是它响了', ja:'こっち', en:'this one'},
+    btn_replay:{zh:'↻ 再听一次', ja:'↻ もう一度', en:'↻ Replay'},
+    result_sub:{zh:'听力年龄测试', ja:'聴力年齢テスト', en:'Hearing Age Test'},
+    twin_hi_cap:{zh:'↑ 耳朵年龄', ja:'↑ 耳年齢', en:'↑ Ear Age'},
+    twin_hi_unit:{zh:'岁的耳朵', ja:'歳の耳', en:'yr-old ears'},
+    twin_lo_cap:{zh:'↓ 贝斯感度', ja:'↓ ベース感度', en:'↓ Bass Sens.'},
+    twin_lo_unit:{zh:'级低音感度', ja:'級 ベース感度', en:'bass tier'},
+    res_note:{zh:'※ 仅供娱乐，受设备与环境影响极大，非医学听力检查。',
+              ja:'※ 娯楽用。機器・環境で大きく変動。医学的聴力検査ではありません。',
+              en:'※ For fun only. Highly device/environment dependent. Not a medical test.'},
+    share_badge:{zh:'扫码挑战', ja:'QRで挑戦', en:'Scan to challenge'},
+    share_card_title:{zh:'你的耳朵几岁？', ja:'あなたの耳、何歳？', en:'How old are your ears?'},
+    share_card_sub:{zh:'BASS SHOW · 听力年龄测试', ja:'BASS SHOW · 聴力年齢テスト', en:'BASS SHOW · Hearing Age Test'},
+    btn_screenshot:{zh:'截图分享给你的朋友', ja:'スクショして友達にシェア', en:'Screenshot & share'},
+    btn_copy:{zh:'复制文字', ja:'テキストをコピー', en:'Copy text'},
+    reveal_t:{zh:'🎸 <span class="em">答案揭晓</span>', ja:'🎸 <span class="em">答え合わせ</span>', en:'🎸 <span class="em">The reveal</span>'},
+    reveal_d:{zh:'测完低音后，这里会用真实贝斯音色播放你听到的最低频率。', ja:'低音テスト後、ここで到達した最低周波数を本物のベース音色で再生します。', en:'After the low-end test, your lowest reached tone plays here as a real bass timbre.'},
+    reveal_btn:{zh:'▶ 播放真实贝斯音 (合成)', ja:'▶ 本物のベース音を聴く (合成)', en:'▶ Play real bass tone (synth)'},
+    promo_title:{zh:'加入贝斯手社区', ja:'ベーシストコミュニティに参加', en:'Join the Bassist Community'},
+    gzh_name:{zh:'加入贝斯手交流群', ja:'ベーシスト交流グループに参加', en:'Join the Bassist Group Chat'},
+    gzh_desc:{zh:'扫码关注公众号 · 回复「入群」即可进群', ja:'公式アカウントをQRでフォロー · 「入群」で参加', en:'Follow the official account · reply "入群" to join'},
+    gzh_steps:{zh:'① 微信扫码关注 → ② 回复「入群」→ ③ 收到进群方式', ja:'① WeChatでQRフォロー → ② 「入群」と返信 → ③ 参加方法が届く', en:'① Scan & follow → ② Reply "入群" → ③ Get join info'},
+    gzh_ph:{zh:'[公众号 QR]<br>shared-assets.js<br>注入', ja:'[公式QR]<br>shared-assets.js<br>で注入', en:'[Official QR]<br>via shared-assets.js'},
+    bili_name:{zh:'Bilibili · 在华日本音乐人MASATO', ja:'Bilibili · 在華日本音楽人MASATO', en:'Bilibili · MASATO, a Japanese Musician in China'},
+    bili_desc:{zh:'贝斯教学视频 · BASS SHOW系列<br>6,700+ 粉丝 · 3万获赞', ja:'ベース教則動画 · BASS SHOWシリーズ<br>6,700+ フォロワー · 3万いいね', en:'Bass lessons · BASS SHOW series<br>6,700+ followers · 30k likes'},
+    games_name:{zh:'BASS SHOW 小游戏合集', ja:'BASS SHOW ミニゲーム集', en:'BASS SHOW Mini-Games'},
+    games_desc:{zh:'更多贝斯手测试 · 性格诊断・实力训练', ja:'もっとベーシスト診断 · 性格診断・実力トレーニング', en:'More bassist tests · personality & skill training'},
+    btn_again:{zh:'再测一次', ja:'もう一度', en:'Try Again'}
+  };
+
+  // 動的辞書
+  var BS_DYN = {
+    play_q_hi:{zh:'高音 · 越来越高…', ja:'高音 · だんだん高く…', en:'Highs · climbing…'},
+    play_q_lo:{zh:'低音 · 越来越低…', ja:'低音 · だんだん低く…', en:'Lows · sinking…'},
+    axis_hi:{zh:'高音 ↑', ja:'高音 ↑', en:'Highs ↑'},
+    axis_lo:{zh:'低音 ↓', ja:'低音 ↓', en:'Lows ↓'},
+    prog:{zh:'第 {i} / {n} 关', ja:'{i} / {n} 段', en:'Step {i} / {n}'},
+    // 高音＝耳年齢コメント（到達段ごと。indexは「クリアした周波数の数」）
+    hi_freqlabel:{zh:'听到 {f}', ja:'{f} まで', en:'up to {f}'},
+    lo_freqlabel:{zh:'听到 {f}', ja:'{f} まで', en:'down to {f}'},
+    toast_copied:{zh:'成绩已复制', ja:'結果をコピーしました', en:'Result copied'},
+    toast_manual:{zh:'请手动复制', ja:'手動でコピーしてください', en:'Please copy manually'},
+    toast_shot:{zh:'长按或截图上方卡片即可分享 📸', ja:'上のカードを長押し／スクショでシェア 📸', en:'Long-press or screenshot the card above 📸'},
+    share_head:{zh:'【BASS SHOW 听力年龄测试】', ja:'【BASS SHOW 聴力年齢テスト】', en:'[BASS SHOW Hearing Age Test]'},
+    share_hi:{zh:'耳朵年龄：约 {age} 岁（听到 {f}）', ja:'耳年齢：約 {age} 歳（{f} まで）', en:'Ear age: ~{age} ({f})'},
+    share_lo:{zh:'贝斯感度：{rank} 级（听到 {f}）', ja:'ベース感度：{rank} 級（{f} まで）', en:'Bass sensitivity: tier {rank} ({f})'},
+    share_cta:{zh:'来测测你的耳朵几岁 👉', ja:'あなたの耳年齢を測ろう 👉', en:'Test your ear age 👉'},
+    // 高音は機器依存が大きいことを結果に添える注記（耳年齢の数字を絶対視させない）
+    hi_device_note:{
+      zh:'※ 高音极度依赖播放设备——很多耳机/手机放不出 18kHz 以上，所以「耳龄」偏大可能是设备上限，不一定是你的耳朵。',
+      ja:'※ 高音は再生機器の影響が非常に大きく——多くのイヤホン/スマホは18kHz以上を出せません。「耳年齢」が高めに出るのは機器の上限のせいかも、耳のせいとは限りません。',
+      en:'※ Highs depend heavily on your device — many headphones/phones can\'t output above 18kHz, so an older "ear age" may be the device limit, not your ears.'}
+  };
+
+  function bsL(key){
+    var lang = window.BS_LANG || 'zh';
+    var d = BS_DYN[key];
+    if(!d) return '';
+    return d[lang] || d.zh;
+  }
+
+  // ══════════════════════════════════════════
+  // 高音→耳年齢マップ（到達周波数の数 reach=0..10）
+  // reach=クリアできた周波数の数。HIGH_FREQS[reach-1]が到達周波数。
+  // 演出寄りの目安（HANDOFF §5・実機でぶれる前提）
+  // ══════════════════════════════════════════
+  // reach=クリア数。到達周波数=HIGH_FREQS[reach-1]。
+  // HANDOFF確定値: 15k=50 / 16k=40 / 17k=30 / 18k=24 / 19k=20、20k=18(可聴上限)
+  var HI_AGE = {
+    0:'60+',  // 8kも取れず
+    1:'60+',  // 8kHz  入り口
+    2:'60+',  // 10kHz 入り口
+    3:'60',   // 12kHz
+    4:'55',   // 14kHz
+    5:'50',   // 15kHz ←確定
+    6:'40',   // 16kHz ←確定
+    7:'30',   // 17kHz ←確定
+    8:'24',   // 18kHz ←確定
+    9:'20',   // 19kHz ←確定
+    10:'18'   // 20kHz 可聴上限
+  };
+  // reach別 高音コメント
+  var HI_COMMENT = {
+    zh:['一个高音都没抓到，可能音量太小或环境太吵，建议换好耳机重测。',
+        '8kHz 关卡——基础听力在线。',
+        '10kHz 通过，入门稳。',
+        '12kHz，耳朵开始展现实力。',
+        '14kHz，听力相当不错。',
+        '15kHz，比大多数人都灵。',
+        '16kHz，年轻的耳朵。',
+        '17kHz，蚊子音对你没用——很年轻！',
+        '18kHz，金耳朵预备役。',
+        '19kHz，几乎到顶，怪物级听力。',
+        '20kHz 全通关！人类可听上限，你的耳朵（和设备）是真的猛。'],
+    ja:['高音を1つも取れず。音量が小さいか環境が騒がしいかも。良いイヤホンで再挑戦を。',
+        '8kHzクリア——基礎聴力は健在。',
+        '10kHz通過、入口は安定。',
+        '12kHz、耳が本領を出してきた。',
+        '14kHz、なかなか良い聴力。',
+        '15kHz、多くの人より鋭い。',
+        '16kHz、若い耳。',
+        '17kHz、モスキート音が効かない——かなり若い！',
+        '18kHz、ゴールデンイヤー予備軍。',
+        '19kHz、ほぼ天井、化け物級。',
+        '20kHz完全制覇！人間の可聴上限。耳（と機材）は本物。'],
+    en:['Caught zero highs — volume too low or room too noisy. Retry with good headphones.',
+        '8kHz cleared — baseline hearing intact.',
+        '10kHz passed, solid entry.',
+        '12kHz, ears showing some range.',
+        '14kHz, quite good hearing.',
+        '15kHz, sharper than most.',
+        '16kHz, young ears.',
+        '17kHz, mosquito tones don\'t work on you — very young!',
+        '18kHz, golden-ear material.',
+        '19kHz, near the ceiling, monster hearing.',
+        '20kHz full clear! The human upper limit — your ears (and gear) are the real deal.']
+  };
+
+  // ══════════════════════════════════════════
+  // 低音→ベース感度級（到達周波数の数 reach=0..10）
+  // 級位＝reach（1..10）。0=未到達。
+  // ══════════════════════════════════════════
+  var LO_COMMENT = {
+    zh:['一个低音都没听到——你的播放设备低音可能「死了」。戴上耳机、贴近、再来一次。',
+        '82Hz，入口通过（E2，比四弦 E 高八度）。',
+        '62Hz，往下走了一格（B1）。',
+        '50Hz，低音地带（G1）。',
+        '41Hz！<b>四弦贝斯开放 E 弦</b>——你听得到贝斯最低的根，贝斯民认证。',
+        '36Hz，已经低于四弦极限（D1）。',
+        '31Hz！<b>五弦贝斯开放 B 弦</b>——连五弦的底都摸到了。',
+        '28Hz，进入超低音猎人区，设备说了算。',
+        '25Hz，凡人耳朵已经罕见。',
+        '22Hz，逼近可听极限，这里更多是「感」而非「听」。',
+        '20Hz 触底！可听下限。你的耳朵（和设备）是真的低音猎人。'],
+    ja:['低音が1つも聴こえず——再生環境の低音が「死んで」いるかも。イヤホンで近づけて再挑戦を。',
+        '82Hz、入口通過（E2、4弦Eの1オクターブ上）。',
+        '62Hz、一段下りた（B1）。',
+        '50Hz、低音ゾーン（G1）。',
+        '41Hz！<b>4弦ベース開放E弦</b>——ベース最低の根が聴こえる。ベース民認定。',
+        '36Hz、もう4弦の限界より下（D1）。',
+        '31Hz！<b>5弦ベース開放B弦</b>——5弦の底まで届いた。',
+        '28Hz、超低音ハンター域。ここからは機材次第。',
+        '25Hz、常人の耳では稀。',
+        '22Hz、可聴限界の手前。ここは「聴く」より「感じる」領域。',
+        '20Hz 到達！可聴下限。あなたの耳（と機材）は本物の低音ハンター。'],
+    en:['Heard zero lows — your playback bass may be "dead". Put on earphones, get close, retry.',
+        '82Hz, entry cleared (E2, an octave above 4-string E).',
+        '62Hz, one step down (B1).',
+        '50Hz, into low territory (G1).',
+        '41Hz! <b>Open low E of a 4-string bass</b> — you hear the bass\'s lowest root. Certified bassist.',
+        '36Hz, already below the 4-string floor (D1).',
+        '31Hz! <b>Open low B of a 5-string bass</b> — you reached the 5-string bottom.',
+        '28Hz, super-low hunter zone. Gear decides from here.',
+        '25Hz, rare for mortal ears.',
+        '22Hz, near the limit — more "feel" than "hear" down here.',
+        '20Hz reached! The lower limit of hearing. Your ears (and gear) are a true low-end hunter.']
+  };
+
+  // ══════════════════════════════════════════
+  // Web Audio：sine純音 + FADE（クリックノイズ封じ＝測定の生命線）
+  // ══════════════════════════════════════════
+  var audioCtx = null;
+  function getCtx(){
+    if(!audioCtx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+    }
+    if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+    return audioCtx;
+  }
+
+  // レイズドコサイン窓のFADEカーブを生成（クリック=スペクトル漏れを潰す）
+  function makeFadeCurve(samples, rising){
+    var c = new Float32Array(samples);
+    for(var i=0;i<samples;i++){
+      var x = i/(samples-1);                 // 0..1
+      var v = 0.5*(1-Math.cos(Math.PI*x));   // レイズドコサイン 0..1
+      c[i] = rising ? v : (1-v);
+    }
+    return c;
+  }
+
+  // 1音をスケジュール再生。sine純音・両端にレイズドコサインFADE。
+  // freq別にFADE長を変える：低音は1波長以上＆下端は長め（HANDOFF）。
+  function playTone(freq, startAt, dur){
+    var ctx = getCtx();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+
+    // FADE長（秒）：低音ほど長く。最低でも2波長分は確保しクリックを防ぐ。
+    var fade;
+    if(freq < 100){
+      fade = Math.max(0.06, (1/freq)*2);   // 例 20Hz→0.10s, 41Hz→0.06s
+    }else{
+      fade = 0.012;                         // 高音12ms（高域のクリック漏れ対策に十分）
+    }
+    // FADEが半分の長さを超えないようガード
+    if(fade > dur/2) fade = dur/2;
+
+    var sr = ctx.sampleRate;
+    var fSamp = Math.max(2, Math.floor(fade*sr));
+    var PEAK = 0.28;                         // クリップ防止の固定レベル（実機で要調整）
+
+    var t0 = startAt;
+    var t1 = startAt + dur;
+
+    // ゲイン包絡：0→PEAK(fade in)→hold→0(fade out) をレイズドコサインで
+    gain.gain.setValueAtTime(0, t0);
+    var up = makeFadeCurve(fSamp, true);
+    for(var i=0;i<fSamp;i++){ up[i] *= PEAK; }
+    gain.gain.setValueCurveAtTime(up, t0, fade);
+    gain.gain.setValueAtTime(PEAK, t0+fade);
+    var down = makeFadeCurve(fSamp, false);
+    for(var j=0;j<fSamp;j++){ down[j] *= PEAK; }
+    gain.gain.setValueCurveAtTime(down, t1-fade, fade);
+
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t1 + 0.02);
+    // start前stopガード：stopは必ずstartより後
+    return {osc:osc, gain:gain};
+  }
+
+  // ══════════════════════════════════════════
+  // 2IFC トライアル制御
+  // ══════════════════════════════════════════
+  var FRAME_DUR = 0.7;   // 各枠の長さ
+  var GAP = 0.35;        // 枠間の無音
+  var LEAD = 0.25;       // 開始までのリード
+
+  var state = {
+    axis:'hi',          // 'hi' | 'lo'
+    queue:[],           // 残りの軸（both時に['hi','lo']）
+    freqs:[],           // 現在軸の周波数テーブル
+    idx:0,              // 現在の周波数index
+    streak:0,           // 現在周波数の連続正解
+    soundFrame:1,       // この回の正解（1 or 2）
+    reachHi:0,          // 高音クリア数
+    reachLo:0,          // 低音クリア数
+    answering:false,    // 回答受付中
+    activeNodes:[]      // 再生中ノード（stopガード用）
+  };
+
+  var $=function(id){return document.getElementById(id);};
+  var screens = ['s-start','s-select','s-play','s-interlude','s-result'];
+  function show(id){
+    screens.forEach(function(s){ $(s).classList.remove('active'); });
+    $(id).classList.add('active');
+  }
+
+  // 再生中ノードを安全に停止（home/再測時のstopガード）
+  function stopActive(){
+    var now = getCtx().currentTime;
+    state.activeNodes.forEach(function(n){
+      try{ n.osc.stop(now); }catch(e){}
+    });
+    state.activeNodes = [];
+  }
+
+  // 1トライアル再生（鳴る側のカードだけ playTone、他方は完全無音）
+  // 統合カード：再生中は両カード点灯→再生後にタップ可能(回答)になる
+  function runTrial(){
+    state.answering = false;
+    setChoicesEnabled(false);
+    $('btn-replay').disabled = true;
+
+    var freq = state.freqs[state.idx];
+    state.soundFrame = (Math.random() < 0.5) ? 1 : 2;
+
+    var ctx = getCtx();
+    var base = ctx.currentTime + LEAD;
+    var f1Start = base;
+    var f2Start = base + FRAME_DUR + GAP;
+
+    // 鳴る側だけ音をスケジュール（視覚は両カードとも同一アニメ）
+    var node = playTone(freq, (state.soundFrame===1 ? f1Start : f2Start), FRAME_DUR);
+    state.activeNodes.push(node);
+
+    var ab1=$('ab1'), ab2=$('ab2');
+    ab1.classList.remove('playing','answerable'); ab2.classList.remove('playing','answerable');
+    $('ab1-state').innerHTML='&nbsp;'; $('ab2-state').innerHTML='&nbsp;';
+
+    var lang = window.BS_LANG||'zh';
+    var lab = BS_I18N.play_listen[lang]||BS_I18N.play_listen.zh;
+    var labChoose = BS_I18N.play_choose[lang]||BS_I18N.play_choose.zh;
+
+    // デバッグ：?debug=1 で実際の周波数とどちらが鳴るかを表示（高音60歳問題の切り分け用）
+    var dbg = DEBUG ? (' ['+ (freq>=1000?(freq/1000)+'k':freq) +'Hz · 鳴='+(state.soundFrame===1?'A':'B')+']') : '';
+
+    var d1 = (f1Start - ctx.currentTime)*1000;
+    var d1end = (f1Start + FRAME_DUR - ctx.currentTime)*1000;
+    var d2 = (f2Start - ctx.currentTime)*1000;
+    var d2end = (f2Start + FRAME_DUR - ctx.currentTime)*1000;
+
+    setTimeout(function(){ ab1.classList.add('playing'); $('ab1-state').textContent=lab; }, Math.max(0,d1));
+    setTimeout(function(){ ab1.classList.remove('playing'); $('ab1-state').innerHTML='&nbsp;'; }, Math.max(0,d1end));
+    setTimeout(function(){ ab2.classList.add('playing'); $('ab2-state').textContent=lab; }, Math.max(0,d2));
+    setTimeout(function(){
+      ab2.classList.remove('playing'); $('ab2-state').innerHTML='&nbsp;';
+      // 回答受付開始：両カードをタップ可能に
+      state.answering = true;
+      setChoicesEnabled(true);
+      ab1.classList.add('answerable'); ab2.classList.add('answerable');
+      $('ab1-state').textContent = labChoose; $('ab2-state').textContent = labChoose;
+      $('btn-replay').disabled = false;
+      $('play-instr').textContent = labChoose + dbg;
+    }, Math.max(0,d2end));
+
+    $('play-instr').textContent = lab + dbg;
+  }
+
+  function setChoicesEnabled(on){
+    $('ab1').disabled = !on;
+    $('ab2').disabled = !on;
+    if(!on){
+      $('ab1').classList.remove('answerable');
+      $('ab2').classList.remove('answerable');
+    }
+  }
+
+  function updatePlayHead(){
+    var lang = window.BS_LANG||'zh';
+    var axisLabel = state.axis==='hi' ? bsL('axis_hi') : bsL('axis_lo');
+    var el = $('play-axis-label');
+    el.textContent = axisLabel;
+    el.className = 'play-axis '+state.axis;
+    $('play-prog').textContent = bsL('prog').replace('{i}', state.idx+1).replace('{n}', state.freqs.length);
+    var pct = (state.idx/state.freqs.length)*100;
+    $('play-prog-bar').style.width = pct+'%';
+    $('play-q').textContent = state.axis==='hi' ? bsL('play_q_hi') : bsL('play_q_lo');
+    // streak dots
+    var dots = $('streak-dots').children;
+    for(var i=0;i<3;i++){
+      dots[i].className = 'streak-dot' + (i<state.streak ? (' on'+(state.axis==='lo'?' lo':'')) : '');
+    }
+  }
+
+  function startAxis(axis){
+    state.axis = axis;
+    state.freqs = (axis==='hi') ? HIGH_FREQS : LOW_FREQS;
+    state.idx = 0;
+    state.streak = 0;
+    show('s-play');
+    updatePlayHead();
+    runTrial();
+  }
+
+  function onAnswer(choice){
+    if(!state.answering) return;
+    state.answering = false;
+    setChoicesEnabled(false);
+    $('btn-replay').disabled = true;
+
+    var correct = (choice === state.soundFrame);
+    if(correct){
+      state.streak++;
+      updatePlayHead();
+      if(state.streak >= 3){
+        // この周波数クリア → 到達数を更新 → 次の周波数へ
+        if(state.axis==='hi') state.reachHi = state.idx+1;
+        else state.reachLo = state.idx+1;
+        state.idx++;
+        state.streak = 0;
+        if(state.idx >= state.freqs.length){
+          // 軸完走
+          nextAxisOrResult();
+          return;
+        }
+        updatePlayHead();
+        setTimeout(runTrial, 600);
+      }else{
+        setTimeout(runTrial, 450);
+      }
+    }else{
+      // 1回でも外したら到達点確定（直前周波数まで）→ 軸終了
+      nextAxisOrResult();
+    }
+  }
+
+  function nextAxisOrResult(){
+    stopActive();
+    if(state.queue.length > 0){
+      // 二軸通し：次軸(低音)へ直行せず、中間ページを挟む（ユーザーがボタンで開始）
+      showInterlude();
+    }else{
+      showResult();
+    }
+  }
+
+  // 高音→低音の区切りページ
+  function showInterlude(){
+    var img=$('interlude-char-img');
+    if(img){ img.src = getAsset('CHAR_HEAR_LO', CHAR_HEAR_LO_FB); }
+    show('s-interlude');
+  }
+
+  // ══════════════════════════════════════════
+  // 結果
+  // ══════════════════════════════════════════
+  var testedHi=false, testedLo=false;
+
+  function renderLadder(elId, reach){
+    var el = $(elId); el.innerHTML='';
+    for(var i=0;i<10;i++){
+      var r=document.createElement('div');
+      r.className='rung'+(i<reach?' fill':'');
+      el.appendChild(r);
+    }
+  }
+
+  function showResult(){
+    var lang = window.BS_LANG||'zh';
+
+    // 高音側
+    var twHi=$('twin-hi');
+    if(testedHi){
+      twHi.classList.remove('skip');
+      $('hi-age').textContent = HI_AGE[state.reachHi];
+      var hf = state.reachHi>0 ? (HIGH_FREQS[state.reachHi-1]/1000)+'kHz' : '—';
+      $('hi-freq').textContent = state.reachHi>0 ? bsL('hi_freqlabel').replace('{f}',hf) : '—';
+      renderLadder('ladder-hi', state.reachHi);
+    }else{
+      twHi.classList.add('skip');
+      $('hi-age').textContent='—'; $('hi-freq').textContent='—';
+      renderLadder('ladder-hi', 0);
+    }
+
+    // 低音側
+    var twLo=$('twin-lo');
+    if(testedLo){
+      twLo.classList.remove('skip');
+      $('lo-rank').textContent = state.reachLo;
+      var lf = state.reachLo>0 ? (LOW_FREQS[state.reachLo-1]+'Hz') : '—';
+      $('lo-freq').textContent = state.reachLo>0 ? bsL('lo_freqlabel').replace('{f}',lf) : '—';
+      renderLadder('ladder-lo', state.reachLo);
+    }else{
+      twLo.classList.add('skip');
+      $('lo-rank').textContent='—'; $('lo-freq').textContent='—';
+      renderLadder('ladder-lo', 0);
+    }
+
+    // コメント（両軸テスト時は低音優先でブランド感、単軸はその軸）
+    var cmt='';
+    if(testedLo){ cmt = LO_COMMENT[lang][state.reachLo]; }
+    else if(testedHi){ cmt = HI_COMMENT[lang][state.reachHi]; }
+    $('res-comment').innerHTML = cmt || '—';
+
+    // 注記：高音をテストした場合は「機器の上限かも」を添える（耳年齢の数字を絶対視させない）
+    var baseNote = (BS_I18N.res_note[lang]||BS_I18N.res_note.zh);
+    var noteEl = $('res-note');
+    if(testedHi){
+      noteEl.removeAttribute('data-i18n');  // 動的上書きするのでi18n自動適用から外す
+      noteEl.textContent = bsL('hi_device_note') + '　' + baseNote;
+    }else{
+      noteEl.setAttribute('data-i18n','res_note');
+      noteEl.textContent = baseNote;
+    }
+
+    // 答え合わせ：到達した最低の周波数で本物ベース音を案内
+    updateReveal(lang);
+
+    show('s-result');
+    renderQR();
+    saveLast();
+  }
+
+  // 答え合わせ：再生周波数とテキスト
+  // ★修正3: ベースの実音域は最低31Hz(5弦B開放)。28Hz以下はベースに存在しない超低音なので
+  //   倍音合成しても「ベースの音」にならない。よって鳴らす音はベース実音域にclampし、
+  //   超低音まで聴こえた人には「ベースの最低音(31Hz)」を聴かせて説明する。
+  var BASS_FLOOR = 31;           // 5弦ベース開放B（ベースで出せる最低の実音）
+  var revealReachedFreq = 41;    // 到達した最低の周波数（表示用）
+  var revealPlayFreq = 41;       // 実際に鳴らすベース音（ベース実音域にclamp）
+  function updateReveal(lang){
+    var box=$('reveal-box');
+    if(testedLo && state.reachLo>0){
+      revealReachedFreq = LOW_FREQS[state.reachLo-1];
+      var note = LOW_NOTES[revealReachedFreq] || '';
+      var isSubBass = (revealReachedFreq < BASS_FLOOR);   // 28Hz以下＝ベースに存在しない
+      revealPlayFreq = isSubBass ? BASS_FLOOR : revealReachedFreq;
+      var playNote = LOW_NOTES[revealPlayFreq] || '';
+      var txt, btnLabel;
+      if(isSubBass){
+        // 超低音まで聴こえた → ベースの最低音31Hzを代わりに鳴らす
+        if(lang==='ja'){ txt='あなたは '+revealReachedFreq+'Hz まで聴こえた——これはベースに存在しない超低音です。ベースで出せる最低の音は 31Hz（5弦B開放）。その音を聴いてみよう。'; btnLabel='▶ ベース最低音 31Hz を聴く'; }
+        else if(lang==='en'){ txt='You heard down to '+revealReachedFreq+'Hz — below anything a bass can play. The lowest real bass note is 31Hz (open low B). Hear it.'; btnLabel='▶ Play lowest bass note 31Hz'; }
+        else{ txt='你听到了 '+revealReachedFreq+'Hz——这已经低于贝斯能发出的音了。贝斯最低的实音是 31Hz（五弦 B 开放）。听听这个音。'; btnLabel='▶ 播放贝斯最低音 31Hz'; }
+      }else{
+        // ベース実音域 → その音をベース音色で
+        if(lang==='ja'){ txt='あなたが聴こえた最低の音 '+revealReachedFreq+'Hz'+(playNote&&playNote!=='—'?'（'+playNote+'）':'')+'。本物のベース音色で聴いてみよう——これがあなたの聴力の境界。'; btnLabel='▶ 本物のベース音を聴く ('+revealReachedFreq+'Hz)'; }
+        else if(lang==='en'){ txt='Your lowest audible tone was '+revealReachedFreq+'Hz'+(playNote&&playNote!=='—'?' ('+playNote+')':'')+'. Hear it as a real bass — the edge of your hearing.'; btnLabel='▶ Play real bass tone ('+revealReachedFreq+'Hz)'; }
+        else{ txt='你听到的最低音 '+revealReachedFreq+'Hz'+(playNote&&playNote!=='—'?'（'+playNote+'）':'')+'。听听真正的贝斯音色——这就是你听力的边界。'; btnLabel='▶ 播放真实贝斯音 ('+revealReachedFreq+'Hz)'; }
+      }
+      $('reveal-d').textContent = txt;
+      var rb=$('btn-reveal'); if(rb) rb.textContent = btnLabel;
+      box.style.display='block';
+    }else{
+      box.style.display='none';   // 低音未テスト or 0クリアは非表示
+    }
+  }
+
+  // 答え合わせ：本物のベース音（演出専用＝採点には使わない）
+  // missing fundamentalを逆手に取り「豊かなベース音」を聴かせる。
+  function playRealBass(freq){
+    var ctx = getCtx();
+    var dur = 1.4;
+    var t0 = ctx.currentTime + 0.05;
+    var partials = [1,2,3,4,5,6,7,8];
+    var amps     = [1.0,0.6,0.45,0.3,0.22,0.16,0.11,0.08];
+    var master = ctx.createGain();
+    master.gain.setValueAtTime(0, t0);
+    master.gain.linearRampToValueAtTime(0.22, t0+0.02);
+    master.gain.setValueAtTime(0.22, t0+dur-0.25);
+    master.gain.linearRampToValueAtTime(0, t0+dur);
+    master.connect(ctx.destination);
+    var nodes=[];
+    for(var i=0;i<partials.length;i++){
+      var o=ctx.createOscillator();
+      var g=ctx.createGain();
+      o.type='sine';
+      o.frequency.value=freq*partials[i];
+      g.gain.value=amps[i];
+      o.connect(g).connect(master);
+      o.start(t0);
+      o.stop(t0+dur+0.05);
+      nodes.push(o);
+    }
+  }
+
+  // ══════════════════════════════════════════
+  // QR（shared-assets未読込時はフォールバック）
+  // ══════════════════════════════════════════
+  var GAME_URL = "https://bassshow.rocks/hearing.html";
+  function renderQR(){
+    var box=$('shareQrBox'); if(!box) return;
+    if(window.qrcode){
+      try{
+        var qr=window.qrcode(0,"M"); qr.addData(GAME_URL); qr.make();
+        box.innerHTML=qr.createSvgTag({cellSize:4,margin:2,scalable:true});
+        return;
+      }catch(e){}
+    }
+    box.innerHTML='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#111;font-size:8px;word-break:break-all;padding:3px;box-sizing:border-box;text-align:center">QR<br>'+GAME_URL+'</div>';
+  }
+
+  // ══════════════════════════════════════════
+  // シェア文・コピー
+  // ══════════════════════════════════════════
+  var lastResult=null;
+  function saveLast(){
+    lastResult={
+      testedHi:testedHi, testedLo:testedLo,
+      reachHi:state.reachHi, reachLo:state.reachLo
+    };
+  }
+  function buildShareText(){
+    var lang=window.BS_LANG||'zh';
+    var lines=[bsL('share_head')];
+    if(testedHi){
+      var hf=state.reachHi>0?(HIGH_FREQS[state.reachHi-1]/1000)+'kHz':'—';
+      lines.push(bsL('share_hi').replace('{age}',HI_AGE[state.reachHi]).replace('{f}',hf));
+    }
+    if(testedLo){
+      var lf=state.reachLo>0?(LOW_FREQS[state.reachLo-1]+'Hz'):'—';
+      lines.push(bsL('share_lo').replace('{rank}',state.reachLo).replace('{f}',lf));
+    }
+    lines.push(bsL('share_cta')+' '+GAME_URL);
+    return lines.join('\n');
+  }
+  function copyText(t){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){toast(bsL('toast_copied'));},function(){fallbackCopy(t);});
+    }else{fallbackCopy(t);}
+  }
+  function fallbackCopy(t){
+    var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');toast(bsL('toast_copied'));}catch(e){toast(bsL('toast_manual'));}
+    ta.remove();
+  }
+  function toast(msg){
+    var d=document.createElement('div');d.className='toast';d.textContent=msg;
+    document.body.appendChild(d);setTimeout(function(){d.remove();},1500);
+  }
+
+  // ══════════════════════════════════════════
+  // イベント結線
+  // ══════════════════════════════════════════
+  $('btn-to-select').addEventListener('click', function(){ getCtx(); show('s-select'); });
+
+  // ══════════════════════════════════════════
+  // 修正5: 音量/出力確認（高音が本当に出ているかの切り分け）
+  // 1kHz(必ず聴こえる) → 8kHz → 12kHz を順に鳴らし、どこから聴こえなくなるか体感させる。
+  // 1kHzは聴こえるのに8kHzが聴こえない場合、それは「耳」より先に「音量/機器」を疑う材料になる。
+  // ══════════════════════════════════════════
+  function soundCheck(){
+    var lang=window.BS_LANG||'zh';
+    var instr=$('btn-soundcheck');
+    var ctx=getCtx();
+    var t=ctx.currentTime+0.1;
+    var seq=[1000,8000,12000];
+    var dur=0.6, gap=0.25;
+    seq.forEach(function(f,i){
+      playTone(f, t + i*(dur+gap), dur);
+    });
+    var orig = BS_I18N.btn_soundcheck[lang]||BS_I18N.btn_soundcheck.zh;
+    instr.textContent = BS_I18N.soundcheck_run[lang]||BS_I18N.soundcheck_run.zh;
+    setTimeout(function(){
+      instr.textContent = BS_I18N.soundcheck_done[lang]||BS_I18N.soundcheck_done.zh;
+      setTimeout(function(){ instr.textContent = orig; }, 4000);
+    }, seq.length*(dur+gap)*1000 + 200);
+  }
+  $('btn-soundcheck').addEventListener('click', soundCheck);
+  $('btn-back-start').addEventListener('click', function(){ show('s-start'); });
+
+  document.querySelectorAll('.axis-card').forEach(function(card){
+    card.addEventListener('click', function(){
+      getCtx();
+      var axis = card.getAttribute('data-axis');
+      state.reachHi=0; state.reachLo=0;
+      if(axis==='hi'){ testedHi=true; testedLo=false; state.queue=[]; startAxis('hi'); }
+      else if(axis==='lo'){ testedHi=false; testedLo=true; state.queue=[]; startAxis('lo'); }
+      else { testedHi=true; testedLo=true; state.queue=['lo']; startAxis('hi'); }
+    });
+  });
+
+  $('ab1').addEventListener('click', function(){ if(!$('ab1').disabled) onAnswer(1); });
+  $('ab2').addEventListener('click', function(){ if(!$('ab2').disabled) onAnswer(2); });
+  $('btn-replay').addEventListener('click', function(){ if(!$('btn-replay').disabled) runTrial(); });
+
+  $('btn-reveal').addEventListener('click', function(){ playRealBass(revealPlayFreq); });
+  $('btn-copy').addEventListener('click', function(){ copyText(buildShareText()); });
+  $('btn-screenshot').addEventListener('click', function(){ toast(bsL('toast_shot')); });
+  $('btn-again').addEventListener('click', function(){ stopActive(); show('s-select'); });
+  // 中間ページ：低音テスト開始ボタン
+  $('btn-to-low').addEventListener('click', function(){
+    getCtx();
+    var nx = state.queue.shift();   // 'lo'
+    startAxis(nx);
+  });
+
+  $('gzh-card').addEventListener('click', function(){
+    var w=$('gzh-qr-wrap'); var open=w.classList.toggle('show');
+    $('gzh-arrow').textContent=open?'⌄':'›';
+  });
+
+  // ══════════════════════════════════════════
+  // i18n適用
+  // ══════════════════════════════════════════
+  function bsApplyLang(lang){
+    window.BS_LANG = lang;
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      var key=el.getAttribute('data-i18n');
+      var dict=BS_I18N[key];
+      if(dict && dict[lang]) el.innerHTML=dict[lang];
+    });
+    document.querySelectorAll('.bs-lang-switch button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-lang')===lang);
+    });
+    document.documentElement.lang = (lang==='zh'?'zh-CN':lang);
+    // 動的テキストの再描画
+    if($('s-play').classList.contains('active')){ updatePlayHead(); }
+    if($('s-result').classList.contains('active') && lastResult){ showResult(); }
+  }
+  // ══════════════════════════════════════════
+  // 画像注入（本番=shared-assets.js / デモ=フォールバック）
+  // ══════════════════════════════════════════
+  (function(){
+    var setImg=function(id,key,fb){ var el=$(id); if(el) el.src=getAsset(key,fb); };
+    // 公众号QR：本番は shared-assets.js の GZH_QR を注入。data-i18n を持たないため言語切替で消えない。
+    var gq=$('gzhQrImg'); if(gq && window.BS_ASSETS && window.BS_ASSETS.GZH_QR) gq.src=window.BS_ASSETS.GZH_QR;
+    setImg('bs-hero-img','ICON_HEARING','');
+    setImg('card-hi-img','CHAR_HEAR_HI',CHAR_HEAR_HI_FB);
+    setImg('card-lo-img','CHAR_HEAR_LO',CHAR_HEAR_LO_FB);
+    setImg('card-both-hi-img','CHAR_HEAR_HI',CHAR_HEAR_HI_FB);
+    setImg('card-both-lo-img','CHAR_HEAR_LO',CHAR_HEAR_LO_FB);
+    setImg('res-hi-img','CHAR_HEAR_HI',CHAR_HEAR_HI_FB);
+    setImg('res-lo-img','CHAR_HEAR_LO',CHAR_HEAR_LO_FB);
+  })();
+
+  (function(){
+    var sw=$('bs-lang-switch');
+    if(sw){
+      sw.addEventListener('click', function(e){
+        var b=e.target.closest('button[data-lang]'); if(!b) return;
+        bsApplyLang(b.getAttribute('data-lang'));
+      });
+    }
+    bsApplyLang('zh');
+  })();
+
+  // shared-assets.js が読み込まれていれば QR ライブラリ等が window に乗る（本番）
+  // デモ単体では未読込でもフォールバックで動作する。
+
+})();
+</script>
+</body>
+</html>
