@@ -674,6 +674,8 @@
   var _warmedUp = false;
   var masterGain = null;   // 永続マスター（destinationへ1回だけ接続。各トーンはここへ繋ぐ）
   var _keepAlive = null;   // 常時サイレントのループ無音（DACを眠らせない＝断続ポップ対策の核）
+  var measOsc  = null;     // 測定音用の永続オシレータ（毎問のstart/stopトランジェントを撤廃＝Androidオンセット雑音対策）
+  var measGate = null;     // 測定音用のゲート（通常0=無音。発音時だけ開閉）
   function getCtx(){
     if(!audioCtx){
       var AC = window.AudioContext || window.webkitAudioContext;
@@ -701,6 +703,15 @@
         _keepAlive.start();
         // _keepAlive / masterGain はグローバル保持（GCで消えないように）
 
+        // 【Androidオンセット雑音対策】測定音を「永続オシレータ＋ゲート」に。
+        //   毎問 createBufferSource/start する方式は Android で鳴り始めにグリッチ（プツ/雑音）が乗る。
+        //   ノードを1度だけ生成して停止しない → start/stopトランジェントが原理的に出ない。
+        //   発音は measGate を linearRamp で開閉、周波数変更は「ゲート0の無音中」に行うのでクリック無し。
+        measOsc  = audioCtx.createOscillator(); measOsc.type='sine';
+        measGate = audioCtx.createGain();       measGate.gain.value = 0;   // 通常は完全無音
+        measOsc.connect(measGate).connect(masterGain);
+        measOsc.start();                                                   // 以後ずっと走らせる（停止しない）
+
         // 旧来の1サンプルウォームアップも併用（初回の1音の鳴り始めポップ対策）。masterGain経由。
         var s0 = audioCtx.createBufferSource();
         s0.buffer = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
@@ -711,64 +722,53 @@
     return audioCtx;
   }
 
-  // 1音をスケジュール再生。【方式変更】GainNodeオートメーション → AudioBuffer 焼き込み。
-  //   前回修正（t0重複撤去・onended disconnect）は実機で効かず。
-  //   原因仮説：Android/WeChat(X5) では setValueCurveAtTime 等のオートメーションが
-  //   階段状になりジッパー/クリックの温床。末尾の明示 stop＋同期 disconnect もポップ要因。
-  //   → サンプル単位で「sine × レイズドコサイン窓」を AudioBuffer に焼き込み、
-  //     AudioBufferSourceNode で素直に再生する。オートメーション完全排除＝ジッパー源を断つ。
-  //     バッファ末尾は窓で 0 に収束するため stop クリックは原理的に出ない（明示 stop 不要）。
-  //   ※測定純音(sine)＋窓FADEは測定妥当性の生命線。焼き込みでも FADE 仕様を厳守する。
+  // スケジュール先読み(lead)を Android 出力レイテンシに追従させて算出。
+  //   Androidは出力レイテンシが大きく変動（端末で 0.1〜0.3s）。固定0.10sだとオンセットで
+  //   アンダーラン（プツ/雑音）が出る → outputLatency+baseLatency に下駄を履かせ最低0.25s確保。
+  //   ※まだ残るなら基準値 0.25 を 0.40 に上げて再確認（端末のoutputLatencyが大きい可能性）。
+  function _lead(ctx){
+    return Math.max(0.25, (ctx.outputLatency||0) + (ctx.baseLatency||0) + 0.18);
+  }
+
+  // 1音をスケジュール再生。【方式変更】AudioBuffer 焼き込み → 永続オシレータ＋ゲート開閉。
+  //   前回までの焼き込み(BufferSource)方式も実機で効かず＝原因は FADE/エンベロープではなく
+  //   「Androidが毎問の新規 start() でオンセットにグリッチを乗せる」こと。
+  //   → measOsc を停止せず常駐させ、measGate を linearRamp で開閉するだけで発音。
+  //     ノードを作らない/停止しないので start/stop トランジェントが原理的に出ない。
+  //     周波数変更はゲート0の無音中に行うのでクリック無し。FADE長（低音長め/高音短め）は維持。
+  //   ※測定純音(sine)＋窓FADEは測定妥当性の生命線。linearRampでもFADE仕様（測定の抜け道封じ）を厳守。
   function playTone(freq, startAt, dur){
     var ctx = getCtx();
-    var sr = ctx.sampleRate;
-
-    // FADE長（秒）：低音ほど長く。最低でも2波長分は確保しクリックを防ぐ。
-    var fade;
-    if(freq < 100){
-      fade = Math.max(0.06, (1/freq)*2);   // 例 20Hz→0.10s, 41Hz→0.06s
-    }else{
-      fade = 0.012;                         // 高音12ms（高域のクリック漏れ対策に十分）
-    }
-    if(fade > dur/2) fade = dur/2;           // FADEが半分を超えないようガード
 
     var PEAK = 0.28;                         // クリップ防止の固定レベル（実機で要調整）
-    var coreLen = Math.ceil(dur*sr);
-    var fSamp = Math.max(2, Math.floor(fade*sr));
-    // 窓のさらに外側に ~5ms の無音パディングを両端に足す。
-    //   BufferSource固有の start/stop トランジェントが「無音区間」で起きるようにし、断続クリックを断つ。
-    var pad = Math.max(1, Math.floor(0.005*sr));
-    var total = coreLen + pad*2;
-
-    // 窓を焼き込んだバッファを生成（先頭pad無音→立上り→中央1.0→立下り→末尾pad無音）
-    var buf = ctx.createBuffer(1, total, sr);
-    var ch = buf.getChannelData(0);
-    var twoPiF = 2*Math.PI*freq;
-    for(var n=0; n<coreLen; n++){
-      var env;
-      if(n < fSamp){                          // フェードイン：0→1 レイズドコサイン（端点厳密0）
-        env = 0.5*(1 - Math.cos(Math.PI*(n/(fSamp-1))));
-      }else if(n >= coreLen - fSamp){         // フェードアウト：1→0 レイズドコサイン（端点厳密0）
-        var k = n - (coreLen - fSamp);
-        env = 0.5*(1 + Math.cos(Math.PI*(k/(fSamp-1))));
-      }else{
-        env = 1.0;                            // サスティーン
-      }
-      ch[n+pad] = PEAK * env * Math.sin(twoPiF * (n/sr));
+    // FADE長（秒）：低音ほど長く。最低でも2波長分は確保しクリックを防ぐ（旧仕様準拠）。
+    var atk;
+    if(freq < 100){
+      atk = Math.max(0.06, (1/freq)*2);      // 例 41Hz→0.06s（低音は長め）
+    }else{
+      atk = 0.012;                           // 高音12ms（高域のクリック漏れ対策に十分）
     }
-    // ch[0..pad-1] と ch[total-pad..total-1] は createBuffer 既定で 0（無音パディング）。
-    // 窓端点 n=0 / n=coreLen-1 は cos(0)=1 → env=0 で厳密に 0（DCオフセットなし）。
+    if(atk > dur/2) atk = dur/2;             // FADEが半分を超えないようガード
+    var rel = atk;
 
-    var src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.connect(masterGain);                  // destinationでなく永続masterへ（グラフ変動グリッチを断つ）
-    // start を currentTime に近づけすぎるとアンダーランで断続クリックが出やすい。最低0.10sの余裕を確保。
-    var when = Math.max(ctx.currentTime + 0.10, startAt);
-    src.start(when);
-    // 末尾は無音パディングで 0。明示 stop は置かない。disconnect は遅延（同期disconnectがポップ源になりうる）。
-    src.onended = function(){ var s=src; setTimeout(function(){ try{ s.disconnect(); }catch(e){} }, 120); };
-    // 呼び出し側（stopActive）が n.osc.stop(now) を使うため互換キーで返す。
-    return {osc:src, gain:null};
+    // lead に従い発音時刻を決定（予定時刻 startAt があるならそれと max）。
+    var lead = _lead(ctx);
+    var when = Math.max(ctx.currentTime + lead, startAt);
+
+    // 周波数はゲート0の無音中に変更（クリック無し）。
+    measOsc.frequency.setValueAtTime(freq, Math.max(ctx.currentTime, when - 0.03));
+    // ゲートを linearRamp で開閉（setValueCurveより Android で安定）。完全に0へ戻す。
+    measGate.gain.setValueAtTime(0, when);
+    measGate.gain.linearRampToValueAtTime(PEAK, when + atk);
+    measGate.gain.setValueAtTime(PEAK, when + dur - rel);
+    measGate.gain.linearRampToValueAtTime(0, when + dur);
+
+    // ノードは常駐＝停止/破棄しない。stopActive 互換のため擬似ノードを返す（osc.stop はゲート即0で代替）。
+    return {osc:{ stop:function(t){ try{
+      var now = (t!=null) ? t : ctx.currentTime;
+      measGate.gain.cancelScheduledValues(now);
+      measGate.gain.setValueAtTime(0, now);
+    }catch(e){} } }, gain:measGate};
   }
 
   // ══════════════════════════════════════════
@@ -799,10 +799,13 @@
   }
 
   // 再生中ノードを安全に停止（home/再測時のstopガード）
+  //   永続オシレータ方式では「ノード停止」ではなく measGate を即0にして発音を断つ。
   function stopActive(){
     var now = getCtx().currentTime;
+    // 予約済みゲートカーブを破棄して無音へ（中断時の取りこぼし防止）。
+    if(measGate){ try{ measGate.gain.cancelScheduledValues(now); measGate.gain.setValueAtTime(0, now); }catch(e){} }
     state.activeNodes.forEach(function(n){
-      try{ n.osc.stop(now); }catch(e){}
+      try{ n.osc.stop(now); }catch(e){}   // 擬似ノードでもゲート0化される（保険）
     });
     state.activeNodes = [];
   }
@@ -1068,9 +1071,10 @@
   //   v4 の明るい倍音バランスを「暗い太いベース」へ寄せる：
   //   1〜4倍音中心（missing fundamental は 2〜4倍音=62/93/124Hz帯で十分成立）、
   //   5倍音以上は大幅減衰。三角芯の明るさも後段 lowpass を大きく下げて抑える。
-  // reveal調整：31Hzのビビり対策で倍音を3本(31/62/93Hz)に絞る。
-  //   ビビりは高次倍音＋微小な相互変調が主因 → 4倍音以上は不使用(=0)、基音主体に。
-  var BASS_HARMONICS=[ {m:1,a:1.00},{m:2,a:0.65},{m:3,a:0.30},{m:4,a:0.00},
+  // reveal調整(第3R)：倍音をもう一段減らし m1〜2中心（31/62Hz主体）に。
+  //   ビビりは高次倍音＋微小な相互変調が主因 → 3倍音以降は不使用(=0)、基音＋2倍音で「太く丸い」低音に。
+  //   ※実機で「ベースらしさ」が痩せすぎるなら m3 を 0.20 程度まで戻して調整。
+  var BASS_HARMONICS=[ {m:1,a:1.00},{m:2,a:0.45},{m:3,a:0.00},{m:4,a:0.00},
                        {m:5,a:0.00},{m:6,a:0.00},{m:7,a:0.00},{m:8,a:0.00} ];
   // 三角芯を奇数倍音として畳み込んだ「実際に鳴る」倍音振幅（v4の WAVE_IMAG と同一）
   var BASS_WAVE_IMAG=(function(){
@@ -1079,8 +1083,8 @@
     for(var k=1;k<=8;k++){
       var s=0;
       BASS_HARMONICS.forEach(function(h){ if(h.m===k) s+=h.a; });
-      // 三角芯は奇数倍音を足すが、reveal は3本(k≤3)に絞るため k>3 では加えない（ビビり源の高次を断つ）。
-      if(k%2===1 && k<=3){ var sign=(k%4===1)?1:-1; s += TRI_A*c8*sign/(k*k); }
+      // 三角芯は奇数倍音を足すが、reveal(第3R)は m1〜2中心のため基音(k=1)のみに限定（高次ビビり源を断つ）。
+      if(k===1){ s += TRI_A*c8; }   // k=1 は sign=+1
       arr[k]=s;
     }
     return arr;
@@ -1098,7 +1102,7 @@
   }
   // フィルタ振幅応答（正規化計算用の近似）：HP45×1段, LP~900×~2pole（reveal調整後の実フィルタに整合）
   function _hpMag(hz){ var r=hz/45;  return r/Math.sqrt(1+r*r); }
-  function _lpMag(hz){ var r=hz/900; return 1/Math.sqrt(1+Math.pow(r,4)); }
+  function _lpMag(hz){ var r=hz/550; return 1/Math.sqrt(1+Math.pow(r,4)); }  // 実LP 600→500 に整合
   // A特性近似（v4 audWeight 相当の簡易ラウドネス重み）
   function _audWeight(f){
     var f2=f*f, f4=f2*f2;
@@ -1130,8 +1134,9 @@
     var ctx = getCtx();
     var dur = 1.4;
     var END = dur;
-    var t0 = ctx.currentTime + 0.05;
-    var STOP = t0 + END + 0.03;
+    // 測定音と同じ Android オンセット問題が reveal にも乗る → 大幅 lead を適用。
+    var t0 = ctx.currentTime + _lead(ctx);
+    var STOP = t0 + END + 0.05;   // 末尾に ~10ms 以上の無音余白（オフセット雑音対策）
 
     // out（音域別ラウドネス正規化）→ master（destinationの繋ぎ直しをやめる）
     var out = ctx.createGain();
@@ -1149,19 +1154,19 @@
     //   ※実機で明るすぎ/こもりすぎなら ±100Hz で微調整。
     var lp = ctx.createBiquadFilter();
     lp.type='lowpass';
-    lp.frequency.setValueAtTime(700, t0);
-    lp.frequency.exponentialRampToValueAtTime(600, t0+END*0.5);
+    lp.frequency.setValueAtTime(600, t0);                          // 700→600 へ（暗く丸く）
+    lp.frequency.exponentialRampToValueAtTime(500, t0+END*0.5);    // 600→500 へ（高域の明るさをさらに抑制）
     lp.Q.value=0.7;
     lp.connect(hp);
 
-    // エンベロープ（v4：先頭0→線形アタック→指数減衰→末尾linearで完全0）
+    // エンベロープ：再生前後の雑音対策で attack/release をやや長めに（完全0へ）。
     var env = ctx.createGain();
     env.gain.setValueAtTime(0, t0);
-    env.gain.linearRampToValueAtTime(1.0, t0+0.015);
+    env.gain.linearRampToValueAtTime(1.0, t0+0.04);               // attack 0.015→0.04（オンセット雑音緩和）
     env.gain.exponentialRampToValueAtTime(0.72, t0+0.20);
     env.gain.exponentialRampToValueAtTime(0.50, t0+END*0.6);
-    env.gain.exponentialRampToValueAtTime(0.02, t0+END*0.92);
-    env.gain.linearRampToValueAtTime(0, t0+END);
+    env.gain.exponentialRampToValueAtTime(0.02, t0+END*0.78);
+    env.gain.linearRampToValueAtTime(0, t0+END-0.01);            // 末尾 ~10ms 手前で完全0（オフセット雑音対策）
     env.connect(lp);
 
     // 1音=単一PeriodicWaveオシレータ（倍音は WAVE_IMAG に畳み込み済み）
