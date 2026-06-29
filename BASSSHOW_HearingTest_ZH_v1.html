@@ -232,7 +232,7 @@
     </div>
 
     <div class="rule" data-i18n="rule">
-      <b>玩法：</b>每个音会在「①」和「②」两个框里各响一次——但<b>只有一个框真的有声音</b>，另一个是无声。你来选「<b>哪个框响了？</b>」。<br>听得到就能选对；听不到只能靠猜（50%）。同一频率连对 3 次才算「听得到」，进入更难的频率。
+      <b>玩法：</b>每个音会在「A」和「B」两个框里各响一次——但<b>只有一个框真的有声音</b>，另一个是无声。你来选「<b>哪个框响了？</b>」。<br>听得到就能选对；听不到只能靠猜（50%）。同一频率连对 3 次才算「听得到」，进入更难的频率。
     </div>
 
     <button class="btn" id="btn-to-select" data-i18n="btn_next">下一步：选择测试</button>
@@ -468,9 +468,9 @@
     warn_b:{zh:'请<span class="em">戴上耳机或入耳式耳塞</span>。手机外放<b>放不出低音</b>，低音轴会全军覆没。安静环境、音量适中（别太大伤耳）。',
             ja:'必ず<span class="em">イヤホン／ヘッドホン</span>を。スマホ外部スピーカーは<b>低音が出ません</b>。静かな環境で、音量は控えめに（大きすぎ注意）。',
             en:'Use <span class="em">earphones / headphones</span>. Phone speakers <b>can\'t reproduce bass</b>. Quiet room, moderate volume (don\'t blast it).'},
-    rule:{zh:'<b>玩法：</b>每个音会在「①」和「②」两个框里各响一次——但<b>只有一个框真的有声音</b>，另一个是无声。你来选「<b>哪个框响了？</b>」。<br>听得到就能选对；听不到只能靠猜（50%）。同一频率连对 3 次才算「听得到」，进入更难的频率。',
-          ja:'<b>遊び方：</b>各音は「①」「②」の2つの枠で順に再生——でも<b>本当に鳴るのは片方だけ</b>、もう片方は無音。「<b>鳴ったのはどっち？</b>」を当てます。<br>聴こえれば当たる／聴こえなければ勘（50%）。同じ周波数で3回連続正解で「聴こえた」判定、次の難しい周波数へ。',
-          en:'<b>How it works:</b> each tone plays in frames "①" and "②" — but <b>only one frame actually sounds</b>, the other is silent. Pick "<b>which frame played?</b>"<br>If you hear it you\'ll get it right; if not you\'re guessing (50%). 3 in a row = "you can hear it", move to a harder frequency.'},
+    rule:{zh:'<b>玩法：</b>每个音会在「A」和「B」两个框里各响一次——但<b>只有一个框真的有声音</b>，另一个是无声。你来选「<b>哪个框响了？</b>」。<br>听得到就能选对；听不到只能靠猜（50%）。同一频率连对 3 次才算「听得到」，进入更难的频率。',
+          ja:'<b>遊び方：</b>各音は「A」「B」の2つの枠で順に再生——でも<b>本当に鳴るのは片方だけ</b>、もう片方は無音。「<b>鳴ったのはどっち？</b>」を当てます。<br>聴こえれば当たる／聴こえなければ勘（50%）。同じ周波数で3回連続正解で「聴こえた」判定、次の難しい周波数へ。',
+          en:'<b>How it works:</b> each tone plays in frames "A" and "B" — but <b>only one frame actually sounds</b>, the other is silent. Pick "<b>which frame played?</b>"<br>If you hear it you\'ll get it right; if not you\'re guessing (50%). 3 in a row = "you can hear it", move to a harder frequency.'},
     btn_next:{zh:'下一步：选择测试', ja:'次へ：テストを選ぶ', en:'Next: choose a test'},
     btn_soundcheck:{zh:'🔊 先听一下测试音（确认有声音）', ja:'🔊 テスト音を確認（音が出るかチェック）', en:'🔊 Hear a test tone (check sound)'},
     soundcheck_run:{zh:'播放中… 1kHz → 8kHz → 12kHz', ja:'再生中… 1kHz → 8kHz → 12kHz', en:'Playing… 1kHz → 8kHz → 12kHz'},
@@ -667,39 +667,38 @@
   // Web Audio：sine純音 + FADE（クリックノイズ封じ＝測定の生命線）
   // ══════════════════════════════════════════
   var audioCtx = null;
+  var _warmedUp = false;
   function getCtx(){
     if(!audioCtx){
       var AC = window.AudioContext || window.webkitAudioContext;
       audioCtx = new AC();
     }
     if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+    // WeChat(X5)/Android定番：初回ユーザー操作起点で無音1サンプルを流し context をウォームアップ。
+    //   これをやらないと「最初の1音」の鳴り始めにポップが出る端末がある。
+    if(!_warmedUp){
+      _warmedUp = true;
+      try{
+        var s0 = audioCtx.createBufferSource();
+        s0.buffer = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+        s0.connect(audioCtx.destination);
+        s0.start();
+      }catch(e){}
+    }
     return audioCtx;
   }
 
-  // レイズドコサイン窓のFADEカーブを生成（クリック=スペクトル漏れを潰す）
-  function makeFadeCurve(samples, rising){
-    var c = new Float32Array(samples);
-    for(var i=0;i<samples;i++){
-      var x = i/(samples-1);                 // 0..1
-      var v = 0.5*(1-Math.cos(Math.PI*x));   // レイズドコサイン 0..1
-      c[i] = rising ? v : (1-v);
-    }
-    return c;
-  }
-
-  // 1音をスケジュール再生。sine純音・両端にレイズドコサインFADE。
-  // freq別にFADE長を変える：低音は1波長以上＆下端は長め（HANDOFF）。
-  // ※測定純音(sine)＋レイズドコサインFADEは測定妥当性の生命線なので維持。
-  //   クリック/プツ音対策は PitchTest v4 の知見を適用：
-  //   (1) t0重複イベントの解消（setValueCurveAtTime が先頭0で立ち上げるので
-  //       直前の setValueAtTime(0,t0) は同一時刻競合の原因。撤去する）
-  //   (2) 再生後 osc.onended で osc/gain を disconnect（Android GC由来ポップ対策）
+  // 1音をスケジュール再生。【方式変更】GainNodeオートメーション → AudioBuffer 焼き込み。
+  //   前回修正（t0重複撤去・onended disconnect）は実機で効かず。
+  //   原因仮説：Android/WeChat(X5) では setValueCurveAtTime 等のオートメーションが
+  //   階段状になりジッパー/クリックの温床。末尾の明示 stop＋同期 disconnect もポップ要因。
+  //   → サンプル単位で「sine × レイズドコサイン窓」を AudioBuffer に焼き込み、
+  //     AudioBufferSourceNode で素直に再生する。オートメーション完全排除＝ジッパー源を断つ。
+  //     バッファ末尾は窓で 0 に収束するため stop クリックは原理的に出ない（明示 stop 不要）。
+  //   ※測定純音(sine)＋窓FADEは測定妥当性の生命線。焼き込みでも FADE 仕様を厳守する。
   function playTone(freq, startAt, dur){
     var ctx = getCtx();
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = freq;
+    var sr = ctx.sampleRate;
 
     // FADE長（秒）：低音ほど長く。最低でも2波長分は確保しクリックを防ぐ。
     var fade;
@@ -708,34 +707,37 @@
     }else{
       fade = 0.012;                         // 高音12ms（高域のクリック漏れ対策に十分）
     }
-    // FADEが半分の長さを超えないようガード
-    if(fade > dur/2) fade = dur/2;
+    if(fade > dur/2) fade = dur/2;           // FADEが半分を超えないようガード
 
-    var sr = ctx.sampleRate;
-    var fSamp = Math.max(2, Math.floor(fade*sr));
     var PEAK = 0.28;                         // クリップ防止の固定レベル（実機で要調整）
+    var total = Math.ceil(dur*sr);
+    var fSamp = Math.max(2, Math.floor(fade*sr));
 
-    var t0 = startAt;
-    var t1 = startAt + dur;
+    // 窓を焼き込んだバッファを生成（立上り/立下りレイズドコサイン・中央は1.0）
+    var buf = ctx.createBuffer(1, total, sr);
+    var ch = buf.getChannelData(0);
+    var twoPiF = 2*Math.PI*freq;
+    for(var n=0; n<total; n++){
+      var env;
+      if(n < fSamp){                          // フェードイン：0→1 レイズドコサイン
+        env = 0.5*(1 - Math.cos(Math.PI*(n/(fSamp-1))));
+      }else if(n >= total - fSamp){           // フェードアウト：1→0 レイズドコサイン
+        var k = n - (total - fSamp);
+        env = 0.5*(1 + Math.cos(Math.PI*(k/(fSamp-1))));
+      }else{
+        env = 1.0;                            // サスティーン
+      }
+      ch[n] = PEAK * env * Math.sin(twoPiF * (n/sr));
+    }
 
-    // ゲイン包絡：0→PEAK(fade in)→hold→0(fade out) をレイズドコサインで。
-    //   v4知見：先頭0は setValueCurveAtTime の第1要素(=0)が担うため、
-    //   同一時刻 t0 の setValueAtTime(0,t0) は競合を生むので置かない。
-    var up = makeFadeCurve(fSamp, true);
-    for(var i=0;i<fSamp;i++){ up[i] *= PEAK; }
-    gain.gain.setValueCurveAtTime(up, t0, fade);   // 先頭=0 から立ち上げ（t0重複なし）
-    gain.gain.setValueAtTime(PEAK, t0+fade);
-    var down = makeFadeCurve(fSamp, false);
-    for(var j=0;j<fSamp;j++){ down[j] *= PEAK; }
-    gain.gain.setValueCurveAtTime(down, t1-fade, fade);
-
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(t0);
-    osc.stop(t1 + 0.02);
-    // start前stopガード：stopは必ずstartより後
-    // v4知見：再生後にノードを切り離す（GC待ちのまま残るとAndroidでポップの一因）。
-    osc.onended = function(){ try{ osc.disconnect(); gain.disconnect(); }catch(e){} };
-    return {osc:osc, gain:gain};
+    var src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);            // 固定ゲインは不要（PEAK をサンプルに織込済）
+    src.start(startAt);
+    // 末尾は窓で 0。明示 stop は置かない（再生完了後に onended で切り離すだけ）。
+    src.onended = function(){ try{ src.disconnect(); }catch(e){} };
+    // 呼び出し側（stopActive）が n.osc.stop(now) を使うため互換キーで返す。
+    return {osc:src, gain:null};
   }
 
   // ══════════════════════════════════════════
@@ -956,11 +958,13 @@
       renderLadder('ladder-lo', 0);
     }
 
-    // コメント（両軸テスト時は低音優先でブランド感、単軸はその軸）
-    var cmt='';
-    if(testedLo){ cmt = LO_COMMENT[lang][state.reachLo]; }
-    else if(testedHi){ cmt = HI_COMMENT[lang][state.reachHi]; }
-    $('res-comment').innerHTML = cmt || '—';
+    // コメント（両軸テスト時は高音→低音の順で両方表示／単軸はその軸のみ）。
+    //   reach=0 でも HI_COMMENT/LO_COMMENT に index0（未到達文）があるので添字は安全。
+    //   念のため未定義は ||'' で握りつぶし、filter(Boolean) で空行を除去。
+    var parts=[];
+    if(testedHi){ parts.push(HI_COMMENT[lang][state.reachHi] || ''); }
+    if(testedLo){ parts.push(LO_COMMENT[lang][state.reachLo] || ''); }
+    $('res-comment').innerHTML = parts.filter(Boolean).join('<br>') || '—';
 
     // 注記：高音をテストした場合は「機器の上限かも」を添える（耳年齢の数字を絶対視させない）
     var baseNote = (BS_I18N.res_note[lang]||BS_I18N.res_note.zh);
@@ -1026,8 +1030,12 @@
   //     ・固定 highpass 78Hz（再生不能な超低域の基音を捨て、ピッチは倍音列が運ぶ
   //       ＝missing fundamental）＋ lowpass 3200→2500Hz スイープ
   // ══════════════════════════════════════════
-  var BASS_HARMONICS=[ {m:1,a:1.00},{m:2,a:0.72},{m:3,a:0.52},{m:4,a:0.34},
-                       {m:5,a:0.22},{m:6,a:0.14},{m:7,a:0.09},{m:8,a:0.06} ];
+  // 【reveal専用に再調整】31Hz でビビり/ジャリつき（倍音過多）を解消するため、
+  //   v4 の明るい倍音バランスを「暗い太いベース」へ寄せる：
+  //   1〜4倍音中心（missing fundamental は 2〜4倍音=62/93/124Hz帯で十分成立）、
+  //   5倍音以上は大幅減衰。三角芯の明るさも後段 lowpass を大きく下げて抑える。
+  var BASS_HARMONICS=[ {m:1,a:1.00},{m:2,a:0.70},{m:3,a:0.40},{m:4,a:0.20},
+                       {m:5,a:0.06},{m:6,a:0.03},{m:7,a:0.015},{m:8,a:0.008} ];
   // 三角芯を奇数倍音として畳み込んだ「実際に鳴る」倍音振幅（v4の WAVE_IMAG と同一）
   var BASS_WAVE_IMAG=(function(){
     var TRI_A=0.10, c8=8/(Math.PI*Math.PI);
@@ -1051,9 +1059,9 @@
     }
     return _bassWave;
   }
-  // フィルタ振幅応答（正規化計算用の近似）：HP78×1段, LP2600×~2pole
-  function _hpMag(hz){ var r=hz/78;   return r/Math.sqrt(1+r*r); }
-  function _lpMag(hz){ var r=hz/2600; return 1/Math.sqrt(1+Math.pow(r,4)); }
+  // フィルタ振幅応答（正規化計算用の近似）：HP45×1段, LP~900×~2pole（reveal調整後の実フィルタに整合）
+  function _hpMag(hz){ var r=hz/45;  return r/Math.sqrt(1+r*r); }
+  function _lpMag(hz){ var r=hz/900; return 1/Math.sqrt(1+Math.pow(r,4)); }
   // A特性近似（v4 audWeight 相当の簡易ラウドネス重み）
   function _audWeight(f){
     var f2=f*f, f4=f2*f2;
@@ -1070,7 +1078,8 @@
     return Math.sqrt(s);
   }
   var _LG_REF=_noteLoudness(110.0);                // 基準 A2(110Hz) を相対ゲイン≒1 に
-  var _LG_MIN=0.45, _LG_MAX=2.7, _LG_OUT=0.16;     // 低音持ち上げ上限/高音下げ下限/全体スケール(ピーク≦1.0)
+  // reveal調整：低域スピーカーの歪み/ビビり回避のため全体ゲインを下げる（0.16→0.11）。
+  var _LG_MIN=0.45, _LG_MAX=2.7, _LG_OUT=0.11;     // 低音持ち上げ上限/高音下げ下限/全体スケール(ピーク≦1.0)
   function _loudnessGain(f){
     var rel=_LG_REF/_noteLoudness(f);
     rel=Math.max(_LG_MIN, Math.min(_LG_MAX, rel));
@@ -1092,16 +1101,18 @@
     out.gain.value = _loudnessGain(freq);
     out.connect(ctx.destination);
 
-    // highpass 78Hz：再生不能な超低域の基音を捨てる（ピッチは倍音列で保持）
+    // highpass 45Hz：実機スピーカー保護で残すが、31Hz基音を切りすぎない範囲まで下げる
+    //   （v4は78Hzだったが、reveal は深い 31Hz の太さを残したいので 45Hz）。
     var hp = ctx.createBiquadFilter();
-    hp.type='highpass'; hp.frequency.value=78; hp.Q.value=0.6;
+    hp.type='highpass'; hp.frequency.value=45; hp.Q.value=0.6;
     hp.connect(out);
 
-    // lowpass 3200→2500Hz スイープ（アタック明るい→サスティーンまろやか・全音共通）
+    // lowpass を大きく下げる（3200→2500 → ~1100→850Hz）。高域倍音/三角芯の明るさを抑え、
+    //   31Hz でも「ビビらず太く丸い」暗めのベースに寄せる（reveal専用）。
     var lp = ctx.createBiquadFilter();
     lp.type='lowpass';
-    lp.frequency.setValueAtTime(3200, t0);
-    lp.frequency.exponentialRampToValueAtTime(2500, t0+END*0.5);
+    lp.frequency.setValueAtTime(1100, t0);
+    lp.frequency.exponentialRampToValueAtTime(850, t0+END*0.5);
     lp.Q.value=0.7;
     lp.connect(hp);
 
