@@ -757,17 +757,25 @@
 
     // 周波数はゲート0の無音中に変更（クリック無し）。
     measOsc.frequency.setValueAtTime(freq, Math.max(ctx.currentTime, when - 0.03));
-    // ゲートを linearRamp で開閉（setValueCurveより Android で安定）。完全に0へ戻す。
+    // 【オフセットのプツ対策】開閉を setTargetAtTime（指数・1次微分連続＝角なし）に。
+    //   linearRamp の「角」が消える瞬間のプツ源だった → 平滑に 0 へ近づけ、実質0後にハードピン。
+    //   時定数: atk/rel は窓長(atk)の概ね 1/4 を採用（低音は長め・高音は短め＝従来仕様を踏襲）。
+    var tcAtk = Math.max(0.006, atk * 0.25);   // 平滑アタック時定数
+    var tcRel = Math.max(0.012, rel * 0.30);   // 平滑リリース時定数（オフセット側はやや長めに）
+    measGate.gain.cancelScheduledValues(when);
     measGate.gain.setValueAtTime(0, when);
-    measGate.gain.linearRampToValueAtTime(PEAK, when + atk);
-    measGate.gain.setValueAtTime(PEAK, when + dur - rel);
-    measGate.gain.linearRampToValueAtTime(0, when + dur);
+    measGate.gain.setTargetAtTime(PEAK, when, tcAtk);              // 平滑アタック（角なし）
+    var relStart = when + dur - rel;
+    measGate.gain.setTargetAtTime(0, relStart, tcRel);            // 平滑リリース（角なし＝オフセットのプツ源を断つ）
+    measGate.gain.setValueAtTime(0, relStart + tcRel*8 + 0.02);   // 実質0(≈8τ)まで減衰後にハードピン（無音中なので段差にならない）
 
-    // ノードは常駐＝停止/破棄しない。stopActive 互換のため擬似ノードを返す（osc.stop はゲート即0で代替）。
+    // ノードは常駐＝停止/破棄しない。stopActive 互換のため擬似ノードを返す（osc.stop はゲート平滑0で代替）。
     return {osc:{ stop:function(t){ try{
       var now = (t!=null) ? t : ctx.currentTime;
       measGate.gain.cancelScheduledValues(now);
-      measGate.gain.setValueAtTime(0, now);
+      measGate.gain.setValueAtTime(measGate.gain.value, now);     // 現在値から平滑に（瞬間0ステップ禁止）
+      measGate.gain.setTargetAtTime(0, now, 0.004);
+      measGate.gain.setValueAtTime(0, now + 0.05);
     }catch(e){} } }, gain:measGate};
   }
 
@@ -802,10 +810,16 @@
   //   永続オシレータ方式では「ノード停止」ではなく measGate を即0にして発音を断つ。
   function stopActive(){
     var now = getCtx().currentTime;
-    // 予約済みゲートカーブを破棄して無音へ（中断時の取りこぼし防止）。
-    if(measGate){ try{ measGate.gain.cancelScheduledValues(now); measGate.gain.setValueAtTime(0, now); }catch(e){} }
+    // 【オフセットのプツ対策】予約カーブ破棄後の「瞬間0ステップ」を禁止。現在値から ~4ms 平滑で消す。
+    //   （自然リリース直後に即0ステップしていたのが低音オフセットのプツの主因の可能性大）
+    if(measGate){ try{
+      measGate.gain.cancelScheduledValues(now);
+      measGate.gain.setValueAtTime(measGate.gain.value, now);   // 現在値から
+      measGate.gain.setTargetAtTime(0, now, 0.004);             // ~4ms平滑（瞬間段差にしない）
+      measGate.gain.setValueAtTime(0, now + 0.05);              // 実質0後にハードピン
+    }catch(e){} }
     state.activeNodes.forEach(function(n){
-      try{ n.osc.stop(now); }catch(e){}   // 擬似ノードでもゲート0化される（保険）
+      try{ n.osc.stop(now); }catch(e){}   // 擬似ノードでもゲート平滑0化される（保険）
     });
     state.activeNodes = [];
   }
@@ -1166,7 +1180,10 @@
     env.gain.exponentialRampToValueAtTime(0.72, t0+0.20);
     env.gain.exponentialRampToValueAtTime(0.50, t0+END*0.6);
     env.gain.exponentialRampToValueAtTime(0.02, t0+END*0.78);
-    env.gain.linearRampToValueAtTime(0, t0+END-0.01);            // 末尾 ~10ms 手前で完全0（オフセット雑音対策）
+    // 【オフセットのプツ対策】末尾の linearRamp→0（角あり）を setTargetAtTime（指数・角なし）に。
+    var relStart = t0+END*0.78;
+    env.gain.setTargetAtTime(0, relStart, 0.02);                 // 平滑に 0 へ近づける（消える瞬間のプツを断つ）
+    env.gain.setValueAtTime(0, relStart + 0.15);                // 実質0収束後にハードピン（無音中なので段差にならない）
     env.connect(lp);
 
     // 1音=単一PeriodicWaveオシレータ（倍音は WAVE_IMAG に畳み込み済み）
@@ -1177,7 +1194,7 @@
     o.start(t0);
     o.stop(STOP);
     // 再生後に切り離し（Android GC由来ポップ対策）。同期disconnectはポップ源になりうるので遅延。
-    o.onended = function(){ setTimeout(function(){ try{ o.disconnect(); env.disconnect(); lp.disconnect(); hp.disconnect(); out.disconnect(); }catch(e){} }, 120); };
+    o.onended = function(){ setTimeout(function(){ try{ o.disconnect(); env.disconnect(); lp.disconnect(); hp.disconnect(); out.disconnect(); }catch(e){} }, 150); };  // ゲイン0収束後に切離し（120→150ms 余裕）
   }
 
   // ══════════════════════════════════════════
