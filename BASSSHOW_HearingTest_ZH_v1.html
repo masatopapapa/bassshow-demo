@@ -762,20 +762,26 @@
     //   時定数: atk/rel は窓長(atk)の概ね 1/4 を採用（低音は長め・高音は短め＝従来仕様を踏襲）。
     var tcAtk = Math.max(0.004, atk * 0.25);   // 平滑アタック時定数
     var tcRel = Math.max(0.006, rel * 0.30);   // 平滑リリース時定数（オフセット側はやや長めに）
-    var relStart = when + dur - rel;
-    // アタック平滑到達(~5τ)がリリース開始より前にあること＝PEAK保持区間の存在を保証
-    var pinAt = when + tcAtk*5;
-    if(pinAt > relStart) pinAt = relStart;     // 万一フレームが短くてもピンはリリース前に収める
-    measGate.gain.cancelScheduledValues(when);
-    measGate.gain.setValueAtTime(0, when);
-    // 【音量退行修正】アタックは平滑に立ち上げ → setValueAtTime で確実に PEAK へ到達(ハードピン)。
-    //   setTargetAtTime は指数漸近で PEAK に届かない＝音量低下/低音無音の原因だった → ~5τで≈99%到達後 PEAK にピン。
-    measGate.gain.setTargetAtTime(PEAK, when, tcAtk);              // 平滑アタック（角なし）
-    measGate.gain.setValueAtTime(PEAK, pinAt);                    // PEAK へハードピン（上昇中の微小段差＝無害）
-    // ホールド：pinAt 〜 relStart は PEAK 保持（フレーム中フルレベル）
-    // 【オフセットのプツ対策＝維持】リリースは setTargetAtTime のまま（角なし）。瞬間0ステップは禁止。
-    measGate.gain.setTargetAtTime(0, relStart, tcRel);            // 平滑リリース（角なし＝オフセットのプツ源を断つ）
-    measGate.gain.setValueAtTime(0, relStart + tcRel*8 + 0.02);   // 実質0(≈8τ)まで減衰後にハードピン（無音中なので段差にならない）
+    // r6: raised-cosine attack/release (reach PEAK exactly = keep volume; zero slope ends = no step/corner)
+    var N = 256;
+    var atkCurve = new Float32Array(N);
+    var relCurve = new Float32Array(N);
+    for (var i = 0; i < N; i++){
+      var p = i / (N - 1);
+      atkCurve[i] = PEAK * 0.5 * (1 - Math.cos(Math.PI * p)); // 0 -> PEAK
+      relCurve[i] = PEAK * 0.5 * (1 + Math.cos(Math.PI * p)); // PEAK -> 0
+    }
+    var safeAtk = atk, safeRel = rel;
+    if (safeAtk + safeRel > dur - 0.01){            // guard for short frame (prevent window overlap)
+      var _k = (dur - 0.01) / (safeAtk + safeRel);
+      safeAtk *= _k; safeRel *= _k;
+    }
+    var relStart = when + dur - safeRel;
+    measGate.gain.cancelScheduledValues(when - 0.01);       // clear prior automation
+    measGate.gain.setValueAtTime(0, when - 0.01);           // anchor baseline to 0 in the silent gap
+    measGate.gain.setValueCurveAtTime(atkCurve, when, safeAtk);     // 0 -> PEAK (exact endpoints, no corner)
+    // hold at PEAK from when+safeAtk until relStart (no event = hold)
+    measGate.gain.setValueCurveAtTime(relCurve, relStart, safeRel); // PEAK -> 0 (exact endpoints, no corner)
 
     // ノードは常駐＝停止/破棄しない。stopActive 互換のため擬似ノードを返す（osc.stop はゲート平滑0で代替）。
     return {osc:{ stop:function(t){ try{
