@@ -840,13 +840,14 @@
 
   // 1トライアル再生（鳴る側のカードだけ playTone、他方は完全無音）
   // 統合カード：再生中は両カード点灯→再生後にタップ可能(回答)になる
-  function runTrial(){
+  function runTrial(isReplay){
     state.answering = false;
     setChoicesEnabled(false);
     $('btn-replay').disabled = true;
 
     var freq = state.freqs[state.idx];
-    state.soundFrame = (Math.random() < 0.5) ? 1 : 2;
+    // 新規トライアルのみ A/B を抽選。「もう一度」(isReplay) は直前に鳴った側を維持して再生。
+    if(!isReplay) state.soundFrame = (Math.random() < 0.5) ? 1 : 2;
 
     var ctx = getCtx();
     var base = ctx.currentTime + LEAD;
@@ -1310,7 +1311,7 @@
 
   $('ab1').addEventListener('click', function(){ if(!$('ab1').disabled) onAnswer(1); });
   $('ab2').addEventListener('click', function(){ if(!$('ab2').disabled) onAnswer(2); });
-  $('btn-replay').addEventListener('click', function(){ if(!$('btn-replay').disabled) runTrial(); });
+  $('btn-replay').addEventListener('click', function(){ if(!$('btn-replay').disabled) runTrial(true); });
 
   $('btn-reveal').addEventListener('click', function(){ playRealBass(revealPlayFreq); });
   $('btn-copy').addEventListener('click', function(){ copyText(buildShareText()); });
