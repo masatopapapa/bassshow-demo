@@ -760,12 +760,20 @@
     // 【オフセットのプツ対策】開閉を setTargetAtTime（指数・1次微分連続＝角なし）に。
     //   linearRamp の「角」が消える瞬間のプツ源だった → 平滑に 0 へ近づけ、実質0後にハードピン。
     //   時定数: atk/rel は窓長(atk)の概ね 1/4 を採用（低音は長め・高音は短め＝従来仕様を踏襲）。
-    var tcAtk = Math.max(0.006, atk * 0.25);   // 平滑アタック時定数
-    var tcRel = Math.max(0.012, rel * 0.30);   // 平滑リリース時定数（オフセット側はやや長めに）
+    var tcAtk = Math.max(0.004, atk * 0.25);   // 平滑アタック時定数
+    var tcRel = Math.max(0.006, rel * 0.30);   // 平滑リリース時定数（オフセット側はやや長めに）
+    var relStart = when + dur - rel;
+    // アタック平滑到達(~5τ)がリリース開始より前にあること＝PEAK保持区間の存在を保証
+    var pinAt = when + tcAtk*5;
+    if(pinAt > relStart) pinAt = relStart;     // 万一フレームが短くてもピンはリリース前に収める
     measGate.gain.cancelScheduledValues(when);
     measGate.gain.setValueAtTime(0, when);
+    // 【音量退行修正】アタックは平滑に立ち上げ → setValueAtTime で確実に PEAK へ到達(ハードピン)。
+    //   setTargetAtTime は指数漸近で PEAK に届かない＝音量低下/低音無音の原因だった → ~5τで≈99%到達後 PEAK にピン。
     measGate.gain.setTargetAtTime(PEAK, when, tcAtk);              // 平滑アタック（角なし）
-    var relStart = when + dur - rel;
+    measGate.gain.setValueAtTime(PEAK, pinAt);                    // PEAK へハードピン（上昇中の微小段差＝無害）
+    // ホールド：pinAt 〜 relStart は PEAK 保持（フレーム中フルレベル）
+    // 【オフセットのプツ対策＝維持】リリースは setTargetAtTime のまま（角なし）。瞬間0ステップは禁止。
     measGate.gain.setTargetAtTime(0, relStart, tcRel);            // 平滑リリース（角なし＝オフセットのプツ源を断つ）
     measGate.gain.setValueAtTime(0, relStart + tcRel*8 + 0.02);   // 実質0(≈8τ)まで減衰後にハードピン（無音中なので段差にならない）
 
