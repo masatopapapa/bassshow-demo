@@ -694,11 +694,17 @@
         masterGain.gain.value = 1.0;
         masterGain.connect(audioCtx.destination);
 
-        // keep-alive：1秒・全ゼロのバッファをループ。実質無音だが出力は生かし続ける。
+        // keep-alive：1秒バッファをループ。【C案=BT対策強化】中身を全ゼロではなく
+        //   極小ディザ(±1/32768≒1LSB相当)で満たす。Bluetoothコーデックは「連続ゼロ=無音」を
+        //   検知すると省電力に入り、次発音時に断続プツを生む → 非ゼロの極微小サンプルを送り続け
+        //   リンクを起こしたままにする。後段 kg.gain=0.0001 を通すので最終出力は ±3e-9 ≒ 完全不可聴
+        //   （測定の無音純度に影響しない）。
         _keepAlive = audioCtx.createBufferSource();
         var kbuf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
+        var kdat = kbuf.getChannelData(0);
+        for(var ki=0; ki<kdat.length; ki++){ kdat[ki] = (Math.random()*2 - 1) / 32768; } // 約1LSBのディザ
         _keepAlive.buffer = kbuf; _keepAlive.loop = true;
-        var kg = audioCtx.createGain(); kg.gain.value = 0.0001;  // 実質無音
+        var kg = audioCtx.createGain(); kg.gain.value = 0.0001;  // 実質無音（ディザ×この係数＝不可聴）
         _keepAlive.connect(kg); kg.connect(audioCtx.destination);
         _keepAlive.start();
         // _keepAlive / masterGain はグローバル保持（GCで消えないように）
