@@ -71,9 +71,9 @@
   .bs-banner-res img{height:26px;width:auto;display:block;margin:0 auto;max-width:100%;}
   .bs-res-title{text-align:center;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:8px;}
   .res-finalcry{text-align:center;font-size:12px;color:var(--text3);letter-spacing:1px;margin-bottom:6px;font-weight:700;}
-  .res-emoji{width:150px;height:150px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:70px;overflow:hidden;
+  .res-emoji{width:150px;height:150px;margin:0 auto 8px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:70px;overflow:hidden;
     background:radial-gradient(circle at 50% 35%,var(--field-green2),var(--field-green));}
-  .res-emoji img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+  .res-emoji img{width:100%;height:100%;object-fit:contain;border-radius:16px;display:block;}
   .res-emoji.rare{background:radial-gradient(circle at 50% 35%,#caa23a,#7a5a10);box-shadow:0 0 24px rgba(255,210,74,.5);}
   .res-abbr{text-align:center;font-size:40px;font-weight:900;letter-spacing:2px;line-height:1;color:var(--goal-white);margin-bottom:4px;
     text-shadow:0 2px 8px rgba(0,0,0,.4);}
@@ -97,14 +97,14 @@
   .res-overlay .spin{font-size:13px;color:var(--text2);letter-spacing:2px;font-weight:700;}
   .res-overlay.hidden{display:none;}
   /* ===== 3カラムフッター（共通アイコン｜案内文｜シェアQR） ===== */
-  .bs-share-foot{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);}
+  .bs-share-foot{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);}
   .bs-share-game-icon{width:48px;height:48px;border-radius:10px;background:var(--field-green);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden;}
   .bs-share-game-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;}
   .bs-share-foot-text{flex:1;}
   .bs-share-badge{display:inline-block;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:3px;}
   .bs-share-title{font-size:13px;font-weight:700;}
   .bs-share-desc{font-size:11px;color:var(--text2);margin-top:2px;}
-  .sc-qrbox{width:48px;height:48px;background:#fff;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .sc-qrbox{width:80px;height:80px;background:#fff;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:visible;padding:4px;box-sizing:border-box;}
   .sc-qrbox svg{width:100%;height:100%;}
   .sc-qrbox .urlfb{font-size:6px;color:#333;word-break:break-all;padding:2px;line-height:1.1;}
   .share-btn-row{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
@@ -292,7 +292,7 @@ const QUESTION_POOL = [
   {
     id: "spot1", axis: "spot",
     q:  { zh: "比赛中最让你热血沸腾的瞬间是？", ja: "試合で一番テンションが上がるのは？", en: "What gets you most fired up in a match?" },
-    a:  { text: { zh: "自己打进制胜球", ja: "自分が決勝ゴールを決める", en: "Scoring the winning goal yourself" }, v: { spot: 2, zone: 1 } },
+    a:  { text: { zh: "自己打进制胜球", ja: "自分が決勝ゴールを決める", en: "Scoring the winning goal yourself" }, v: { spot: 2 } },
     b:  { text: { zh: "做了没人注意但很关键的工作", ja: "誰も気づかないけど効いてた仕事", en: "Doing the unsung work that quietly decides it" }, v: { spot: -2, style: -1 } }
   },
   {
@@ -352,7 +352,7 @@ const QUESTION_POOL = [
   {
     id: "role1", axis: "role",
     q:  { zh: "环顾球队，你最在意的是？", ja: "チームを見渡すと、つい気になるのは？", en: "Looking around the team, you notice…" },
-    a:  { text: { zh: "自己能怎么发挥", ja: "自分がどう活躍するか", en: "How you can shine" }, v: { role: -1, spot: 1 } },
+    a:  { text: { zh: "自己能怎么发挥", ja: "自分がどう活躍するか", en: "How you can shine" }, v: { role: -1 } },
     b:  { text: { zh: "整体运转得顺不顺", ja: "全体がうまく回っているか", en: "Whether the whole thing is clicking" }, v: { role: 2 } }
   },
   {
@@ -364,7 +364,7 @@ const QUESTION_POOL = [
   {
     id: "role3", axis: "role",
     q:  { zh: "你更想做哪一种人？", ja: "なりたいのはどっち？", en: "Which would you rather be?" },
-    a:  { text: { zh: "亲自决定胜负的球员", ja: "自分で勝負を決める選手", en: "The player who decides the result" }, v: { role: 0, spot: 1 } },
+    a:  { text: { zh: "亲自决定胜负的球员", ja: "自分で勝負を決める選手", en: "The player who decides the result" }, v: { role: 0 } },
     b:  { text: { zh: "让全队变强的存在", ja: "チーム全体を強くする存在", en: "The one who makes the whole team better" }, v: { role: 2 } }
   },
 
@@ -372,7 +372,7 @@ const QUESTION_POOL = [
   {
     id: "stance1", axis: "stance",
     q:  { zh: "足球最大的乐趣是？", ja: "サッカーの一番の楽しみは？", en: "The biggest joy of football is…" },
-    a:  { text: { zh: "自己上场踢球", ja: "自分がプレーすること", en: "Playing it yourself" }, v: { stance: -2, zone: 1 } },
+    a:  { text: { zh: "自己上场踢球", ja: "自分がプレーすること", en: "Playing it yourself" }, v: { stance: -2 } },
     b:  { text: { zh: "为喜欢的球队加油", ja: "好きなチームを応援すること", en: "Cheering for the team you love" }, v: { stance: 2 } }
   },
   {
@@ -470,7 +470,7 @@ var CHARS = {
     buddyNote:{zh:"\u540e\u8170\uff08\u8d1d\u65af\uff09\u2014\u540e\u573a\u4e24\u4e2a\u5b9a\u6d77\u795e\u9488\uff0c\u4e92\u76f8\u4fe1\u8d56",ja:"\u30dc\u30e9\u30f3\u30c1\uff08\u30d9\u30fc\u30b9\uff09\u2014\u5f8c\u308d\u306e\u4e8c\u4eba\u3067\u571f\u53f0\u3092\u652f\u3048\u5408\u3046",en:"Pivot (Bass) \u2014 the two anchors at the back, leaning on each other"}, rivalNote:{zh:"CF\uff08\u4e3b\u5531\uff09\u2014\u4e00\u8d77\u538b\u4e0a\u53bb\u5c31\u51fa\u4e8b",ja:"CF\uff08\u30dc\u30fc\u30ab\u30eb\uff09\u2014\u4e00\u7dd2\u306b\u524d\u304c\u304b\u308a\u3068\u4e8b\u6545",en:"CF (Vocal) \u2014 push forward together and disaster strikes"},
     buddy:"volante", rival:"cf" },
 
-  cf:{ key:"cf", emoji:"\u26BD", rare:false, coord:{spot:2,zone:2,style:0,stance:-1},
+  cf:{ key:"cf", emoji:"\u26BD", rare:false, coord:{spot:2,zone:2,style:1,stance:-1},
     posAbbr:"CF",
     pos:{zh:"\u4e2d\u950b CF",ja:"CF\uFF08\u30bb\u30f3\u30bf\u30fc\u30d5\u30a9\u30ef\u30fc\u30c9\uFF09",en:"Center Forward"},
     band:{zh:"\u4e3b\u5531",ja:"\u30e1\u30a4\u30f3\u30dc\u30fc\u30ab\u30eb",en:"Lead Vocal"},
@@ -483,7 +483,7 @@ var CHARS = {
     buddyNote:{zh:"\u5f71\u950b\uff08\u548c\u58f0\uff09\u2014\u4e00\u4e2a\u51b2\u9876\u4e00\u4e2a\u63a5\u5e94\uff0c\u5929\u751f\u4e8c\u4eba\u7ec4",ja:"\u30b7\u30e3\u30c9\u30fc\uff08\u30b3\u30fc\u30e9\u30b9\uff09\u2014\u4e8c\u4eba\u3067\u4e00\u3064\u306e\u30b3\u30f3\u30d3",en:"Shadow (Backing Vocal) \u2014 one finishes, one supports; a natural duo"}, rivalNote:{zh:"\u524d\u8170\uff08\u4e3b\u5409\u4ed6\uff09\u2014\u4e3b\u89d2\u4e4b\u4f4d\u4e92\u4e0d\u76f8\u8ba9",ja:"\u30c8\u30c3\u30d7\u4e0b\uff08\u30ea\u30fc\u30c9\u30ae\u30bf\u30fc\uff09\u2014\u4e3b\u5f79\u3092\u596a\u3044\u5408\u3046",en:"Attacking Mid (Lead Guitar) \u2014 fighting over who gets to be the star"},
     buddy:"shadow", rival:"toptan" },
 
-  toptan:{ key:"toptan", emoji:"\uD83C\uDFA9", rare:false, coord:{spot:1,zone:1,style:2,stance:-1},
+  toptan:{ key:"toptan", emoji:"\uD83C\uDFA9", rare:false, coord:{spot:2,zone:1,style:2,stance:-1},
     posAbbr:"AM",
     pos:{zh:"\u524d\u8170\uFF0F\u7ec4\u7ec7\u6838\u5fc3",ja:"\u30c8\u30c3\u30d7\u4e0b\uFF0F\u53f8\u4ee4\u5854",en:"Attacking Mid / Playmaker"},
     band:{zh:"\u4e3b\u5409\u4ed6",ja:"\u30ea\u30fc\u30c9\u30ae\u30bf\u30fc",en:"Lead Guitar"},
@@ -509,7 +509,7 @@ var CHARS = {
     buddyNote:{zh:"GK\uff08\u9f13\u624b\uff09\u2014\u540e\u9632\u4e0e\u95e8\u5c06\u7684\u9ed8\u5951",ja:"GK\uff08\u30c9\u30e9\u30e0\uff09\u2014\u5b88\u308a\u306e\u30e9\u30a4\u30f3\u3092\u5171\u6709\u3059\u308b\u606f\u306e\u5408\u3046\u4e8c\u4eba",en:"GK (Drums) \u2014 the defensive line shared in perfect understanding"}, rivalNote:{zh:"CF\uff08\u4e3b\u5531\uff09\u2014\u4f60\u7684\u91cd\u8981\u6027\u603b\u88ab\u5fd8\u8bb0",ja:"CF\uff08\u30dc\u30fc\u30ab\u30eb\uff09\u2014\u3042\u308a\u304c\u305f\u307f\u306b\u6c17\u3065\u304b\u308c\u306a\u3044",en:"CF (Vocal) \u2014 your importance goes unnoticed"},
     buddy:"gk", rival:"cf" },
 
-  b2b:{ key:"b2b", emoji:"\u2699\uFE0F", rare:false, coord:{spot:0,zone:0,style:0,stance:-1},
+  b2b:{ key:"b2b", emoji:"\u2699\uFE0F", rare:false, coord:{spot:0,zone:0,style:1,stance:-1},
     posAbbr:"CM",
     pos:{zh:"B2B \u4e2d\u573a",ja:"B2B MF",en:"Box-to-Box Mid"},
     band:{zh:"\u952e\u76d8",ja:"\u30ad\u30fc\u30dc\u30fc\u30c9",en:"Keyboards"},
@@ -522,7 +522,7 @@ var CHARS = {
     buddyNote:{zh:"\u5168\u961f\u2014\u54ea\u91cc\u6709\u6d1e\u5c31\u53bb\u54ea\u91cc",ja:"\u5168\u54e1\u2014\u7a74\u304c\u3042\u308c\u3070\u3069\u3053\u3078\u3067\u3082",en:"Everyone \u2014 wherever there\u2019s a gap, you fill it"}, rivalNote:{zh:"\u5168\u961f\u2014\u603b\u88ab\u968f\u610f\u4f7f\u5524",ja:"\u5168\u54e1\u2014\u3044\u3044\u3088\u3046\u306b\u4f7f\u308f\u308c\u304c\u3061",en:"Everyone \u2014 always getting used however they please"},
     buddy:"all", rival:"all" },
 
-  wing:{ key:"wing", emoji:"\uD83C\uDFBA", rare:false, coord:{spot:1,zone:2,style:2,stance:-1},
+  wing:{ key:"wing", emoji:"\uD83C\uDFBA", rare:false, coord:{spot:1,zone:1,style:2,stance:-1},
     posAbbr:"WG",
     pos:{zh:"\u8fb9\u950b",ja:"\u30a6\u30a4\u30f3\u30b0",en:"Winger"},
     band:{zh:"\u7ba1\u4e50\u7ec4",ja:"\u30db\u30fc\u30f3\u30bb\u30af\u30b7\u30e7\u30f3",en:"Horn Section"},
@@ -535,7 +535,7 @@ var CHARS = {
     buddyNote:{zh:"CF\uff08\u4e3b\u5531\uff09\u2014\u526f\u6b4c\u91cc\u540c\u53f0\u7206\u53d1",ja:"CF\uff08\u30dc\u30fc\u30ab\u30eb\uff09\u2014\u30b5\u30d3\u3067\u5171\u6f14",en:"CF (Vocal) \u2014 exploding together in the chorus"}, rivalNote:{zh:"\u95f7\u573a\u2014\u6ca1\u6709\u673a\u4f1a\u65f6\u6700\u96be\u53d7",ja:"\u5869\u8a66\u5408\u2014\u4ed5\u639b\u3051\u3069\u3053\u308d\u304c\u306a\u304f\u624b\u6301\u3061\u7121\u6c99\u6c70",en:"A dull match \u2014 nothing to do, the worst for you"},
     buddy:"cf", rival:"none" },
 
-  shadow:{ key:"shadow", emoji:"\uD83D\uDDE3\uFE0F", rare:false, coord:{spot:1,zone:0,style:-1,stance:-1},
+  shadow:{ key:"shadow", emoji:"\uD83D\uDDE3\uFE0F", rare:false, coord:{spot:1,zone:0,style:0,stance:-1},
     posAbbr:"SS",
     pos:{zh:"\u5f71\u950b\uFF0F\u7b2c\u4e8c\u524d\u950b",ja:"\u30b7\u30e3\u30c9\u30fc\uFF0F\u30bb\u30ab\u30f3\u30c9\u30c8\u30c3\u30d7",en:"Shadow / Second Striker"},
     band:{zh:"\u548c\u58f0",ja:"\u30b3\u30fc\u30e9\u30b9",en:"Backing Vocal"},
@@ -548,7 +548,7 @@ var CHARS = {
     buddyNote:{zh:"CF\uff08\u4e3b\u5531\uff09\u2014\u4e24\u4eba\u4e00\u4f53\u7684\u9ed8\u5951",ja:"CF\uff08\u30dc\u30fc\u30ab\u30eb\uff09\u2014\u4e8c\u4eba\u3067\u4e00\u3064",en:"CF (Vocal) \u2014 two halves of one whole"}, rivalNote:{zh:"\u2014\u603b\u6709\u4e00\u5929\u4f1a\u4e0a\u514b\u4e0a\u4f4d",ja:"\u2014\u305d\u306e\u3046\u3061\u4e0b\u524b\u4e0a\u306e\u4e88\u611f",en:"\u2014 a coup is brewing someday"},
     buddy:"cf", rival:"none" },
 
-  sb:{ key:"sb", emoji:"\uD83E\uDD41", rare:false, coord:{spot:-1,zone:1,style:-2,stance:-1},
+  sb:{ key:"sb", emoji:"\uD83E\uDD41", rare:false, coord:{spot:0,zone:1,style:-1,stance:-1},
     posAbbr:"FB",
     pos:{zh:"\u8fb9\u540e\u536b SB\uFF0FWB",ja:"SB\uFF0FWB",en:"Full Back / Wing Back"},
     band:{zh:"\u6253\u51fb\u4e50",ja:"\u30d1\u30fc\u30ab\u30c3\u30b7\u30e7\u30f3",en:"Percussion"},
