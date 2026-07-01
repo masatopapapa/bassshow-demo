@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>足球位置诊断 · 你是乐队哪个位置 | BASS SHOW</title>
+<style>
+  :root{
+    --bg:#0A0A0F;--bg2:#13131A;--bg3:#1C1C26;
+    --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+    --text:#F0EFF8;--text2:#9896B0;--text3:#5A5870;
+    --accent:#ff2d2d;--accent-2:#ffb02e;
+    --field-green:#1D5C2A;--field-green2:#2a8a40;
+    --goal-white:#F5F5F0;--card-red:#C1121F;--gold:#ffd24a;
+    --r:12px;--rs:8px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    overscroll-behavior:none;}
+  .wrap{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;padding:0 16px 24px;}
+  .demo-ribbon{background:repeating-linear-gradient(45deg,#2a2a18,#2a2a18 10px,#1f1f12 10px,#1f1f12 20px);
+    color:var(--accent-2);font-size:11px;font-weight:700;text-align:center;padding:5px;letter-spacing:1px;margin:0 -16px;}
+  /* ===== 共通テンプレ Top骨格（赤バナー→中央キャラ→タイトル） ===== */
+  .bs-topbar{display:flex;justify-content:center;margin:14px 0 4px;}
+  .bs-topbar img{height:34px;width:auto;display:block;}
+  .bs-hero{width:130px;height:130px;margin:8px auto 6px;border-radius:16px;object-fit:cover;display:block;background:#000;}
+  .bs-game-title{text-align:center;font-size:24px;font-weight:800;margin:8px 0 4px;letter-spacing:.5px;}
+  .lead{text-align:center;font-size:13px;color:var(--text2);line-height:1.7;margin:6px 4px 16px;}
+  .lead b{color:var(--text);}
+  .bs-lang-switch{position:absolute;top:36px;right:16px;display:flex;gap:2px;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:2px;z-index:10;}
+  .bs-lang-switch button{background:transparent;border:none;color:var(--text3);font-size:12px;font-weight:700;padding:4px 9px;border-radius:6px;cursor:pointer;line-height:1;}
+  .bs-lang-switch button.active{background:var(--accent);color:#fff;}
+  .btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:var(--r);
+    font-size:16px;font-weight:800;padding:15px;cursor:pointer;letter-spacing:1px;}
+  .btn:active{transform:scale(.99);}
+  .btn.ghost{background:var(--bg3);color:var(--text);border:0.5px solid var(--border2);font-size:14px;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  /* ===== 出題（WC演出） ===== */
+  .stage-head{text-align:center;margin:18px 0 6px;}
+  .stage-tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:3px;
+    color:var(--field-green2);border:1px solid var(--field-green);border-radius:20px;padding:4px 14px;}
+  .stage-tag.knockout{color:var(--gold);border-color:#7a5a10;}
+  .round-label{font-size:13px;color:var(--text3);margin-top:8px;font-weight:700;letter-spacing:1px;}
+  .prog-bar{height:5px;background:var(--bg3);border-radius:3px;margin:12px 2px 4px;overflow:hidden;}
+  .prog-fill{height:100%;background:linear-gradient(90deg,var(--field-green2),var(--gold));width:0;transition:width .35s;}
+  .vs-wrap{margin:20px 0 6px;text-align:center;}
+  .vs-q{font-size:18px;font-weight:800;line-height:1.5;margin-bottom:4px;padding:0 6px;color:var(--text);}
+  .choices{display:flex;flex-direction:row;align-items:stretch;gap:44px;margin-top:10px;position:relative;}
+  .choice{flex:1;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);
+    padding:22px 14px;cursor:pointer;font-size:15px;font-weight:700;line-height:1.5;
+    transition:border-color .15s,transform .1s,background .15s;color:var(--text);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:140px;}
+  .choice:active{transform:scale(.97);}
+  .choice .ctext{color:var(--text);font-weight:700;display:block;}
+  .choice .side{display:block;font-size:14px;font-weight:900;letter-spacing:2px;margin-bottom:12px;}
+  .choice.cA .side{color:var(--field-green2);}
+  .choice.cA:hover{border-color:var(--field-green2);background:rgba(42,138,64,.08);}
+  .choice.cB .side{color:var(--accent-2);}
+  .choice.cB:hover{border-color:var(--accent-2);background:rgba(255,176,46,.08);}
+  .vs-mid{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;
+    width:50px;height:50px;border-radius:50%;background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;
+    box-shadow:0 0 0 5px var(--bg),0 2px 12px rgba(0,0,0,.55);letter-spacing:1px;}
+  /* ===== 結果カード（診断型・スクショ対象 .bs-share-capture） ===== */
+  .bs-share-capture{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:20px 16px;margin:18px 0 10px;position:relative;}
+  .bs-banner-res{text-align:center;margin-bottom:6px;}
+  .bs-banner-res img{height:30px;width:auto;display:inline-block;}
+  .bs-res-title{text-align:center;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:14px;}
+  .res-finalcry{text-align:center;font-size:12px;color:var(--text3);letter-spacing:1px;margin-bottom:8px;font-weight:700;}
+  .res-emoji{width:96px;height:96px;margin:0 auto 10px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:46px;overflow:hidden;
+    background:radial-gradient(circle at 50% 35%,var(--field-green2),var(--field-green));}
+  .res-emoji img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+  .res-emoji.rare{background:radial-gradient(circle at 50% 35%,#caa23a,#7a5a10);box-shadow:0 0 24px rgba(255,210,74,.5);}
+  .res-abbr{text-align:center;font-size:40px;font-weight:900;letter-spacing:2px;line-height:1;color:var(--goal-white);margin-bottom:4px;
+    text-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .res-pos{text-align:center;font-size:18px;font-weight:800;margin-bottom:3px;color:var(--text);}
+  .res-band{text-align:center;font-size:14px;font-weight:700;color:var(--field-green2);margin-bottom:8px;}
+  .res-rare-tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2px;color:#1a1205;background:var(--gold);border-radius:20px;padding:3px 12px;}
+  .res-catch{text-align:center;font-size:15px;font-weight:800;color:var(--gold);margin:6px 0 12px;}
+  .res-desc{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:10px;}
+  .res-link{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px;
+    background:linear-gradient(90deg,rgba(42,138,64,.14),rgba(255,45,45,.10));
+    border:0.5px solid var(--border);border-radius:8px;padding:11px 13px;font-weight:600;}
+  .res-voice{font-size:12.5px;color:var(--text);background:var(--bg3);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 12px;line-height:1.6;margin-bottom:12px;}
+  .res-rel{display:flex;gap:8px;font-size:11.5px;}
+  .res-rel .cell{flex:1;background:var(--bg3);border-radius:8px;padding:10px 9px;text-align:center;}
+  .res-rel .cell .k{color:var(--text3);font-size:10px;letter-spacing:1px;display:block;margin-bottom:4px;}
+  .res-rel .cell .v{color:var(--text);font-weight:700;display:block;margin-bottom:4px;}
+  .res-rel .cell .note{color:var(--text2);font-size:10.5px;line-height:1.45;display:block;}
+  .res-note{font-size:10.5px;color:var(--text3);text-align:center;margin-top:12px;line-height:1.5;}
+  .res-overlay{position:absolute;inset:0;background:var(--bg2);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;}
+  .res-overlay .spin{font-size:13px;color:var(--text2);letter-spacing:2px;font-weight:700;}
+  .res-overlay.hidden{display:none;}
+  /* ===== 3カラムフッター（共通アイコン｜案内文｜シェアQR） ===== */
+  .bs-share-foot{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:0.5px solid var(--border);}
+  .bs-share-game-icon{width:48px;height:48px;border-radius:10px;background:var(--field-green);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;overflow:hidden;}
+  .bs-share-game-icon img{width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;}
+  .bs-share-foot-text{flex:1;}
+  .bs-share-badge{display:inline-block;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:3px;}
+  .bs-share-title{font-size:13px;font-weight:700;}
+  .bs-share-desc{font-size:11px;color:var(--text2);margin-top:2px;}
+  .sc-qrbox{width:48px;height:48px;background:#fff;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .sc-qrbox svg{width:100%;height:100%;}
+  .sc-qrbox .urlfb{font-size:6px;color:#333;word-break:break-all;padding:2px;line-height:1.1;}
+  .share-btn-row{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+  .share-btn{width:100%;background:var(--bg3);border:0.5px solid var(--border2);color:var(--text);border-radius:var(--r);font-size:14px;font-weight:700;padding:13px;cursor:pointer;}
+  .share-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+  /* ===== 三段導線（4カード・全アイコン付き） ===== */
+  .promo-section{margin-bottom:14px;margin-top:6px;}
+  .promo-title{font-size:11px;color:var(--text3);letter-spacing:2px;text-align:center;margin-bottom:10px;}
+  .promo-cards{display:flex;flex-direction:column;gap:8px;}
+  .promo-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;text-decoration:none;color:var(--text);}
+  .promo-card:active{transform:scale(.99);}
+  .promo-icon{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;overflow:hidden;color:#fff;}
+  .promo-icon img{width:100%;height:100%;object-fit:cover;border-radius:9px;}
+  .promo-icon-gzh{background:linear-gradient(135deg,#07C160,#0F6E56);}
+  .promo-icon-bili{background:linear-gradient(135deg,#00A1D6,#0066CC);}
+  .promo-icon-bs{background:linear-gradient(135deg,#0F6E56,#534AB7);}
+  .promo-icon-games{background:linear-gradient(135deg,#E8552D,#B7841E);}
+  .promo-text{flex:1;}
+  .promo-name{font-size:14px;font-weight:700;}
+  .promo-badge{display:inline-block;font-size:10px;font-weight:700;color:var(--accent-2);border:1px solid var(--accent-2);border-radius:4px;padding:1px 5px;margin-left:6px;}
+  .promo-desc{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.5;}
+  .promo-arrow{color:var(--text3);font-size:18px;}
+  .gzh-qr-wrap{display:none;flex-direction:column;align-items:center;gap:8px;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:16px;margin-top:-2px;}
+  .gzh-qr-wrap.show{display:flex;}
+  .gzh-qr-wrap img{width:160px;height:160px;border-radius:8px;background:#fff;padding:6px;box-sizing:border-box;}
+  .gzh-qr-wrap p{font-size:11px;color:var(--text2);text-align:center;line-height:1.6;margin:0;}
+  .toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#000;color:#fff;font-size:13px;padding:10px 18px;border-radius:24px;opacity:0;transition:opacity .25s;z-index:50;pointer-events:none;max-width:90%;text-align:center;}
+  .toast.show{opacity:.92;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="demo-ribbon" data-i18n="demo_ribbon">DEMO · 世界杯特别版 · 足球位置 × 乐队角色</div>
+
+  <div class="bs-lang-switch" id="bs-lang-switch">
+    <button data-lang="zh" class="active">中</button>
+    <button data-lang="ja">日</button>
+    <button data-lang="en">EN</button>
+  </div>
+
+  <section class="screen active" id="screen-intro">
+    <div class="bs-topbar"><img id="bs-banner-start" alt="BASS SHOW"></div>
+    <img class="bs-hero" id="bs-hero-soccer" alt="">
+    <h1 class="bs-game-title" data-i18n="title">你是乐队哪个位置？</h1>
+    <p class="lead" data-i18n="lead">lead</p>
+    <button class="btn" id="btn-start" data-i18n="btn_start">⚽ 开赛 · 开始诊断</button>
+    <p class="lead" style="margin-top:14px;font-size:11.5px" data-i18n="intro_note">note</p>
+  </section>
+
+  <section class="screen" id="screen-play">
+    <div class="stage-head">
+      <span class="stage-tag" id="stage-tag" data-i18n="stage_group">小组赛 · GROUP STAGE</span>
+      <div class="round-label" id="round-label">MATCHDAY 1 / 3</div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="vs-wrap">
+      <div class="vs-q" id="vs-q">—</div>
+    </div>
+    <div class="choices">
+      <button class="choice cA" id="choice-a"><span class="side" data-i18n="side_a">A</span><span class="ctext" id="choice-a-t">—</span></button>
+      <div class="vs-mid">VS</div>
+      <button class="choice cB" id="choice-b"><span class="side" data-i18n="side_b">B</span><span class="ctext" id="choice-b-t">—</span></button>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-result">
+    <div class="bs-share-capture" id="bs-share-capture">
+      <div class="bs-banner-res"><img id="bs-banner-res" alt="BASS SHOW"></div>
+      <div class="bs-res-title" data-i18n="result_sub">足球位置 × 乐队角色 诊断</div>
+      <div class="res-finalcry" id="res-finalcry" data-i18n="final_cry">🏆 决赛胜出！你的位置是——</div>
+
+      <div class="res-emoji" id="res-emoji">⚽</div>
+      <div id="res-raretag-wrap" style="text-align:center;margin-bottom:6px;display:none;">
+        <span class="res-rare-tag" id="res-raretag">★ 隐藏稀有</span>
+      </div>
+      <div class="res-abbr" id="res-abbr">—</div>
+      <div class="res-pos" id="res-pos">—</div>
+      <div class="res-band" id="res-band">—</div>
+      <div class="res-catch" id="res-catch">—</div>
+      <div class="res-desc" id="res-desc">—</div>
+      <div class="res-link" id="res-link">—</div>
+      <div class="res-voice" id="res-voice">—</div>
+      <div class="res-rel" id="res-rel">
+        <div class="cell"><span class="k" data-i18n="rel_buddy">最佳搭档</span><span class="v" id="rel-buddy">—</span><span class="note" id="rel-buddy-note">—</span></div>
+        <div class="cell"><span class="k" data-i18n="rel_rival">死对头</span><span class="v" id="rel-rival">—</span><span class="note" id="rel-rival-note">—</span></div>
+      </div>
+      <div class="res-note" data-i18n="res_note">※ 仅供娱乐。位置与角色的对应是趣味设定，非专业测评。</div>
+
+      <div class="bs-share-foot">
+        <div class="bs-share-game-icon" id="bs-share-game-icon">⚽</div>
+        <div class="bs-share-foot-text">
+          <div class="bs-share-badge" data-i18n="share_badge">扫码挑战</div>
+          <div class="bs-share-title" data-i18n="share_card_title">你是乐队哪个位置？</div>
+          <div class="bs-share-desc" data-i18n="share_card_sub">BASS SHOW · 足球位置诊断</div>
+        </div>
+        <div class="sc-qrbox" id="shareQrBox"></div>
+      </div>
+
+      <div class="res-overlay" id="res-overlay"><div class="spin" data-i18n="diagnosing">诊断中…</div></div>
+    </div>
+
+    <div class="share-btn-row">
+      <button class="share-btn primary" id="btn-screenshot" data-i18n="btn_screenshot">截图分享给朋友</button>
+      <button class="share-btn" id="btn-copy" data-i18n="btn_copy">复制文字</button>
+    </div>
+
+    <div class="promo-section">
+      <div class="promo-title" data-i18n="promo_title">加入深圳轻音部 · BASS SHOW</div>
+      <div class="promo-cards">
+        <div class="promo-card" id="gzh-card">
+          <div class="promo-icon promo-icon-gzh">📱</div>
+          <div class="promo-text"><div class="promo-name" data-i18n="promo_gzh_n">交流群</div><div class="promo-desc" data-i18n="promo_gzh_d">扫码关注公众号 · 回复「入群」即可进群</div></div>
+          <div class="promo-arrow" id="gzh-arrow">›</div>
+        </div>
+        <div class="gzh-qr-wrap" id="gzh-qr-wrap">
+          <img id="gzhQrImg" alt="BASS SHOW 公众号 QR">
+          <p data-i18n="promo_gzh_d">扫码关注公众号 · 回复「入群」即可进群</p>
+        </div>
+        <a class="promo-card" href="https://b23.tv/CGkvQc4" target="_blank" rel="noopener">
+          <div class="promo-icon promo-icon-bili">📺</div>
+          <div class="promo-text"><div class="promo-name" data-i18n="promo_bili_n">Bilibili</div><div class="promo-desc" data-i18n="promo_bili_d">在华日本音乐人 MASATO</div></div>
+          <div class="promo-arrow">›</div>
+        </a>
+        <a class="promo-card" href="https://bassshow.rocks/platform.html" target="_blank" rel="noopener">
+          <div class="promo-icon promo-icon-bs"><img id="bs-promo-platform-icon" alt="BASS SHOW"></div>
+          <div class="promo-text"><div class="promo-name" data-i18n="promo_plat_n">BASS SHOW<span class="promo-badge" data-i18n="promo_demo_tag">体验版</span></div><div class="promo-desc" data-i18n="promo_plat_d">线上练耳 · 节奏 · 手速等小游戏</div></div>
+          <div class="promo-arrow">›</div>
+        </a>
+        <a class="promo-card" href="https://bassshow.rocks/minigames.html" target="_blank" rel="noopener">
+          <div class="promo-icon promo-icon-games"><img id="bs-promo-games-icon" alt="BASS SHOW"></div>
+          <div class="promo-text"><div class="promo-name" data-i18n="promo_games_n">小游戏合集</div><div class="promo-desc" data-i18n="promo_games_d">更多 BASS SHOW 小游戏</div></div>
+          <div class="promo-arrow">›</div>
+        </a>
+      </div>
+    </div>
+
+    <button class="btn ghost" id="btn-again" data-i18n="btn_again">⌂ 返回首页（再挑战）</button>
+  </section>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- 共通アセット（ロゴ・バナー・アイコン・QR・BS_RESULT演出）を1回だけ読み込む -->
+<script src="shared-assets.js"></script>
+
+<!-- ★キャラ画像の差し替え箱：12体のwebpが届いたら 1行ずつ追記するだけで結果画像が切替わる（HTML/ロジック改修不要）
+     例: CHAR_IMAGES.volante = "data:image/webp;base64,...";
+     キー: volante, gk, cf, toptan, cb, b2b, wing, shadow, sb, shushin, kantoku, supporter -->
+<script>var CHAR_IMAGES = {};</script>
+
+
+<!-- ===== soccer_data_v0.6.js（データ層・未改変で組み込み） ===== -->
+<script>
+/* ============================================================
+ * soccer_data.js  —  サッカー×バンド診断 データ層
+ * v0.4 プロトタイプ  2026-06-30
+ * 内容: 質問プール(18問・検証済) / キャラ12体 / ゲート定数 / UI i18n
+ * ============================================================ */
+
+/* ---- 判定ゲート定数（30万回シミュ検証値） ---- */
+var GATES = { ROLE_GATE:5, KANTOKU_P:0.30, STANCE_GATE:4, SUPPORTER_P:0.35 };
+
+/* ---- WC構造：9問 = グループ3 + トーナメント6 ---- */
+var STAGE_PLAN = { groupCount:3, knockoutCount:6, total:9 };
+
+const QUESTION_POOL = [
+
+  /* ===== SPOT軸（目立ち⇔縁の下）×3 ===== */
+  {
+    id: "spot1", axis: "spot",
+    q:  { zh: "比赛中最让你热血沸腾的瞬间是？", ja: "試合で一番テンションが上がるのは？", en: "What gets you most fired up in a match?" },
+    a:  { text: { zh: "自己打进制胜球", ja: "自分が決勝ゴールを決める", en: "Scoring the winning goal yourself" }, v: { spot: 2, zone: 1 } },
+    b:  { text: { zh: "做了没人注意但很关键的工作", ja: "誰も気づかないけど効いてた仕事", en: "Doing the unsung work that quietly decides it" }, v: { spot: -2, style: -1 } }
+  },
+  {
+    id: "spot2", axis: "spot",
+    q:  { zh: "如果接受赛后英雄采访，你想说？", ja: "ヒーローインタビューを受けるなら？", en: "If you got the post-match hero interview, you'd say…" },
+    a:  { text: { zh: "“今天是我的主场”", ja: "「今日は俺の日でした」と言いたい", en: "\"Today was my day.\"" }, v: { spot: 2 } },
+    b:  { text: { zh: "“多亏了队友”就够了", ja: "「チームのおかげです」で十分", en: "\"It was all the team\" is enough" }, v: { spot: -2, role: 1 } }
+  },
+  {
+    id: "spot3", axis: "spot",
+    q:  { zh: "你更希望被记住的是？", ja: "記憶に残りたいのは？", en: "How would you rather be remembered?" },
+    a:  { text: { zh: "全场最闪耀的那个人", ja: "その試合で一番輝いた人", en: "The standout star of the match" }, v: { spot: 1 } },
+    b:  { text: { zh: "“少了他就不行”的那个人", ja: "「あいつがいないと困る」人", en: "The one nobody can do without" }, v: { spot: -2 } }
+  },
+
+  /* ===== ZONE軸（攻撃⇔守備）×3 ===== */
+  {
+    id: "zone1", axis: "zone",
+    q:  { zh: "拿到球的瞬间，你会？", ja: "ボールを持ったら？", en: "The moment you get the ball, you…" },
+    a:  { text: { zh: "向前突破，直奔球门", ja: "縦に勝負、ゴールを狙う", en: "Drive forward and go for goal" }, v: { zone: 2 } },
+    b:  { text: { zh: "稳稳传球，保持平衡", ja: "安全に繋いでバランスを保つ", en: "Pass safely and keep the balance" }, v: { zone: -2, style: -1 } }
+  },
+  {
+    id: "zone2", axis: "zone",
+    q:  { zh: "哪种心情更强烈？", ja: "どっちの気持ちが強い？", en: "Which urge is stronger?" },
+    a:  { text: { zh: "想进球", ja: "点を取りたい", en: "I want to score" }, v: { zone: 2 } },
+    b:  { text: { zh: "不想丢球", ja: "点を取られたくない", en: "I don't want to concede" }, v: { zone: -2 } }
+  },
+  {
+    id: "zone3", axis: "zone",
+    q:  { zh: "你觉得自己更擅长？", ja: "自分が得意なのは？", en: "You're better at…" },
+    a:  { text: { zh: "打破僵局、制造机会", ja: "局面を打開してチャンスを作る", en: "Breaking the deadlock and creating chances" }, v: { zone: 2, style: 1 } },
+    b:  { text: { zh: "封锁对手、稳住后防", ja: "相手を抑えて後ろを固める", en: "Shutting opponents down and locking the back" }, v: { zone: -2, spot: -1 } }
+  },
+
+  /* ===== STYLE軸（閃き・一発⇔規律・継続）×3 ===== */
+  {
+    id: "style1", axis: "style",
+    q:  { zh: "陷入困境时，你会？", ja: "ピンチのとき、あなたは？", en: "When you're in trouble, you…" },
+    a:  { text: { zh: "凭灵光一闪扭转局势", ja: "ひらめき一発で局面を変える", en: "Flip the game with a flash of brilliance" }, v: { style: 2 } },
+    b:  { text: { zh: "默默跑满90分钟补漏洞", ja: "淡々と90分走って穴を埋める", en: "Just run the full 90 and plug the gaps" }, v: { style: -2, role: 1 } }
+  },
+  {
+    id: "style2", axis: "style",
+    q:  { zh: "你想因什么被认可？", ja: "評価されたい自分は？", en: "You want to be valued for…" },
+    a:  { text: { zh: "一瞬间的超级表演", ja: "一瞬のスーパープレー", en: "A moment of magic" }, v: { style: 1 } },
+    b:  { text: { zh: "每场都稳定的安定感", ja: "毎試合ブレない安定感", en: "Rock-solid consistency every match" }, v: { style: -2 } }
+  },
+  {
+    id: "style3", axis: "style",
+    q:  { zh: "你的踢球风格更接近？", ja: "あなたのプレースタイルは？", en: "Your playing style is closer to…" },
+    a:  { text: { zh: "天马行空、难以预测", ja: "自由奔放で読めない", en: "Free-spirited and unpredictable" }, v: { style: 2 } },
+    b:  { text: { zh: "纪律严明、始终如一", ja: "規律正しくブレない", en: "Disciplined and unwavering" }, v: { style: -2 } }
+  },
+
+  /* ===== ROLE軸（プレイヤー⇔まとめ役・俯瞰）×3 ===== */
+  {
+    id: "role1", axis: "role",
+    q:  { zh: "环顾球队，你最在意的是？", ja: "チームを見渡すと、つい気になるのは？", en: "Looking around the team, you notice…" },
+    a:  { text: { zh: "自己能怎么发挥", ja: "自分がどう活躍するか", en: "How you can shine" }, v: { role: -1, spot: 1 } },
+    b:  { text: { zh: "整体运转得顺不顺", ja: "全体がうまく回っているか", en: "Whether the whole thing is clicking" }, v: { role: 2 } }
+  },
+  {
+    id: "role2", axis: "role",
+    q:  { zh: "教练的哪句话最让你高兴？", ja: "監督に言われて嬉しいのは？", en: "Which line from the manager pleases you most?" },
+    a:  { text: { zh: "“用你的个性去决定比赛”", ja: "「お前の個性で決めてくれ」", en: "\"Win it with your individuality.\"" }, v: { style: 2 } },
+    b:  { text: { zh: "“有你在，球队就稳了”", ja: "「お前がいるとチームが締まる」", en: "\"You hold this team together.\"" }, v: { role: 2, stance: -1 } }
+  },
+  {
+    id: "role3", axis: "role",
+    q:  { zh: "你更想做哪一种人？", ja: "なりたいのはどっち？", en: "Which would you rather be?" },
+    a:  { text: { zh: "亲自决定胜负的球员", ja: "自分で勝負を決める選手", en: "The player who decides the result" }, v: { role: 0, spot: 1 } },
+    b:  { text: { zh: "让全队变强的存在", ja: "チーム全体を強くする存在", en: "The one who makes the whole team better" }, v: { role: 2 } }
+  },
+
+  /* ===== STANCE軸（やる側⇔見る側）×4 ★サポーター検出 ===== */
+  {
+    id: "stance1", axis: "stance",
+    q:  { zh: "足球最大的乐趣是？", ja: "サッカーの一番の楽しみは？", en: "The biggest joy of football is…" },
+    a:  { text: { zh: "自己上场踢球", ja: "自分がプレーすること", en: "Playing it yourself" }, v: { stance: -2, zone: 1 } },
+    b:  { text: { zh: "为喜欢的球队加油", ja: "好きなチームを応援すること", en: "Cheering for the team you love" }, v: { stance: 2 } }
+  },
+  {
+    id: "stance2", axis: "stance",
+    q:  { zh: "走进球场时，你会？", ja: "スタジアムに行ったら？", en: "When you walk into the stadium, you…" },
+    a:  { text: { zh: "手痒得想冲进场内踢", ja: "ピッチに立ちたくてうずうずする", en: "Itch to get on the pitch yourself" }, v: { stance: -2, style: 1 } },
+    b:  { text: { zh: "扯着嗓子全力呐喊", ja: "声を枯らして全力で応援する", en: "Scream your lungs out for the team" }, v: { stance: 2 } }
+  },
+  {
+    id: "stance3", axis: "stance",
+    q:  { zh: "对你来说，球队是？", ja: "あなたにとってチームとは？", en: "To you, the team is…" },
+    a:  { text: { zh: "自己拿出成绩的舞台", ja: "自分が結果を出す場所", en: "A stage where you deliver results" }, v: { stance: -2, role: 1 } },
+    b:  { text: { zh: "倾注全部热爱的对象", ja: "全身全霊で愛を注ぐ対象", en: "Something you pour your whole heart into" }, v: { stance: 2 } }
+  },
+  {
+    id: "stance4", axis: "stance",
+    q:  { zh: "夺冠的那一刻，你最想？", ja: "優勝の瞬間、一番したいのは？", en: "At the moment of winning the title, you most want to…" },
+    a:  { text: { zh: "自己站在领奖台中央", ja: "自分が表彰台の中央に立つ", en: "Stand at the center of the podium yourself" }, v: { stance: -1, spot: 2 } },
+    b:  { text: { zh: "在看台上哭着欢呼", ja: "スタンドで泣きながら叫ぶ", en: "Cry and roar from the stands" }, v: { stance: 2 } }
+  },
+
+  /* ===== 複合（バランス調整用）×2 ===== */
+  {
+    id: "mix1", axis: "mix",
+    q:  { zh: "赛后你最想聊的是？", ja: "試合後に語りたいのは？", en: "After the match, you want to talk about…" },
+    a:  { text: { zh: "自己的那个高光时刻", ja: "自分のあのプレー", en: "That one play of yours" }, v: { spot: 1, zone: 1 } },
+    b:  { text: { zh: "全队整体的踢法", ja: "チーム全体の戦い方", en: "How the team played as a whole" }, v: { spot: -1, zone: -1 } }
+  },
+  {
+    id: "mix2", axis: "mix",
+    q:  { zh: "你喜欢哪种比赛？", ja: "好きな試合展開は？", en: "Which kind of match do you enjoy?" },
+    a:  { text: { zh: "火爆的对攻大战", ja: "派手な打ち合い", en: "A wide-open, end-to-end shootout" }, v: { zone: 1 } },
+    b:  { text: { zh: "紧凑的低比分防守战", ja: "締まったロースコア", en: "A tight, low-scoring battle" }, v: { style: -1, zone: -1 } }
+  }
+
+];
+
+/* ============================================================
+ * 層化抽出：計9問。各軸の最低問数を保証してから残りを補充する。
+ * 保証配分（合計8問）＋残り1問を全プールから補充 → 計9問：
+ *   spot:2 zone:2 style:2 role:1 stance:1 ... ではなく、
+ *   各軸の弁別を担保するため次の必須数を確保する：
+ *     spot 1, zone 1, style 1, role 2(まとめ役検出), stance 2(サポーター検出)
+ *   = 必須7問。残り2問を全残プールからランダム補充 → 計9問。
+ *   role/stance を厚めにするのはレアゲート（監督/サポーター）検出の
+ *   取りこぼしを防ぐため。これで「stance過少で攻撃キャラ突出」を解消。
+ * ============================================================ */
+const PICK_TOTAL = 9;
+const AXIS_MIN = { spot:1, zone:1, style:1, role:2, stance:2 }; // 必須計7
+
+function pickQuestions() {
+  const byAxis = { spot:[], zone:[], style:[], role:[], stance:[], mix:[] };
+  QUESTION_POOL.forEach(q => byAxis[q.axis].push(q));
+  const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(p=>p[1]);
+
+  const picked = [];
+  // 1) 各軸の必須数を確保
+  for (const [ax, n] of Object.entries(AXIS_MIN)) {
+    picked.push(...shuffle(byAxis[ax]).slice(0, n));
+  }
+  // 2) 残りを全残プール（複合mix含む）からランダム補充して計9問に
+  const usedIds = new Set(picked.map(q => q.id));
+  const rest = shuffle(QUESTION_POOL.filter(q => !usedIds.has(q.id)));
+  while (picked.length < PICK_TOTAL && rest.length) picked.push(rest.shift());
+
+  return shuffle(picked).slice(0, PICK_TOTAL); // 出題順もシャッフル
+}
+
+
+/* ---- キャラ12体（座標は検証済み調整値） ---- */
+var CHARS = {
+  volante:{ key:"volante", emoji:"\u26BD", rare:false, coord:{spot:-2,zone:0,style:-1,stance:-1},
+    posAbbr:"DM",
+    pos:{zh:"\u540e\u8170\uFF0F\u951a\u70B9",ja:"\u30dc\u30e9\u30f3\u30c1\uFF0F\u30a2\u30f3\u30ab\u30fc",en:"Pivot / Anchor"},
+    band:{zh:"\u8d1d\u65af\u624b",ja:"\u30d9\u30fc\u30b9",en:"Bassist"},
+    catch:{zh:"\u9690\u5f62\u4f46\u81f4\u547d",ja:"\u52b9\u3044\u3066\u308b\u30aa\u30c8\u30b3",en:"The one who runs the game"},
+    desc:{zh:"\u6bd4\u8c01\u90fd\u591a\u89e6\u7403\uFF0C\u5374\u6700\u5c11\u51fa\u73b0\u5728\u96c6\u9526\u91cc\u3002\u4e0d\u8fdb\u7403\u4e5f\u4e0d\u534e\u4e3d\uFF0C\u4f46\u4e00\u65e6\u4ed6\u62bd\u8eab\uFF0C\u5168\u961f\u5c31\u5d29\u4e86\u3002\u53ea\u6709\u5185\u884c\u4f1a\u8bf4\u4e00\u53e5\uFF1A\u201c\u4ed6\u521a\u521a\uFF0C\u5f88\u5173\u952e\u3002\u201d",
+      ja:"\u8ab0\u3088\u308a\u30dc\u30fc\u30eb\u306b\u89e6\u308a\u3001\u8ab0\u3088\u308a\u30cf\u30a4\u30e9\u30a4\u30c8\u306b\u6620\u3089\u306a\u3044\u3002\u70b9\u3082\u53d6\u3089\u305a\u6d3e\u624b\u3067\u3082\u306a\u3044\u306e\u306b\u3001\u629c\u3051\u305f\u77ac\u9593\u30c1\u30fc\u30e0\u304c\u5d29\u58ca\u3059\u308b\u3002\u300c\u3042\u3044\u3064\u3001\u52b9\u3044\u3066\u305f\u306a\u300d\u3068\u7384\u4eba\u304c\u3064\u3076\u3084\u304f\u3001\u305d\u3046\u3044\u3046\u7537\u3002",
+      en:"Touches the ball more than anyone, shows up in the highlights less than anyone. No goals, no flash \u2014 but the moment he is gone, the team falls apart. Only the connoisseurs mutter, \u201Che was the one holding it all together.\u201D"},
+    voice:{zh:"\u201c\u6ca1\u4e0a\u96c6\u9526\uFF1F\u53ef\u638c\u63a7\u8282\u594f\u7684\u662f\u6211\u554a\u3002\u201d",ja:"\u300c\u30cf\u30a4\u30e9\u30a4\u30c8\u306b\u6620\u3063\u3066\u306a\u3044\uFF1F \u8a66\u5408\u3092\u4f5c\u3063\u3066\u305f\u306e\u306f\u4ffa\u306a\u3093\u3060\u3051\u3069\u306a\u3002\u300d",en:"\u201CNot in the highlights? I was the one running the whole match.\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u8d1d\u65af\u3011\u3002\u4e0d\u9700\u89e3\u91ca\u2014\u2014\u56e0\u4e3a\u662f\u540c\u4e00\u79cd\u751f\u7269\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u30d9\u30fc\u30b9\u3011\u3002\u7406\u7531\u306f\u8aac\u660e\u4e0d\u8981\u3001\u540c\u3058\u751f\u304d\u7269\u3060\u304b\u3089\u3002",en:"In a band: the \u3010Bass\u3011. No explanation needed \u2014 same creature."},
+    buddyNote:{zh:"GK\uff08\u9f13\u624b\uff09\u2014\u6700\u540e\u65b9\u4e24\u4e2a\u4f4e\u8c03\u7684\u638c\u63a7\u8005\uff0c\u5929\u751f\u540c\u9891",ja:"GK\uff08\u30c9\u30e9\u30e0\uff09\u2014\u6700\u5f8c\u65b9\u3067\u571f\u53f0\u3092\u63e1\u308b\u540c\u58eb\u3001\u606f\u304c\u5408\u3046",en:"GK (Drums) \u2014 two low-key controllers from the back, naturally in sync"}, rivalNote:{zh:"CF\uff08\u4e3b\u5531\uff09\u2014\u4e0d\u77e5\u4e3a\u4f55\u603b\u8ddf\u4f60\u6311\u8845\u805a\u5149\u706f",ja:"CF\uff08\u30dc\u30fc\u30ab\u30eb\uff09\u2014\u306a\u305c\u304b\u5f35\u308a\u5408\u3063\u3066\u304f\u308b",en:"CF (Vocal) \u2014 for some reason, always competing with you for the spotlight"},
+    buddy:"gk", rival:"cf" },
+
+  gk:{ key:"gk", emoji:"\uD83E\uDDE4", rare:false, coord:{spot:-1,zone:-2,style:-1,stance:-1},
+    posAbbr:"GK",
+    pos:{zh:"\u95e8\u5c06 GK",ja:"GK\uFF08\u30b4\u30fc\u30eb\u30ad\u30fc\u30d1\u30fc\uFF09",en:"Goalkeeper"},
+    band:{zh:"\u9f13\u624b",ja:"\u30c9\u30e9\u30e0",en:"Drummer"},
+    catch:{zh:"\u5b64\u9ad8\u7684\u6700\u540e\u4e00\u9053\u95e8",ja:"\u5b64\u9ad8\u306e\u6700\u5f8c\u306e\u7826",en:"The lonely last line"},
+    desc:{zh:"90\u5206\u949f\u91cc 89\u5206\u949f\u5728\u53d1\u5446\uFF0C\u5374\u56e0\u4e3a\u4e00\u4e2a\u5931\u8bef\u88ab\u5168\u90e8\u602a\u7f6a\u3002\u6251\u6551\u662f\u201c\u5e94\u8be5\u7684\u201d\uFF0C\u4e22\u7403\u662f\u201c\u7f6a\u4eba\u201d\u3002\u4ece\u6700\u540e\u65b9\u7528\u6700\u5927\u7684\u58f0\u97f3\u6307\u6325\u9632\u7ebf\u7684\u5b64\u72ec\u6307\u6325\u5bb6\u3002",
+      ja:"90\u5206\u306e\u3046\u3061 89\u5206\u306f\u30d2\u30de\u3002\u306a\u306e\u306b\u305f\u3063\u305f1\u3064\u306e\u30df\u30b9\u3067\u5168\u90e8\u3053\u3063\u3061\u306e\u305b\u3044\u306b\u306a\u308b\u7406\u4e0d\u5c3d\u306e\u4f53\u73fe\u8005\u3002\u30d5\u30a1\u30a4\u30f3\u30bb\u30fc\u30d6\u306f\u300c\u5f53\u7136\u300d\u3001\u5931\u70b9\u306f\u300c\u6226\u72af\u300d\u3002\u6700\u5f8c\u5c3e\u304b\u3089\u4e00\u756a\u30c7\u30ab\u3044\u58f0\u3067DF\u3092\u52d5\u304b\u3059\u3001\u5b64\u72ec\u306a\u6307\u63ee\u8005\u3002",
+      en:"89 of the 90 minutes, bored. Then one mistake and it is all on you. Great saves are \u201Cexpected,\u201D goals conceded make you \u201Cthe culprit.\u201D The loneliest conductor, marshalling the defense from the very back with the loudest voice."},
+    voice:{zh:"\u201c\u6251\u6551\u4e00\u77ac\u88ab\u9057\u5fd8\uFF0C\u5931\u8bef\u88ab\u8bb0\u4e00\u8f88\u5b50\u3002\u201d",ja:"\u300c\u30ca\u30a4\u30b9\u30ad\u30fc\u306f\u4e00\u77ac\u3067\u5fd8\u308c\u3089\u308c\u3001\u30df\u30b9\u306f\u4e00\u751f\u8a9e\u308a\u7d99\u304c\u308c\u308b\u3002\u300d",en:"\u201CGreat saves are forgotten in a second; one mistake is remembered forever.\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u9f13\u624b\u3011\u3002\u4ece\u6700\u540e\u65b9\u638c\u63a7\u5168\u4f53\u8282\u594f\u7684\u72ec\u88c1\u8005\uff0c\u4e00\u6a21\u4e00\u6837\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u30c9\u30e9\u30e0\u3011\u3002\u6700\u5f8c\u5c3e\u304b\u3089\u5168\u4f53\u306e\u30c6\u30f3\u30dd\u3092\u63e1\u308b\u72ec\u88c1\u8005\u3001\u305d\u3063\u304f\u308a\u3002",en:"In a band: the \u3010Drums\u3011. The dictator who holds the whole tempo from the very back \u2014 spot on."},
+    buddyNote:{zh:"\u540e\u8170\uff08\u8d1d\u65af\uff09\u2014\u540e\u573a\u4e24\u4e2a\u5b9a\u6d77\u795e\u9488\uff0c\u4e92\u76f8\u4fe1\u8d56",ja:"\u30dc\u30e9\u30f3\u30c1\uff08\u30d9\u30fc\u30b9\uff09\u2014\u5f8c\u308d\u306e\u4e8c\u4eba\u3067\u571f\u53f0\u3092\u652f\u3048\u5408\u3046",en:"Pivot (Bass) \u2014 the two anchors at the back, leaning on each other"}, rivalNote:{zh:"CF\uff08\u4e3b\u5531\uff09\u2014\u4e00\u8d77\u538b\u4e0a\u53bb\u5c31\u51fa\u4e8b",ja:"CF\uff08\u30dc\u30fc\u30ab\u30eb\uff09\u2014\u4e00\u7dd2\u306b\u524d\u304c\u304b\u308a\u3068\u4e8b\u6545",en:"CF (Vocal) \u2014 push forward together and disaster strikes"},
+    buddy:"volante", rival:"cf" },
+
+  cf:{ key:"cf", emoji:"\u26BD", rare:false, coord:{spot:2,zone:2,style:0,stance:-1},
+    posAbbr:"CF",
+    pos:{zh:"\u4e2d\u950b CF",ja:"CF\uFF08\u30bb\u30f3\u30bf\u30fc\u30d5\u30a9\u30ef\u30fc\u30c9\uFF09",en:"Center Forward"},
+    band:{zh:"\u4e3b\u5531",ja:"\u30e1\u30a4\u30f3\u30dc\u30fc\u30ab\u30eb",en:"Lead Vocal"},
+    catch:{zh:"\u82f1\u96c4\uFF0C\u8fd8\u662f\u7f6a\u4eba\uFF1F",ja:"\u82f1\u96c4\u304b\u3001\u6226\u72af\u304b",en:"Hero or villain?"},
+    desc:{zh:"\u4e3a\u8fdb\u7403\u800c\u751f\u7684\u7537\u4eba\u3002\u54ea\u6015 90\u5206\u949f\u6ca1\u8e2a\u5f71\uFF0C\u4e00\u7403\u5c31\u80fd\u62b5\u6d88\u4e00\u5207\u3002\u8fdb\u4e86\u662f\u82f1\u96c4\uFF0C\u4e22\u4e86\u662f\u7f6a\u4eba\u3002\u81ea\u79c1\uFF1F\u90a3\u662f\u8d5e\u7f8e\u3002",
+      ja:"\u70b9\u3092\u53d6\u308b\u305f\u3081\u306b\u751f\u307e\u308c\u3066\u304d\u305f\u7537\u300290\u5206\u306a\u306b\u3082\u3057\u3066\u306a\u304f\u3066\u30821\u70b9\u3067\u5168\u90e8\u30c1\u30e3\u30e9\u306b\u3059\u308b\u6700\u5f37\u306e\u7acb\u3061\u4f4d\u7f6e\u3002\u6c7a\u3081\u308c\u3070\u82f1\u96c4\u3001\u5916\u305b\u3070\u6226\u72af\u3002\u30a8\u30b4\u30a4\u30b9\u30c8\uFF1F \u8912\u3081\u8a00\u8449\u3060\u3002",
+      en:"Born to score. Even after 90 invisible minutes, one goal wipes the slate clean. Score and you are a hero; miss and you are the villain. Egoist? That is a compliment."},
+    voice:{zh:"\u201c\u4eca\u5929\u7684\u4e3b\u89d2\uFF1F\u2026\u5e94\u8be5\u662f\u6211\u5427\uFF1F\u201d",ja:"\u300c\u4eca\u65e5\u306e\u4e3b\u5f79\uFF1F \u307e\u3042\u2026\u4ffa\u3060\u3088\u306d\uFF1F\u300d",en:"\u201CToday\u2019s star? Well\u2026 that\u2019s me, right?\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u4e3b\u5531\u3011\u3002\u72ec\u5360\u805a\u5149\u706f\u4e0e\u91cd\u538b\u7684\u5bbf\u547d\uff0c\u5b8c\u5168\u76f8\u540c\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u30e1\u30a4\u30f3\u30dc\u30fc\u30ab\u30eb\u3011\u3002\u30b9\u30dd\u30c3\u30c8\u30e9\u30a4\u30c8\u3068\u91cd\u5727\u3092\u72ec\u308a\u5360\u3081\u3059\u308b\u5bbf\u547d\u3082\u540c\u3058\u3002",en:"In a band: the \u3010Lead Vocal\u3011. The same fate of monopolizing the spotlight and the pressure."},
+    buddyNote:{zh:"\u5f71\u950b\uff08\u548c\u58f0\uff09\u2014\u4e00\u4e2a\u51b2\u9876\u4e00\u4e2a\u63a5\u5e94\uff0c\u5929\u751f\u4e8c\u4eba\u7ec4",ja:"\u30b7\u30e3\u30c9\u30fc\uff08\u30b3\u30fc\u30e9\u30b9\uff09\u2014\u4e8c\u4eba\u3067\u4e00\u3064\u306e\u30b3\u30f3\u30d3",en:"Shadow (Backing Vocal) \u2014 one finishes, one supports; a natural duo"}, rivalNote:{zh:"\u524d\u8170\uff08\u4e3b\u5409\u4ed6\uff09\u2014\u4e3b\u89d2\u4e4b\u4f4d\u4e92\u4e0d\u76f8\u8ba9",ja:"\u30c8\u30c3\u30d7\u4e0b\uff08\u30ea\u30fc\u30c9\u30ae\u30bf\u30fc\uff09\u2014\u4e3b\u5f79\u3092\u596a\u3044\u5408\u3046",en:"Attacking Mid (Lead Guitar) \u2014 fighting over who gets to be the star"},
+    buddy:"shadow", rival:"toptan" },
+
+  toptan:{ key:"toptan", emoji:"\uD83C\uDFA9", rare:false, coord:{spot:1,zone:1,style:2,stance:-1},
+    posAbbr:"AM",
+    pos:{zh:"\u524d\u8170\uFF0F\u7ec4\u7ec7\u6838\u5fc3",ja:"\u30c8\u30c3\u30d7\u4e0b\uFF0F\u53f8\u4ee4\u5854",en:"Attacking Mid / Playmaker"},
+    band:{zh:"\u4e3b\u5409\u4ed6",ja:"\u30ea\u30fc\u30c9\u30ae\u30bf\u30fc",en:"Lead Guitar"},
+    catch:{zh:"\u65bd\u9b54\u6cd5\u7684 10\u53f7",ja:"\u9b54\u6cd5\u3092\u304b\u3051\u308b10\u756a",en:"The magician in No.10"},
+    desc:{zh:"\u4e00\u811a\u76f4\u585e\u5c31\u80fd\u6539\u53d8\u4e16\u754c\u7684\u5929\u624d\u3002\u9632\u5b88\uFF1F\u8bcd\u5178\u91cc\u6ca1\u8fd9\u4e2a\u8bcd\u3002\u8fdb\u4e86\u662f\u827a\u672f\uFF0C\u4e22\u4e86\u662f\u201c\u4ed6\u4e0d\u9632\u5b88\u201d\u3002\u72b6\u6001\u4e0a\u6765\u7684\u90a3\u5929\uFF0C\u6ca1\u4eba\u62e6\u5f97\u4f4f\u3002",
+      ja:"\u4e00\u672c\u306e\u30b9\u30eb\u30fc\u30d1\u30b9\u3067\u4e16\u754c\u3092\u5909\u3048\u308b\u5929\u624d\u808c\u3002\u5b88\u5099\uFF1F \u305d\u306e\u5358\u8a9e\u306f\u8f9e\u66f8\u306b\u8f09\u3063\u3066\u3044\u306a\u3044\u3002\u6c7a\u307e\u308c\u3070\u82b8\u8853\u3001\u5916\u305b\u3070\u300c\u3042\u3044\u3064\u5b88\u5099\u3057\u306a\u3044\u3088\u306d\u300d\u3002\u6c17\u5206\u306e\u4e57\u3063\u305f\u65e5\u306f\u8ab0\u306b\u3082\u6b62\u3081\u3089\u308c\u306a\u3044\u3002",
+      en:"A genius who can change the world with one through-ball. Defense? Not in his dictionary. When it comes off it is art; when it does not, \u201Che never tracks back.\u201D On his day, nobody can stop him."},
+    voice:{zh:"\u201c\u521a\u624d\u90a3\u811a\u4f20\u7403\u2026\u8fde\u6211\u81ea\u5df1\u90fd\u89c9\u5f97\u662f\u827a\u672f\u3002\u201d",ja:"\u300c\u3044\u3084\u3001\u3055\u3063\u304d\u306e\u30e9\u30b9\u30c8\u30d1\u30b9\u3001\u6211\u306a\u304c\u3089\u82b8\u8853\u3060\u3063\u305f\u306a\u2026\u300d",en:"\u201CThat last pass\u2026 even I have to admit, that was art.\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u4e3b\u5409\u4ed6\u3011\u3002\u4e00\u4e2a\u4e50\u53e5\u5c31\u6539\u53d8\u7a7a\u6c14\u7684\u90a3\u79cd\u6064\u610f\uff0c\u4e00\u6837\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u30ea\u30fc\u30c9\u30ae\u30bf\u30fc\u3011\u3002\u3072\u3068\u30d5\u30ec\u30fc\u30ba\u3067\u7a7a\u6c17\u3092\u5909\u3048\u308b\u3001\u3042\u306e\u604d\u60da\u305d\u306e\u3082\u306e\u3002",en:"In a band: the \u3010Lead Guitar\u3011. That ecstasy of changing the mood with one phrase."},
+    buddyNote:{zh:"\u540e\u8170\uff08\u8d1d\u65af\uff09\u2014\u6709\u571f\u53f0\u624d\u80fd\u95ea\u8000",ja:"\u30dc\u30e9\u30f3\u30c1\uff08\u30d9\u30fc\u30b9\uff09\u2014\u571f\u53f0\u304c\u3042\u3063\u3066\u3053\u305d\u8f1d\u304f",en:"Pivot (Bass) \u2014 you only shine because the foundation is there"}, rivalNote:{zh:"CF\uff08\u4e3b\u5531\uff09\u2014\u4e3b\u89d2\u4e4b\u4f4d\u4e92\u4e0d\u76f8\u8ba9",ja:"CF\uff08\u30dc\u30fc\u30ab\u30eb\uff09\u2014\u4e3b\u5f79\u3092\u596a\u3044\u5408\u3046",en:"CF (Vocal) \u2014 fighting over the leading role"},
+    buddy:"volante", rival:"cf" },
+
+  cb:{ key:"cb", emoji:"\uD83D\uDEE1\uFE0F", rare:false, coord:{spot:-2,zone:-2,style:-1,stance:-1},
+    posAbbr:"CB",
+    pos:{zh:"\u4e2d\u540e\u536b CB",ja:"CB\uFF08\u30bb\u30f3\u30bf\u30fc\u30d0\u30c3\u30af\uFF09",en:"Center Back"},
+    band:{zh:"\u8282\u594f\u5409\u4ed6",ja:"\u30ea\u30ba\u30e0\u30ae\u30bf\u30fc",en:"Rhythm Guitar"},
+    catch:{zh:"\u9605\u8bfb\u6bd4\u8d5b\u7684\u652f\u67f1",ja:"\u8aad\u307f\u306e\u652f\u67f1",en:"The reading pillar"},
+    desc:{zh:"\u4e0d\u505a\u534e\u4e3d\u7684\u524d\u63d2\u3002\u4f46 1\u5bf9 1\u88ab\u8fc7\u5c31\u5b8c\u86cb\uFF0C\u6bcf\u573a\u80cc\u7740\u8fd9\u4efd\u7d27\u5f20\u3002\u4e00\u811a\u89e3\u56f4\u6c42\u4e0d\u6765\u6398\u58f0\uFF0C\u770b\u4f3c\u4f4e\u8c03\uFF0c\u5176\u5b9e\u662f\u6700\u96be\u7684\u90a3\u4e2a\u4eba\u3002",
+      ja:"\u6d3e\u624b\u306a\u30aa\u30fc\u30d0\u30fc\u30e9\u30c3\u30d7\u306f\u3057\u306a\u3044\u3002\u3067\u30821\u5bfe1\u3067\u629c\u304b\u308c\u305f\u3089\u7d42\u308f\u308a\u3001\u3068\u3044\u3046\u30d2\u30ea\u3064\u304d\u3092\u6bce\u8a66\u5408\u80cc\u8ca0\u3046\u3002\u30af\u30ea\u30a2\u4e00\u672c\u3067\u306f\u62cd\u624b\u306f\u3082\u3089\u3048\u306a\u3044\u3002\u5730\u5473\u306b\u898b\u3048\u3066\u3001\u5b9f\u306f\u4e00\u756a\u96e3\u3057\u3044\u3053\u3068\u3092\u6de1\u3005\u3068\u3084\u308a\u7d9a\u3051\u308b\u672c\u7269\u306e\u571f\u53f0\u3002",
+      en:"No flashy overlaps. But lose one 1-v-1 and it is over \u2014 that tension rides on him every match. A clean clearance earns no applause. Looks plain, but he is the one quietly doing the hardest job."},
+    voice:{zh:"\u201c\u4e0d\u9700\u8981\u663e\u773c\u3002\u4e0d\u5d29\uFF0c\u5c31\u662f\u6211\u7684\u5de5\u4f5c\u3002\u201d",ja:"\u300c\u76ee\u7acb\u305f\u306a\u304f\u3066\u3044\u3044\u3002\u5d29\u308c\u306a\u3044\u3053\u3068\u304c\u3001\u4ffa\u306e\u4ed5\u4e8b\u3060\u3002\u300d",en:"\u201CI do not need the spotlight. Not breaking down \u2014 that is my job.\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u8282\u594f\u5409\u4ed6\u3011\u3002\u5d29\u4e86\u4e00\u77ac\u5168\u90e8\u7a7a\u6d1e\u7684\u90a3\u6839\u9876\u6881\u67f1\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u30ea\u30ba\u30e0\u30ae\u30bf\u30fc\u3011\u3002\u5d29\u308c\u305f\u77ac\u9593\u306b\u5168\u90e8\u30b9\u30ab\u30b9\u30ab\u306b\u306a\u308b\u3001\u3042\u306e\u5927\u9ed2\u67f1\u3002",en:"In a band: the \u3010Rhythm Guitar\u3011. The pillar \u2014 lose it and everything turns hollow."},
+    buddyNote:{zh:"GK\uff08\u9f13\u624b\uff09\u2014\u540e\u9632\u4e0e\u95e8\u5c06\u7684\u9ed8\u5951",ja:"GK\uff08\u30c9\u30e9\u30e0\uff09\u2014\u5b88\u308a\u306e\u30e9\u30a4\u30f3\u3092\u5171\u6709\u3059\u308b\u606f\u306e\u5408\u3046\u4e8c\u4eba",en:"GK (Drums) \u2014 the defensive line shared in perfect understanding"}, rivalNote:{zh:"CF\uff08\u4e3b\u5531\uff09\u2014\u4f60\u7684\u91cd\u8981\u6027\u603b\u88ab\u5fd8\u8bb0",ja:"CF\uff08\u30dc\u30fc\u30ab\u30eb\uff09\u2014\u3042\u308a\u304c\u305f\u307f\u306b\u6c17\u3065\u304b\u308c\u306a\u3044",en:"CF (Vocal) \u2014 your importance goes unnoticed"},
+    buddy:"gk", rival:"cf" },
+
+  b2b:{ key:"b2b", emoji:"\u2699\uFE0F", rare:false, coord:{spot:0,zone:0,style:0,stance:-1},
+    posAbbr:"CM",
+    pos:{zh:"B2B \u4e2d\u573a",ja:"B2B MF",en:"Box-to-Box Mid"},
+    band:{zh:"\u952e\u76d8",ja:"\u30ad\u30fc\u30dc\u30fc\u30c9",en:"Keyboards"},
+    catch:{zh:"\u65e0\u9650\u673a\u5668",ja:"\u7121\u9650\u6a5f\u95a2",en:"The infinite engine"},
+    desc:{zh:"\u521a\u5728\u81ea\u5bb6\u95e8\u524d\u9632\u5b88\uFF0c\u4e0b\u4e00\u79d2\u5df2\u7ecf\u5728\u5bf9\u65b9\u7981\u533a\u7b49\u4f60\u4f20\u7403\u3002\u653b\u5b88\u5168\u573a 90\u5206\u949f\u6765\u56de\u8dd1\u7684\u53d1\u52a8\u673a\u3002\u592a\u597d\u7528\u4e86\uFF0c\u4e8e\u662f\u6240\u6709\u7a9f\u7a9f\u90fd\u8ba9\u4ed6\u586b\u3002",
+      ja:"\u81ea\u9663\u30b4\u30fc\u30eb\u524d\u3067\u5b88\u3063\u305f\u304b\u3068\u601d\u3048\u3070\u3001\u6b21\u306e\u77ac\u9593\u306b\u306f\u6575\u9663\u3067\u6c7a\u5b9a\u6a5f\u3002\u653b\u5b88\u309290\u5206\u9593\u30ce\u30f3\u30b9\u30c8\u30c3\u30d7\u3067\u5f80\u5fa9\u3059\u308b\u30a8\u30f3\u30b8\u30f3\u3002\u4fbf\u5229\u3059\u304e\u3066\u3001\u6c17\u3065\u3051\u3070\u30c1\u30fc\u30e0\u306e\u7a74\u3068\u3044\u3046\u7a74\u3092\u5168\u90e8\u57cb\u3081\u3055\u305b\u3089\u308c\u3066\u3044\u308b\u4e07\u80fd\u5c4b\u3002",
+      en:"Defends at his own box one moment, arrives in the opponent\u2019s box the next. A 90-minute engine shuttling between attack and defense. So useful that he ends up plugging every single hole in the team."},
+    voice:{zh:"\u201c\u90a3\u4e2a\u2026\u6211\u8dd1\u4e00\u8d9f\u5e94\u8be5\u5c31\u89e3\u51b3\u4e86\u3002\uFF08\u53c8\u591a\u4e86\u4e2a\u6d3b\uFF09\u201d",ja:"\u300c\u305d\u308c\u3001\u305f\u3076\u3093\u4ffa\u304c\u8d70\u308c\u3070\u89e3\u6c7a\u3057\u307e\u3059\u3002\uFF08\u307e\u305f\u4ed5\u4e8b\u304c\u5897\u3048\u305f\uFF09\u300d",en:"\u201CThat? I can probably fix it by running. (More work, again.)\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u952e\u76d8\u3011\u3002\u97f3\u57df\u592a\u5bbd\uff0c\u7f3a\u7684\u90e8\u5206\u5168\u8ba9\u4f60\u8865\uff0c\u90a3\u4e2a\u201c\u7c98\u5408\u5242\u201d\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u30ad\u30fc\u30dc\u30fc\u30c9\u3011\u3002\u97f3\u57df\u5e83\u3059\u304e\u3066\u8db3\u308a\u306a\u3044\u30d1\u30fc\u30c8\u5168\u90e8\u3084\u3089\u3055\u308c\u308b\u3001\u3042\u306e\u63a5\u7740\u5264\u3002",en:"In a band: the \u3010Keyboards\u3011. So wide-ranging you end up covering every missing part \u2014 the glue."},
+    buddyNote:{zh:"\u5168\u961f\u2014\u54ea\u91cc\u6709\u6d1e\u5c31\u53bb\u54ea\u91cc",ja:"\u5168\u54e1\u2014\u7a74\u304c\u3042\u308c\u3070\u3069\u3053\u3078\u3067\u3082",en:"Everyone \u2014 wherever there\u2019s a gap, you fill it"}, rivalNote:{zh:"\u5168\u961f\u2014\u603b\u88ab\u968f\u610f\u4f7f\u5524",ja:"\u5168\u54e1\u2014\u3044\u3044\u3088\u3046\u306b\u4f7f\u308f\u308c\u304c\u3061",en:"Everyone \u2014 always getting used however they please"},
+    buddy:"all", rival:"all" },
+
+  wing:{ key:"wing", emoji:"\uD83C\uDFBA", rare:false, coord:{spot:1,zone:2,style:2,stance:-1},
+    posAbbr:"WG",
+    pos:{zh:"\u8fb9\u950b",ja:"\u30a6\u30a4\u30f3\u30b0",en:"Winger"},
+    band:{zh:"\u7ba1\u4e50\u7ec4",ja:"\u30db\u30fc\u30f3\u30bb\u30af\u30b7\u30e7\u30f3",en:"Horn Section"},
+    catch:{zh:"\u8fb9\u8def\u7684\u72c2\u9a6c",ja:"\u30b5\u30a4\u30c9\u306e\u66b4\u308c\u99ac",en:"The runaway on the flank"},
+    desc:{zh:"\u51fa\u573a\u65f6\u95f4\u5f88\u5206\u660e\u3002\u4f46\u4e00\u65e6\u5957\u8def\u594f\u6548\uFF0c\u90a3\u79cd\u7206\u53d1\u529b\u8c01\u4e5f\u62e6\u4e0d\u4f4f\u3002\u6709\u65f6\u9632\u5b88\u4e0d\u56de\u6765\uFF1F\u90a3\u4e5f\u662f\u6d6a\u6f2b\u7684\u4e00\u90e8\u5206\u3002\u6d88\u5931\u65f6\u5f7b\u5e95\u6d88\u5931\uFF0c\u51fa\u624b\u65f6\u649e\u788e\u6bd4\u8d5b\u3002",
+      ja:"\u51fa\u756a\u306f\u306f\u3063\u304d\u308a\u5206\u304b\u308c\u308b\u3002\u3067\u3082\u4ed5\u639b\u3051\u304c\u30cf\u30de\u3063\u305f\u77ac\u9593\u3001\u8ab0\u306b\u3082\u6b62\u3081\u3089\u308c\u306a\u3044\u4e00\u767a\u306e\u7206\u767a\u529b\u3002\u5b88\u5099\u3067\u5e30\u3063\u3066\u3053\u306a\u3044\u6642\u304c\u3042\u308b\uFF1F \u305d\u308c\u3082\u542b\u3081\u3066\u30ed\u30de\u30f3\u3002\u6d88\u3048\u308b\u6642\u306f\u5b8c\u5168\u306b\u6d88\u3048\u308b\u304c\u3001\u523a\u3055\u308b\u6642\u306f\u8a66\u5408\u3092\u58ca\u3059\u3002",
+      en:"Game time is hit or miss. But the instant a move comes off, his explosive burst is unstoppable. Does not always track back on defense? That is part of the romance. When he vanishes he vanishes completely \u2014 when he strikes, he breaks the game open."},
+    voice:{zh:"\u201c\u518d\u4e00\u6b21\uFF0c\u53ea\u8981\u518d\u8ba9\u6211\u8fc7\u4e00\u4e2a\u4eba\uFF01\u201d",ja:"\u300c\u3042\u3068\u4e00\u56de\u3001\u4e00\u56de\u3067\u3044\u3044\u3002\u4ed5\u639b\u3051\u3055\u305b\u3066\u304f\u308c\u2026\uFF01\u300d",en:"\u201COne more time \u2014 just let me take him on one more time!\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u7ba1\u4e50\u7ec4\u3011\u3002\u526f\u6b4c\u91cc\u201c\u8f70\u201d\u5730\u5168\u90e8\u5e26\u8d70\u7684\u90a3\u4ef6\u98de\u5668\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u30db\u30fc\u30f3\u30bb\u30af\u30b7\u30e7\u30f3\u3011\u3002\u30b5\u30d3\u3067\u30d6\u30ef\u30c3\u3068\u5168\u90e8\u6301\u3063\u3066\u3044\u304f\u3001\u3042\u306e\u98db\u3073\u9053\u5177\u3002",en:"In a band: the \u3010Horn Section\u3011. The weapon that blasts in and steals the whole chorus."},
+    buddyNote:{zh:"CF\uff08\u4e3b\u5531\uff09\u2014\u526f\u6b4c\u91cc\u540c\u53f0\u7206\u53d1",ja:"CF\uff08\u30dc\u30fc\u30ab\u30eb\uff09\u2014\u30b5\u30d3\u3067\u5171\u6f14",en:"CF (Vocal) \u2014 exploding together in the chorus"}, rivalNote:{zh:"\u95f7\u573a\u2014\u6ca1\u6709\u673a\u4f1a\u65f6\u6700\u96be\u53d7",ja:"\u5869\u8a66\u5408\u2014\u4ed5\u639b\u3051\u3069\u3053\u308d\u304c\u306a\u304f\u624b\u6301\u3061\u7121\u6c99\u6c70",en:"A dull match \u2014 nothing to do, the worst for you"},
+    buddy:"cf", rival:"none" },
+
+  shadow:{ key:"shadow", emoji:"\uD83D\uDDE3\uFE0F", rare:false, coord:{spot:1,zone:0,style:-1,stance:-1},
+    posAbbr:"SS",
+    pos:{zh:"\u5f71\u950b\uFF0F\u7b2c\u4e8c\u524d\u950b",ja:"\u30b7\u30e3\u30c9\u30fc\uFF0F\u30bb\u30ab\u30f3\u30c9\u30c8\u30c3\u30d7",en:"Shadow / Second Striker"},
+    band:{zh:"\u548c\u58f0",ja:"\u30b3\u30fc\u30e9\u30b9",en:"Backing Vocal"},
+    catch:{zh:"\u72e1\u733e\u7684\u4e8c\u53f7\u4f4d",ja:"\u72e1\u733e\u306a\u4e8c\u756a\u624b",en:"The cunning second"},
+    desc:{zh:"\u7acb\u5728\u738b\u724c\u540e\u4e00\u6b65\uFF0c\u6700\u201c\u7f8e\u201d\u7684\u4f4d\u7f6e\u4ed6\u95ed\u773c\u90fd\u77e5\u9053\u3002\u9020\u673a\u4f1a\u7ed9\u522b\u4eba\uFF0c\u4e5f\u4f1a\u81ea\u5df1\u60a0\u7136\u63d2\u4e00\u811a\u3002\u8868\u9762\u634a\u738b\u724c\uFF0c\u5b9e\u5219\u8fdb\u7403\u52a9\u653b\u4e24\u624b\u6293\u3002",
+      ja:"\u30a8\u30fc\u30b9\u306e\u4e00\u6b69\u5f8c\u308d\u3001\u4e00\u756a\u201c\u304a\u3044\u3057\u3044\u201d\u5834\u6240\u3092\u77e5\u308a\u5c3d\u304f\u3057\u305f\u8ce2\u8005\u3002\u6c7a\u5b9a\u6a5f\u3092\u6f14\u51fa\u3057\u3064\u3064\u3001\u81ea\u5206\u3067\u3082\u3057\u308c\u3063\u3068\u6c7a\u3081\u308b\u4e8c\u5200\u6d41\u3002\u4e3b\u5f79\u3092\u7acb\u3066\u308b\u30d5\u30ea\u3092\u3057\u3066\u3001\u5b9f\u306f\u4e21\u53d6\u308a\u3059\u308b\u7537\u3002",
+      en:"One step behind the ace, he knows the tastiest spot on the pitch by heart. He sets up chances and quietly finishes them too. Pretends to serve the star, but actually grabs both goals and assists."},
+    voice:{zh:"\u201c\u738b\u724c\u6211\u4f1a\u634a\u3002\u2026\u4e0d\u8fc7\u521a\u624d\u90a3\u4e0b\u63d2\u4f4d\uFF0c\u7f8e\u5427\uFF1F\u201d",ja:"\u300c\u30a8\u30fc\u30b9\u306f\u7acb\u3066\u308b\u3088\u3002\u2026\u3067\u3082\u4eca\u306e\u629c\u3051\u51fa\u3057\u3001\u7f8e\u5473\u3057\u304b\u3063\u305f\u3067\u3057\u3087\uFF1F\u300d",en:"\u201CI\u2019ll let the ace shine. \u2026But that run just now was delicious, right?\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u548c\u58f0\u3011\u3002\u6bd4\u4e3b\u89d2\u8fd8\u4f1a\u5531\uff0c\u5374\u9ed8\u9ed8\u85cf\u7740\u7684\u90a3\u4e2a\u4eba\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u30b3\u30fc\u30e9\u30b9\u3011\u3002\u4e3b\u5f79\u3088\u308a\u6b4c\u3046\u307e\u3059\u304e\u554f\u984c\u3092\u3001\u5bc6\u304b\u306b\u62b1\u3048\u304c\u3061\u3002",en:"In a band: the \u3010Backing Vocal\u3011. Secretly better than the lead, quietly hiding it."},
+    buddyNote:{zh:"CF\uff08\u4e3b\u5531\uff09\u2014\u4e24\u4eba\u4e00\u4f53\u7684\u9ed8\u5951",ja:"CF\uff08\u30dc\u30fc\u30ab\u30eb\uff09\u2014\u4e8c\u4eba\u3067\u4e00\u3064",en:"CF (Vocal) \u2014 two halves of one whole"}, rivalNote:{zh:"\u2014\u603b\u6709\u4e00\u5929\u4f1a\u4e0a\u514b\u4e0a\u4f4d",ja:"\u2014\u305d\u306e\u3046\u3061\u4e0b\u524b\u4e0a\u306e\u4e88\u611f",en:"\u2014 a coup is brewing someday"},
+    buddy:"cf", rival:"none" },
+
+  sb:{ key:"sb", emoji:"\uD83E\uDD41", rare:false, coord:{spot:-1,zone:1,style:-2,stance:-1},
+    posAbbr:"FB",
+    pos:{zh:"\u8fb9\u540e\u536b SB\uFF0FWB",ja:"SB\uFF0FWB",en:"Full Back / Wing Back"},
+    band:{zh:"\u6253\u51fb\u4e50",ja:"\u30d1\u30fc\u30ab\u30c3\u30b7\u30e7\u30f3",en:"Percussion"},
+    catch:{zh:"\u65e0\u5c3d\u8dd1\u8005",ja:"\u7121\u5c3d\u8535\u30e9\u30f3\u30ca\u30fc",en:"The endless runner"},
+    desc:{zh:"\u4e0a\u4e0b 90\u5206\u949f\uFF0c\u653b\u5b88\u5168\u90e8\u5305\u3002\u63d2\u4e0a\u53bb\u4f20\u4e2d\uFF0c\u8f6c\u8eab\u53c8\u5168\u529b\u51b2\u56de\u672c\u65b9\u3002\u73b0\u4ee3\u8db3\u7403\u91cc\u6700\u91cd\u8981\uFF0c\u5374\u6700\u4e0d\u88ab\u6ce8\u610f\u3002\u6000\u7591\u4ed6\u662f\u4e0d\u662f\u6709\u56db\u6761\u817f\u3002",
+      ja:"\u4e0a\u4e0b\u52d5 90\u5206\u3001\u653b\u6483\u3082\u5b88\u5099\u3082\u5168\u90e8\u3084\u308b\u4f53\u529b\u304a\u3070\u3051\u3002\u30aa\u30fc\u30d0\u30fc\u30e9\u30c3\u30d7\u3067\u30af\u30ed\u30b9\u3092\u4e0a\u3052\u3001\u632f\u308a\u5411\u3044\u3066\u81ea\u9663\u307e\u3067\u5168\u529b\u3067\u623b\u308b\u3002\u8fd1\u4ee3\u30b5\u30c3\u30ab\u30fc\u3067\u6700\u3082\u91cd\u8981\u306a\u306e\u306b\u3001\u6700\u3082\u6c17\u3065\u304b\u308c\u306a\u3044\u3002\u624b\u304c4\u672c\u3042\u308b\u3093\u3058\u3083\u306a\u3044\u304b\u7591\u60d1\u3002",
+      en:"Up and down for 90 minutes, doing both attack and defense. Overlaps to whip in a cross, then sprints all the way back. The most important role in modern football \u2014 and the least noticed. You suspect he has four legs."},
+    voice:{zh:"\u201c\u8fd8\u80fd\u8dd1\u3002\u8fd8\u80fd\u518d\u4e0a\u4e00\u6b21\u3002\u2026\u6c14\uFF0c\u5df2\u7ecf\u6ca1\u4e86\u3002\u201d",ja:"\u300c\u307e\u3060\u8d70\u308c\u308b\u3002\u3082\u3046\u4e00\u56de\u3001\u4e0a\u304c\u308c\u308b\u3002\u2026\u606f\u306f\u3001\u3082\u3046\u306a\u3044\u3002\u300d",en:"\u201CI can still run. One more overlap\u2026 my lungs, though, are gone.\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u6253\u51fb\u4e50\u3011\u3002\u6700\u52a8\u8fd8\u6700\u4e0d\u663e\u773c\uff0c\u90a3\u62b9\u7f18\u4e0b\u7684\u70b9\u7f00\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u30d1\u30fc\u30ab\u30c3\u30b7\u30e7\u30f3\u3011\u3002\u4e00\u756a\u52d5\u3044\u3066\u4e00\u756a\u76ee\u7acb\u305f\u306a\u3044\u3001\u3042\u306e\u7e01\u306e\u4e0b\u306e\u5f69\u308a\u3002",en:"In a band: the \u3010Percussion\u3011. Works the hardest, noticed the least \u2014 the unsung color."},
+    buddyNote:{zh:"GK\xb7CB\uff08\u8282\u594f\u961f\uff09\u2014\u8282\u594f\u4e0a\u5929\u751f\u5951\u5408",ja:"GK\u30fbCB\uff08\u30ea\u30ba\u30e0\u968a\uff09\u2014\u30ea\u30ba\u30e0\u3067\u7e4b\u304c\u308b",en:"GK & CB (Rhythm section) \u2014 locked together on rhythm"}, rivalNote:{zh:"\u2014\u5b58\u5728\u611f\u603b\u88ab\u4e0d\u5c0f\u5fc3\u9057\u5fd8",ja:"\u2014\u5b58\u5728\u3092\u3046\u3063\u304b\u308a\u5fd8\u308c\u3089\u308c\u304c\u3061",en:"\u2014 your presence is easily, accidentally forgotten"},
+    buddy:"gk", rival:"none" },
+
+  shushin:{ key:"shushin", emoji:"\uD83D\uDEA8", rare:false, coord:{spot:0,zone:0,style:0,stance:-1},
+    posAbbr:"REF",
+    pos:{zh:"\u4e3b\u88c1\uFF08\u88c1\u5224\uFF09",ja:"\u4e3b\u5be9\uFF08\u30ec\u30d5\u30a7\u30ea\u30fc\uFF09",en:"Referee"},
+    band:{zh:"PA\uFF08\u97f3\u54cd\u5de5\u7a0b\u5e08\uFF09",ja:"PA\uFF08\u97f3\u97ff\u30a8\u30f3\u30b8\u30cb\u30a2\uFF09",en:"PA / Sound Engineer"},
+    catch:{zh:"\u89c4\u5219\u7684\u770b\u5b88\u4eba",ja:"\u30eb\u30fc\u30eb\u306e\u756a\u4eba",en:"The keeper of the rules"},
+    desc:{zh:"\u4e0d\u662f\u573a\u4e0a 22\u4eba\u4e2d\u7684\u4efb\u4f55\u4e00\u4eba\uFF0c\u5374\u72ec\u81ea\u80cc\u7740\u201c\u6bd4\u8d5b\u89c4\u5219\u201d\u672c\u8eab\u3002\u4e00\u58f0\u54e8\u80fd\u505c\u8d5b\u3001\u91cd\u542f\u3001\u6539\u53d8\u8d70\u52bf\u3002\u8dd1\u5f97\u6bd4\u8c01\u90fd\u591a\uFF0c\u5374\u6ca1\u4eba\u611f\u8c22\uFF1B\u5224\u5f97\u5bf9\u662f\u201c\u5e94\u8be5\u201d\uFF0c\u5224\u9519\u88ab\u516b\u65b9\u56f4\u653b\u3002\u4f46\u6ca1\u4ed6\uFF0c\u6bd4\u8d5b\u4e0d\u6210\u7acb\u3002",
+      ja:"\u30d4\u30c3\u30c1\u306b\u7acb\u3064 22\u4eba\u306e\u8ab0\u3067\u3082\u306a\u304f\u3001\u305f\u3063\u305f\u4e00\u4eba\u300c\u8a66\u5408\u306e\u30eb\u30fc\u30eb\u305d\u306e\u3082\u306e\u300d\u3092\u80cc\u8ca0\u3046\u7537\u3002\u7b1b\u4e00\u3064\u3067\u8a66\u5408\u3092\u6b62\u3081\u3001\u518d\u958b\u3055\u305b\u3001\u6d41\u308c\u3092\u5909\u3048\u308b\u3002\u8ab0\u3088\u308a\u8d70\u308b\u306e\u306b\u8ab0\u304b\u3089\u3082\u611f\u8b1d\u3055\u308c\u305a\u3001\u30b8\u30e3\u30c3\u30b8\u304c\u6b63\u3057\u3051\u308c\u3070\u300c\u5f53\u7136\u300d\u3001\u9593\u9055\u3048\u308c\u3070\u5168\u65b9\u4f4d\u304b\u3089\u888b\u53e9\u304d\u3002\u305d\u308c\u3067\u3082\u3053\u306e\u4eba\u304c\u3044\u306a\u3051\u308c\u3070\u8a66\u5408\u306f\u6210\u7acb\u3057\u306a\u3044\u3002\u4e3b\u5f79\u305f\u3061\u306e\u80cc\u5f8c\u3067\u79e9\u5e8f\u3092\u5b88\u308a\u7d9a\u3051\u308b\u7d76\u5bfe\u6a29\u529b\u8005\u3002",
+      en:"None of the 22 on the pitch \u2014 yet the one who alone carries \u201Cthe rules themselves.\u201D One whistle stops the game, restarts it, changes its flow. Runs more than anyone and is thanked by no one; a correct call is \u201Cobvious,\u201D a wrong one gets him attacked from all sides. Yet without him, there is no match. The absolute authority guarding order behind the stars."},
+    voice:{zh:"\u201c\u6211\u4e0d\u5439\u54e8\uFF0c\u8c01\u90fd\u522b\u60f3\u597d\u597d\u8e22\u7403\u3002\u201d",ja:"\u300c\u4ffa\u304c\u7b1b\u3092\u5439\u304b\u306a\u304d\u3083\u3001\u8ab0\u3082\u6c17\u6301\u3061\u3088\u304f\u30d7\u30ec\u30fc\u3067\u304d\u306a\u3044\u3060\u308d\uFF1F\u300d",en:"\u201CIf I don\u2019t blow the whistle, nobody gets to play in peace, right?\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010PA\uff08\u97f3\u54cd\uff09\u3011\u3002\u638c\u63a7\u5168\u573a\u97f3\u91cf\u5e73\u8861\uff0c\u5bf9\u592a\u5927\u7684\u58f0\u201c\u5439\u54e8\u201d\u2014\u2014\u6267\u6cd5\u8005\u8fd9\u70b9\u5b8c\u5168\u4e00\u81f4\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010PA\uff08\u97f3\u97ff\uff09\u3011\u3002\u5168\u4f53\u306e\u97f3\u91cf\u30d0\u30e9\u30f3\u30b9\u3092\u7d71\u3079\u3001\u5927\u304d\u3059\u304e\u308b\u97f3\u306b\u306f\u201c\u7b1b\u3092\u5439\u304f\u201d\u3002\u57f7\u884c\u8005\u3068\u3044\u3046\u70b9\u304c\u5b8c\u5168\u4e00\u81f4\u3002",en:"In a band: the \u3010PA / Sound Engineer\u3011. Rules the overall balance and blows the whistle on anything too loud \u2014 the enforcer, exactly alike."},
+    buddyNote:{zh:"\u5168\u961f\u2014\u4e0d\u504f\u4e0d\u501a\uff0c\u4e0e\u6240\u6709\u4eba\u7b49\u8ddd",ja:"\u5168\u54e1\u2014\u8ab0\u306e\u5473\u65b9\u3067\u3082\u306a\u304f\u3001\u5168\u54e1\u3092\u6210\u7acb\u3055\u305b\u308b",en:"Everyone \u2014 no one\u2019s ally, makes everyone work"}, rivalNote:{zh:"\u2014\u6ca1\u6709\u5bf9\u624b\uff0c\u53ea\u6709\u89c4\u5219",ja:"\u2014\u30e9\u30a4\u30d0\u30eb\u306f\u3044\u306a\u3044\u3001\u3044\u308b\u306e\u306f\u30eb\u30fc\u30eb\u3060\u3051",en:"\u2014 no rivals, only the rules"},
+    buddy:"all", rival:"none" },
+
+  kantoku:{ key:"kantoku", emoji:"\uD83D\uDC51", rare:true, coord:{spot:0,zone:0,style:0,stance:-1},
+    posAbbr:"MGR",
+    pos:{zh:"\u4e3b\u6559\u7ec3",ja:"\u76e3\u7763",en:"The Manager"},
+    band:{zh:"\u5236\u4f5c\u4eba\uFF0F\u4e50\u961f\u957f",ja:"\u30d7\u30ed\u30c7\u30e5\u30fc\u30b5\u30fc\uFF0F\u30d0\u30f3\u30de\u30b9",en:"Producer / Bandleader"},
+    catch:{zh:"\u638c\u63a7\u4e00\u5207\u7684\u6307\u6325\u5b98",ja:"\u5168\u3066\u3092\u64cd\u308b\u6307\u63ee\u5b98",en:"The one who controls it all"},
+    desc:{zh:"\u5728\u573a\u4e0a\u4e00\u6b21\u90fd\u4e0d\u78b0\u7403\uFF0c\u5374\u51b3\u5b9a\u6bd4\u8d5b\u7684\u4e00\u5207\u3002\u8d62\u4e86\u662f\u201c\u7403\u5458\u7684\u529f\u52b3\u201d\uFF0c\u8f93\u4e86\u662f\u201c\u6559\u7ec3\u7684\u8d23\u4efb\u201d\u3002\u62bd\u5230\u8fd9\u4e2a\u7c7b\u578b\uFF0c\u4f60\u5df2\u7ecf\u8d85\u8d8a\u4e86\u201c\u7403\u5458\u201d\u7684\u5668\u91cf\u3002",
+      ja:"\u30d4\u30c3\u30c1\u3067\u4e00\u5ea6\u3082\u30dc\u30fc\u30eb\u306b\u89e6\u308c\u306a\u3044\u306e\u306b\u3001\u8a66\u5408\u306e\u5168\u90e8\u3092\u6c7a\u3081\u308b\u9ed2\u5e55\u3002\u52dd\u3066\u3070\u300c\u9078\u624b\u306e\u304a\u304b\u3052\u300d\u3001\u8ca0\u3051\u308c\u3070\u300c\u76e3\u7763\u306e\u8cac\u4efb\u300d\u3002\u3053\u306e\u30bf\u30a4\u30d7\u3092\u5f15\u3044\u305f\u6642\u70b9\u3067\u3001\u3042\u306a\u305f\u306f\u201c\u30d7\u30ec\u30a4\u30e4\u30fc\u201d\u306e\u5668\u3092\u8d85\u3048\u3066\u3044\u308b\u3002",
+      en:"Never touches the ball on the pitch, yet decides everything about the match. Win and it is \u201Cthanks to the players;\u201D lose and it is \u201Cthe manager\u2019s fault.\u201D If you drew this type, you have already outgrown the vessel of a mere \u201Cplayer.\u201D"},
+    voice:{zh:"\u201c\u55ef\uFF0c\u597d\u6bd4\u8d5b\u3002\u2026\u4e0d\u8fc7\u8fd9\u91cc\u7684\u9632\u5b88\uFF0c\u518d\u786e\u8ba4\u4e00\u904d\u5427\u3002\u201d",ja:"\u300c\u3046\u3093\u3001\u3044\u3044\u8a66\u5408\u3060\u3063\u305f\u3002\u2026\u3067\u3001\u3053\u3053\u306e\u5b88\u5099\u3001\u3082\u3046\u4e00\u56de\u78ba\u8a8d\u3057\u3088\u3046\u304b\u3002\u300d",en:"\u201CYes, good match. \u2026Now, let\u2019s review the defending here one more time.\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u5236\u4f5c\u4eba\uff0f\u4e50\u961f\u957f\u3011\u3002\u4e00\u4e2a\u97f3\u90fd\u4e0d\u53d1\u5374\u51b3\u5b9a\u4e00\u5207\u7684\u9ed1\u624b\uff0c\u5b8c\u5168\u4e00\u81f4\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u30d7\u30ed\u30c7\u30e5\u30fc\u30b5\u30fc\uff0f\u30d0\u30f3\u30de\u30b9\u3011\u3002\u4e00\u97f3\u3082\u9cf4\u3089\u3055\u305a\u5168\u90e8\u3092\u6c7a\u3081\u308b\u9ed2\u5e55\u3001\u5b8c\u5168\u4e00\u81f4\u3002",en:"In a band: the \u3010Producer / Bandleader\u3011. The mastermind who decides everything without playing a note \u2014 a perfect match."},
+    buddyNote:{zh:"\u5168\u961f\u2014\u638c\u63a7\u6240\u6709\u4eba\u7684\u90a3\u4e2a\u4eba",ja:"\u5168\u54e1\u2014\u5168\u3066\u3092\u64cd\u308b\u8005",en:"Everyone \u2014 the one who controls them all"}, rivalNote:{zh:"\u2014\u8d62\u4e86\u662f\u7403\u5458\u7684\u529f\uff0c\u8f93\u4e86\u662f\u6211\u7684\u9505",ja:"\u2014\u52dd\u3066\u3070\u9078\u624b\u3001\u8ca0\u3051\u308c\u3070\u76e3\u7763\u306e\u8cac\u4efb",en:"\u2014 win, it\u2019s the players; lose, it\u2019s on me"},
+    buddy:"all", rival:"none" },
+
+  supporter:{ key:"supporter", emoji:"\uD83D\uDD25", rare:true, coord:{stance:2},
+    posAbbr:"FAN",
+    pos:{zh:"\u72c2\u70ed\u7403\u8ff7\uFF08\u8ffd\u968f\u8005\uFF09",ja:"\u71b1\u72c2\u7684\u30d5\u30a1\u30f3\uFF0F\u63a8\u3057",en:"The Die-hard Fan"},
+    band:{zh:"\u72c2\u70ed\u7c89\u4e1d\uFF0F\u6700\u524d\u6392",ja:"\u71b1\u72c2\u7684\u30d5\u30a1\u30f3\uFF0F\u63a8\u3057",en:"Die-hard Fan / Stan"},
+    catch:{zh:"\u770b\u53f0\u4e0a\u7684\u9876\u70b9",ja:"\u898b\u308b\u5074\u306e\u9802\u70b9",en:"The summit of the stands"},
+    desc:{zh:"\u4ece\u4e0d\u7ad9\u4e0a\u7403\u573a\uFF0c\u4e5f\u4ece\u4e0d\u78b0\u7403\u3002\u53ef\u8ba9\u6574\u5ea7\u7403\u573a\u9707\u52a8\u7684\uFF0c\u603b\u662f\u8fd9\u7fa4\u4eba\u300290\u5206\u949f\u7ad9\u7740\u5531\uFF0c\u8f93\u4e86\u4e0d\u9aa1\uFF0c\u8fd8\u6bd4\u8c01\u90fd\u65e9\u6765\u3002\u8ba9\u7403\u5458\u6700\u6709\u529b\u91cf\u7684\u4e00\u523b\uFF0c\u4e5f\u8bb8\u4e0d\u662f\u8fdb\u7403\uFF0c\u800c\u662f\u8fd9\u7247\u5e94\u63f4\u3002\u4f60\u4e0d\u662f\u201c\u7403\u5458\u201d\uFF0c\u4f46\u6700\u7231\u8fd9\u652f\u961f\u7684\uFF0c\u4e00\u5b9a\u662f\u4f60\u3002",
+      ja:"\u30d4\u30c3\u30c1\u306b\u306f\u4e00\u5ea6\u3082\u7acb\u305f\u306a\u3044\u3002\u30dc\u30fc\u30eb\u306b\u3082\u89e6\u308c\u306a\u3044\u3002\u306a\u306e\u306b\u3001\u30b9\u30bf\u30b8\u30a2\u30e0\u3092\u63fa\u3089\u3059\u306e\u306f\u3044\u3064\u3082\u3053\u306e\u4eba\u305f\u3061\u3060\u300290\u5206\u9593\u7acb\u3061\u3063\u3071\u306a\u3057\u3067\u6b4c\u3044\u3001\u8ca0\u3051\u3066\u3082\u7f75\u3089\u305a\u8ab0\u3088\u308a\u65e9\u304f\u307e\u305f\u6765\u308b\u3002\u9078\u624b\u304c\u4e00\u756a\u529b\u3092\u3082\u3089\u3046\u77ac\u9593\u306f\u3001\u30b4\u30fc\u30eb\u3067\u3082\u52dd\u5229\u3067\u3082\u306a\u304f\u3001\u3053\u306e\u58f0\u63f4\u304b\u3082\u3057\u308c\u306a\u3044\u3002\u201d\u30d7\u30ec\u30a4\u30e4\u30fc\u201d\u3058\u3083\u306a\u3044\u3002\u3067\u3082\u3001\u3053\u306e\u30c1\u30fc\u30e0\u3092\u4e00\u756a\u611b\u3057\u3066\u3044\u308b\u306e\u306f\u9593\u9055\u3044\u306a\u304f\u3042\u306a\u305f\u3060\u3002",
+      en:"Never stands on the pitch. Never touches the ball. Yet the ones who shake the whole stadium are always these people. Singing on their feet for 90 minutes, never cursing after a loss, first back the next time. The moment a player draws the most strength may not be a goal or a win \u2014 but this roar from the stands. You are not a \u201Cplayer.\u201D But the one who loves this team most is, without a doubt, you."},
+    voice:{zh:"\u201c\u6211\u7ad9\u4e0d\u4e0a\u573a\u3002\u4f46\u8ba9\u4f60\u4eec\u70ed\u8d77\u6765\u7684\uFF0c\u4e0d\u5c31\u662f\u6211\u5417\uFF1F\u201d",ja:"\u300c\u4ffa\u306f\u30d4\u30c3\u30c1\u306b\u7acb\u3066\u306a\u3044\u3002\u3067\u3082\u3001\u304a\u524d\u3089\u3092\u4e00\u756a\u71b1\u304f\u3057\u3066\u308b\u306e\u306f\u4ffa\u3060\u308d\uFF1F\u300d",en:"\u201CI can\u2019t stand on the pitch. But the one firing you up \u2014 that\u2019s me, isn\u2019t it?\u201D"},
+    link:{zh:"\u4e50\u961f\u91cc\u5c31\u662f\u3010\u72c2\u70ed\u7c89\u4e1d\uff0f\u6700\u524d\u6392\u3011\u3002\u8ba9\u6f14\u8005\u771f\u6b63\u70b9\u71c3\u7684\uff0c\u7ec8\u5f52\u662f\u8fd9\u4efd\u70ed\u91cf\u3002",ja:"\u30d0\u30f3\u30c9\u306a\u3089\u3010\u6700\u524d\u5217\u306e\u30d5\u30a1\u30f3\uff0f\u63a8\u3057\u3011\u3002\u6f14\u8005\u3092\u672c\u6c17\u306b\u3055\u305b\u308b\u306e\u306f\u3001\u7d50\u5c40\u3053\u306e\u71b1\u91cf\u3002",en:"In a band: the \u3010front-row fan / stan\u3011. What truly fires up the performers is, in the end, this heat."},
+    buddyNote:{zh:"\u5168\u961f\u2014\u4f60\u7684\u5e94\u63f4\u662f\u4ed6\u4eec\u7684\u71c3\u6599",ja:"\u5168\u54e1\u2014\u3042\u306a\u305f\u306e\u58f0\u63f4\u304c\u71c3\u6599",en:"Everyone \u2014 your cheering is their fuel"}, rivalNote:{zh:"\u76d1\u7763\u2014\u4e00\u4e2a\u201c\u505a\u201d\u7684\u9876\u70b9\uff0c\u4e00\u4e2a\u201c\u770b\u201d\u7684\u9876\u70b9",ja:"\u76e3\u7763\u2014\u300c\u3084\u308b\u5074\u300d\u306e\u9802\u70b9\u3068\u300c\u898b\u308b\u5074\u300d\u306e\u9802\u70b9",en:"The Manager \u2014 the summit of \u201cdoing\u201d vs the summit of \u201cwatching\u201d"},
+    buddy:"all", rival:"kantoku" }
+};
+
+/* ---- 監督「4つの顔」副判定（STYLE×SPOT 象限） ---- */
+var KANTOKU_FACES = {
+  klopp:  { zh:"\u6fc0\u60c5\u578b\uFF08\u514b\u6d1b\u666e\uFF09", ja:"\u60c5\u71b1\u578b\uFF08\u30af\u30ed\u30c3\u30d7\uFF09", en:"Passion (Klopp)" },
+  ancelotti:{ zh:"\u667a\u5c06\u578b\uFF08\u5b89\u8d1d\uFF09", ja:"\u77e5\u5c06\u578b\uFF08\u30a2\u30f3\u30c1\u30a7\u30ed\u30c3\u30c6\u30a3\uFF09", en:"Tactician (Ancelotti)" },
+  pep:    { zh:"\u5b8c\u7f8e\u4e3b\u4e49\u578b\uFF08\u74dc\u8fea\u5965\u62c9\uFF09", ja:"\u5b8c\u74a7\u4e3b\u7fa9\u578b\uFF08\u30da\u30c3\u30d7\uFF09", en:"Perfectionist (Pep)" },
+  cruyff: { zh:"\u57f9\u517b\u578b\uFF08\u514b\u9c81\u4f0a\u592b\uFF09", ja:"\u80b2\u6210\u578b\uFF08\u30af\u30e9\u30a4\u30d5\uFF09", en:"Developer (Cruyff)" }
+};
+
+/* ---- UI i18n ---- */
+var UI = {
+  demo_ribbon:{zh:"DEMO \u00b7 \u4e16\u754c\u676f\u7279\u522b\u7248 \u00b7 \u8db3\u7403\u4f4d\u7f6e \u00d7 \u4e50\u961f\u89d2\u8272",ja:"DEMO \u00b7 W\u676f\u7279\u5225\u7248 \u00b7 \u30b5\u30c3\u30ab\u30fc\u4f4d\u7f6e \u00d7 \u30d0\u30f3\u30c9\u30d1\u30fc\u30c8",en:"DEMO \u00b7 World Cup Edition \u00b7 Position \u00d7 Band Role"},
+  title:{zh:"\u4f60\u662f\u4e50\u961f\u54ea\u4e2a\u4f4d\u7f6e\uFF1F",ja:"\u3042\u306a\u305f\u306f\u30d0\u30f3\u30c9\u306e\u3069\u306e\u4f4d\u7f6e\uFF1F",en:"Which position are you in the band?"},
+  lead:{zh:"<b>\u53f8\u4ee4\u5854\u3001\u524d\u950b\u3001\u8fd8\u662f\u95e8\u5c06\uff1f</b><br>\u8db3\u7403\u573a\u4e0a\u7684\u4f4d\u7f6e\uff0c\u85cf\u7740\u4f60\u5728<b>\u4e50\u961f\u91cc\u7684\u89d2\u8272</b>\u30029 \u9053\u9898\uff0c\u4ece\u5c0f\u7ec4\u8d5b\u4e00\u8def\u8e22\u5230\u51b3\u8d5b\u2014\u2014\u770b\u770b\u4f60\u4f1a\u7ad9\u4e0a\u54ea\u4e2a\u4f4d\u7f6e\u3002",ja:"<b>\u53f8\u4ee4\u5854\u304b\u3001\u70b9\u53d6\u308a\u5c4b\u304b\u3001\u6700\u5f8c\u306e\u7826\u304b\u3002</b><br>\u30b5\u30c3\u30ab\u30fc\u306e\u30dd\u30b8\u30b7\u30e7\u30f3\u306b\u306f\u3001\u3042\u306a\u305f\u306e<b>\u30d0\u30f3\u30c9\u3067\u306e\u5f79\u5272</b>\u304c\u96a0\u308c\u3066\u3044\u308b\u30029\u554f\u3001\u30b0\u30eb\u30fc\u30d7\u30ea\u30fc\u30b0\u304b\u3089\u6c7a\u52dd\u307e\u3067\u52dd\u3061\u4e0a\u304c\u3063\u3066\u3001\u6700\u5f8c\u306b\u7acb\u3064\u30dd\u30b8\u30b7\u30e7\u30f3\u3092\u898b\u3064\u3051\u3088\u3046\u3002",en:"<b>Playmaker, striker, or last line of defense?</b><br>Your position on the pitch reveals your <b>role in the band</b>. 9 questions, from the group stage to the final."},
+  btn_start:{zh:"\u26BD \u5f00\u8d5b \u00b7 \u5f00\u59cb\u8bca\u65ad",ja:"\u26BD \u30ad\u30c3\u30af\u30aa\u30d5 \u00b7 \u8a3a\u65ad\u30b9\u30bf\u30fc\u30c8",en:"\u26BD Kick Off \u00b7 Start"},
+  intro_note:{zh:"\u26bd \u4e16\u754c\u676f\u5b63\u6700\u5e94\u666f\u7684\u8bca\u65ad \xb7 \u4e0d\u61c2\u8db3\u7403\u4e5f\u80fd\u73a9\uff0c\u9898\u76ee\u90fd\u662f\u65e5\u5e38\u611f\u89c9\u7684\u9009\u62e9\u3002",ja:"\u26bd W\u676f\u30b7\u30fc\u30ba\u30f3\u306b\u3074\u3063\u305f\u308a\u306e\u8a3a\u65ad \xb7 \u30b5\u30c3\u30ab\u30fc\u672a\u7d4c\u9a13\u3067\u3082\u3001\u65e5\u5e38\u611f\u899a\u306e\u4e8c\u629e\u3060\u3051\u3067\u697d\u3057\u3081\u308b\u3002",en:"\u26bd The perfect diagnosis for World Cup season \u2014 no football needed, just everyday gut-feel choices."},
+  stage_group:{zh:"\u5c0f\u7ec4\u8d5b \u00b7 GROUP STAGE",ja:"\u30b0\u30eb\u30fc\u30d7\u30ea\u30fc\u30b0 \u00b7 GROUP STAGE",en:"GROUP STAGE"},
+  stage_knockout:{zh:"\u6dd8\u6c70\u8d5b \u00b7 KNOCKOUT",ja:"\u6c7a\u52dd\u30c8\u30fc\u30ca\u30e1\u30f3\u30c8 \u00b7 KNOCKOUT",en:"KNOCKOUT"},
+  side_a:{zh:"A",ja:"A",en:"A"}, side_b:{zh:"B",ja:"B",en:"B"},
+  result_sub:{zh:"\u8db3\u7403\u4f4d\u7f6e \u00d7 \u4e50\u961f\u89d2\u8272 \u8bca\u65ad",ja:"\u30b5\u30c3\u30ab\u30fc\u4f4d\u7f6e \u00d7 \u30d0\u30f3\u30c9\u30d1\u30fc\u30c8 \u8a3a\u65ad",en:"Position \u00d7 Band Role Diagnosis"},
+  final_cry:{zh:"\uD83C\uDFC6 \u51b3\u8d5b\u80dc\u51fa\uFF01\u4f60\u7684\u4f4d\u7f6e\u662f\u2014\u2014",ja:"\uD83C\uDFC6 \u6c7a\u52dd\u3092\u52dd\u3061\u629c\u3051\u305f\uFF01\u3042\u306a\u305f\u306e\u30dd\u30b8\u30b7\u30e7\u30f3\u306f\u2014\u2014",en:"\uD83C\uDFC6 You\u2019ve won the final! Your position is\u2014"},
+  diagnosing:{zh:"\u8bca\u65ad\u4e2d\u2026",ja:"\u8a3a\u65ad\u4e2d\u2026",en:"Diagnosing\u2026"},
+  rel_buddy:{zh:"\u6700\u4f73\u642d\u6863",ja:"\u6700\u9ad8\u306e\u76f8\u68d2",en:"Best partner"},
+  rel_rival:{zh:"\u6b7b\u5bf9\u5934",ja:"\u30e9\u30a4\u30d0\u30eb",en:"Rival"},
+  res_note:{zh:"\u203b \u4ec5\u4f9b\u5a31\u4e50\u3002\u4f4d\u7f6e\u4e0e\u89d2\u8272\u7684\u5bf9\u5e94\u662f\u8da3\u5473\u8bbe\u5b9a\uFF0c\u975e\u4e13\u4e1a\u6d4b\u8bc4\u3002",ja:"\u203b \u5036\u697d\u3002\u30dd\u30b8\u30b7\u30e7\u30f3\u3068\u5f79\u5272\u306e\u5bfe\u5fdc\u306f\u8da3\u5473\u8a2d\u5b9a\u3067\u3001\u5c02\u9580\u7684\u306a\u6e2c\u5b9a\u3067\u306f\u3042\u308a\u307e\u305b\u3093\u3002",en:"\u203b For fun only. The position-to-role mapping is a playful setup, not a professional assessment."},
+  share_badge:{zh:"\u626b\u7801\u6311\u6218",ja:"QR\u3067\u6311\u6226",en:"Scan to play"},
+  share_card_title:{zh:"\u4f60\u662f\u4e50\u961f\u54ea\u4e2a\u4f4d\u7f6e\uFF1F",ja:"\u3042\u306a\u305f\u306f\u30d0\u30f3\u30c9\u306e\u3069\u306e\u4f4d\u7f6e\uFF1F",en:"Which position are you?"},
+  share_card_sub:{zh:"BASS SHOW \u00b7 \u8db3\u7403\u4f4d\u7f6e\u8bca\u65ad",ja:"BASS SHOW \u00b7 \u30b5\u30c3\u30ab\u30fc\u4f4d\u7f6e\u8a3a\u65ad",en:"BASS SHOW \u00b7 Position Diagnosis"},
+  btn_screenshot:{zh:"\u622a\u56fe\u5206\u4eab\u7ed9\u670b\u53cb",ja:"\u30b9\u30af\u30b7\u30e7\u3067\u30b7\u30a7\u30a2",en:"Screenshot & share"},
+  btn_copy:{zh:"\u590d\u5236\u6587\u5b57",ja:"\u30c6\u30ad\u30b9\u30c8\u3092\u30b3\u30d4\u30fc",en:"Copy text"},
+  promo_title:{zh:"\u52a0\u5165\u6df1\u5733\u8f7b\u97f3\u90e8 \u00b7 BASS SHOW",ja:"\u6df1\u5733\u8efd\u97f3\u90e8 \u00b7 BASS SHOW",en:"Join Shenzhen Light Music \u00b7 BASS SHOW"},
+  promo_gzh_n:{zh:"\u4ea4\u6d41\u7fa4",ja:"\u4ea4\u6d41\u30b0\u30eb\u30fc\u30d7",en:"Community"},
+  promo_gzh_d:{zh:"\u626b\u7801\u5173\u6ce8\u516c\u4f17\u53f7 \u00b7 \u56de\u590d\u300c\u5165\u7fa4\u300d\u5373\u53ef\u8fdb\u7fa4",ja:"\u516c\u4f17\u53f7\u3092\u30d5\u30a9\u30ed\u30fc\u3057\u300c\u5165\u7fa4\u300d\u3068\u8fd4\u4fe1",en:"Follow & reply \u201Cjoin\u201D to enter the group"},
+  promo_bili_n:{zh:"Bilibili",ja:"Bilibili",en:"Bilibili"},
+  promo_bili_d:{zh:"\u5728\u534e\u65e5\u672c\u97f3\u4e50\u4eba MASATO",ja:"\u5728\u83ef\u65e5\u672c\u4eba\u97f3\u697d\u5bb6 MASATO",en:"MASATO, Japanese musician in China"},
+  promo_plat_n:{zh:"BASS SHOW",ja:"BASS SHOW",en:"BASS SHOW"},
+  promo_demo_tag:{zh:"\u4f53\u9a8c\u7248",ja:"\u4f53\u9a13\u7248",en:"Demo"},
+  promo_plat_d:{zh:"\u7ebf\u4e0a\u7ec3\u8033 \u00b7 \u8282\u594f \u00b7 \u624b\u901f\u7b49\u5c0f\u6e38\u620f",ja:"\u30aa\u30f3\u30e9\u30a4\u30f3\u7df4\u8033\u30fb\u30ea\u30ba\u30e0\u30fb\u624b\u901f\u7b49",en:"Ear training, rhythm, finger speed & more"},
+  promo_games_n:{zh:"\u5c0f\u6e38\u620f\u5408\u96c6",ja:"\u30df\u30cb\u30b2\u30fc\u30e0\u96c6",en:"Mini-game collection"},
+  promo_games_d:{zh:"\u66f4\u591a BASS SHOW \u5c0f\u6e38\u620f",ja:"\u305d\u306e\u4ed6\u306e BASS SHOW \u30df\u30cb\u30b2\u30fc\u30e0",en:"More BASS SHOW mini-games"},
+  btn_again:{zh:"\u2302 \u8fd4\u56de\u9996\u9875\uFF08\u518d\u6311\u6218\uFF09",ja:"\u2302 \u30c8\u30c3\u30d7\u306b\u623b\u308b\uFF08\u3082\u3046\u4e00\u5ea6\uFF09",en:"\u2302 Back to top (play again)"},
+  rare_tag:{zh:"\u2605 \u9690\u85cf\u7a00\u6709",ja:"\u2605 \u96a0\u3057\u30ec\u30a2",en:"\u2605 Hidden Rare"},
+  share_head:{zh:"\u3010\u4f60\u662f\u4e50\u961f\u54ea\u4e2a\u4f4d\u7f6e\u3011",ja:"\u3010\u3042\u306a\u305f\u306f\u30d0\u30f3\u30c9\u306e\u3069\u306e\u4f4d\u7f6e\uFF1F\u3011",en:"[Which position are you in the band?]"},
+  copy_done:{zh:"\u5df2\u590d\u5236\uFF01\u53bb\u7c98\u8d34\u5206\u4eab\u5427",ja:"\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f\uFF01",en:"Copied!"},
+  shot_tip:{zh:"\u8bf7\u624b\u52a8\u622a\u56fe\u4fdd\u5b58\u7ed3\u679c\u5361\u7247",ja:"\u624b\u52d5\u3067\u30b9\u30af\u30b7\u30e7\u3092\u64ae\u3063\u3066\u4fdd\u5b58\u3057\u3066\u306d",en:"Please take a screenshot to save your card"}
+};
+
+var GAME_URL = "https://bassshow.rocks/soccer.html";
+
+if (typeof module !== "undefined") module.exports = { QUESTION_POOL:QUESTION_POOL, pickQuestions:pickQuestions, GATES:GATES, STAGE_PLAN:STAGE_PLAN, CHARS:CHARS, KANTOKU_FACES:KANTOKU_FACES, UI:UI, GAME_URL:GAME_URL };
+
+</script>
+
+<!-- ===== soccer_logic_v0.6.js（ロジック層・CHAR_IMAGES分岐と導線ダミー無効化の最小配線のみ） ===== -->
+<script>
+/* ============================================================
+ * soccer_logic.js — サッカー×バンド診断 ロジック層
+ * v0.4 プロトタイプ  2026-06-30
+ * 依存: soccer_data.js（QUESTION_POOL, pickQuestions, GATES, CHARS, UI...）
+ * ============================================================ */
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+  window.BS_LANG = window.BS_LANG || "zh";
+
+  /* ---------- i18n ---------- */
+  function t(key) {
+    var e = UI[key];
+    return e ? (e[window.BS_LANG] || e.zh) : key;
+  }
+  function L(obj) { // {zh,ja,en} を引く
+    if (!obj) return "";
+    return obj[window.BS_LANG] || obj.zh || "";
+  }
+  function applyStatic() {
+    document.querySelectorAll("[data-i18n]").forEach(function (el) {
+      var k = el.getAttribute("data-i18n");
+      if (UI[k]) el.innerHTML = t(k);
+    });
+    document.documentElement.lang = window.BS_LANG;
+  }
+
+  /* ---------- ゲーム状態 ---------- */
+  var state = {
+    questions: [],   // 出題9問
+    idx: 0,
+    score: { spot: 0, zone: 0, style: 0, role: 0, stance: 0 },
+    result: null,    // CHARSのkey
+    face: null       // 監督の顔key
+  };
+
+  /* ---------- 画面遷移 ---------- */
+  function show(id) {
+    document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("active"); });
+    $(id).classList.add("active");
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- Topへ戻る（結果→トップ） ---------- */
+  function goHome() {
+    if (window.BS_RESULT && window.BS_RESULT.stop) window.BS_RESULT.stop();
+    show("screen-intro");
+  }
+
+  /* ---------- ゲーム開始 ---------- */
+  function startGame() {
+    if (window.BS_RESULT && window.BS_RESULT.stop) window.BS_RESULT.stop();
+    state.questions = pickQuestions();           // 層化抽出9問
+    state.questions.forEach(function (q) { delete q._swap; }); // A/B入替を毎回引き直す
+    state.idx = 0;
+    state.score = { spot: 0, zone: 0, style: 0, role: 0, stance: 0 };
+    state.result = null;
+    state.face = null;
+    show("screen-play");
+    renderQuestion();
+  }
+
+  /* ---------- 設問描画（WC構造） ---------- */
+  function renderQuestion() {
+    var q = state.questions[state.idx];
+    var n = STAGE_PLAN.total;
+    var i = state.idx; // 0-based
+    // グループステージ3問 → トーナメント6問
+    var inGroup = i < STAGE_PLAN.groupCount;
+    var tag = $("stage-tag");
+    if (inGroup) {
+      tag.className = "stage-tag";
+      tag.textContent = t("stage_group");
+      $("round-label").textContent = "MATCHDAY " + (i + 1) + " / " + STAGE_PLAN.groupCount;
+    } else {
+      tag.className = "stage-tag knockout";
+      tag.textContent = t("stage_knockout");
+      // トーナメントラベル：R16→QF→SF→…→FINAL（残り問数で表現）
+      var ko = i - STAGE_PLAN.groupCount;      // 0..5
+      var labels = ["ROUND OF 16", "ROUND OF 16", "QUARTER-FINAL", "QUARTER-FINAL", "SEMI-FINAL", "FINAL"];
+      $("round-label").textContent = labels[ko] || ("ROUND " + (i + 1));
+    }
+    $("prog-fill").style.width = ((i) / n * 100) + "%";
+
+    // A/B 左右ランダム入替（傾向の読み・偏りを防ぐ）。問ごとに固定（再描画でも保持）
+    if (q._swap === undefined) q._swap = Math.random() < 0.5;
+    var left = q._swap ? q.b : q.a;
+    var right = q._swap ? q.a : q.b;
+    $("vs-q").textContent = L(q.q);
+    $("choice-a-t").textContent = L(left.text);   // 左枠
+    $("choice-b-t").textContent = L(right.text);  // 右枠
+  }
+
+  /* ---------- 回答 ---------- */
+  function answer(which) {
+    var q = state.questions[state.idx];
+    // 左(a)/右(b)ボタン → 入替を考慮して実際の選択肢へ
+    var chosen = (which === "a") ? (q._swap ? q.b : q.a) : (q._swap ? q.a : q.b);
+    var v = chosen.v;
+    for (var k in v) { if (state.score[k] != null) state.score[k] += v[k]; }
+    state.idx++;
+    if (state.idx >= state.questions.length) {
+      finish();
+    } else {
+      $("prog-fill").style.width = (state.idx / STAGE_PLAN.total * 100) + "%";
+      renderQuestion();
+    }
+  }
+
+  /* ---------- 判定（5軸＋ゲート） ---------- */
+  function judge(s) {
+    // 1) STANCEゲート（サポーター）
+    if (s.stance >= GATES.STANCE_GATE) {
+      if (Math.random() < GATES.SUPPORTER_P) return "supporter";
+      return nearest(s);
+    }
+    // 2) ROLEゲート（監督/主審）
+    if (s.role >= GATES.ROLE_GATE) {
+      return (Math.random() < GATES.KANTOKU_P) ? "kantoku" : "shushin";
+    }
+    // 3) 通常キャラ最近傍
+    return nearest(s);
+  }
+  function nearest(s) {
+    var best = null, bd = Infinity;
+    for (var key in CHARS) {
+      var c = CHARS[key];
+      if (c.rare || key === "shushin") continue; // レア・主審はゲート経由のみ
+      var co = c.coord;
+      var d = Math.pow(s.spot - (co.spot || 0), 2)
+            + Math.pow(s.zone - (co.zone || 0), 2)
+            + Math.pow(s.style - (co.style || 0), 2)
+            + Math.pow(s.stance - (co.stance || 0), 2);
+      if (d < bd) { bd = d; best = key; }
+    }
+    return best;
+  }
+  // 監督の顔（STYLE×SPOT 象限）
+  function judgeFace(s) {
+    var hiStyle = s.style >= 0, hiSpot = s.spot >= 0;
+    if (hiStyle && hiSpot) return "klopp";
+    if (hiStyle && !hiSpot) return "ancelotti";
+    if (!hiStyle && hiSpot) return "pep";
+    return "cruyff";
+  }
+
+  /* ---------- 結果確定 ---------- */
+  function finish() {
+    $("prog-fill").style.width = "100%";
+    state.result = judge(state.score);
+    if (state.result === "kantoku") state.face = judgeFace(state.score);
+    show("screen-result");
+    renderResult();
+    // 診断型サスペンス演出 → オーバーレイ解除
+    runReveal();
+  }
+
+  function runReveal() {
+    var overlay = $("res-overlay");
+    var c = CHARS[state.result];
+    var isRare = !!c.rare;
+    overlay.classList.remove("hidden");
+    // BS_RESULT があれば revealBadge を使用（テンプレ§14）。無ければ簡易フォールバック。
+    var delay = isRare ? 2000 + 0 : 1600;
+    if (window.BS_RESULT && window.BS_RESULT.revealBadge) {
+      try {
+        window.BS_RESULT.revealBadge({
+          host: $("bs-share-capture"),
+          badgeEl: $("res-emoji"),
+          rare: isRare,
+          style: "pop",
+          accent: isRare ? "#ffd24a" : "#ff2d2d",
+          onDone: function () { overlay.classList.add("hidden"); }
+        });
+        // セーフティ：onDoneが来なくても解除
+        setTimeout(function () { overlay.classList.add("hidden"); }, isRare ? 3200 : 2200);
+        return;
+      } catch (e) { /* fallthrough */ }
+    }
+    setTimeout(function () { overlay.classList.add("hidden"); }, delay);
+  }
+
+  /* ---------- 結果描画 ---------- */
+  function renderResult() {
+    var c = CHARS[state.result];
+    if (!c) return;
+    // 結果描画：画像があればimg、無ければ絵文字フォールバック（CHAR_IMAGESに追記するだけで差し替え）
+    if (typeof CHAR_IMAGES !== "undefined" && CHAR_IMAGES[c.key]) {
+      $("res-emoji").innerHTML = '<img src="' + CHAR_IMAGES[c.key] + '" alt="">';
+    } else {
+      $("res-emoji").textContent = c.emoji;
+    }
+    $("res-emoji").className = "res-emoji" + (c.rare ? " rare" : "");
+    // レアタグ
+    var rw = $("res-raretag-wrap");
+    if (c.rare) { rw.style.display = "block"; $("res-raretag").textContent = t("rare_tag"); }
+    else { rw.style.display = "none"; }
+
+    // 世界共通の略号（FW/MF/GK等）を大きく → その下に通称
+    $("res-abbr").textContent = c.posAbbr || "";
+    $("res-pos").textContent = L(c.pos);
+    // 監督は顔を band 行に併記
+    var bandTxt = L(c.band);
+    if (state.result === "kantoku" && state.face && KANTOKU_FACES[state.face]) {
+      bandTxt += " · " + L(KANTOKU_FACES[state.face]);
+    }
+    $("res-band").textContent = bandTxt;
+    $("res-catch").textContent = L(c.catch);
+    $("res-desc").textContent = L(c.desc);
+    // バンドパート・リンク文（→ バンドなら【○○】。理由）
+    $("res-link").textContent = c.link ? L(c.link) : "";
+    $("res-link").style.display = c.link ? "block" : "none";
+    $("res-voice").textContent = L(c.voice);
+
+    // 相性（ポジション名 ＋ なぜかの一言）
+    var relWrap = $("res-rel");
+    // buddy/rival が "all"/"none" でも note があれば表示する
+    var buddyName = (c.buddy && c.buddy !== "all" && c.buddy !== "none" && CHARS[c.buddy]) ? L(CHARS[c.buddy].pos) : "";
+    var rivalName = (c.rival && c.rival !== "all" && c.rival !== "none" && CHARS[c.rival]) ? L(CHARS[c.rival].pos) : "";
+    var hasBuddy = !!(buddyName || c.buddyNote);
+    var hasRival = !!(rivalName || c.rivalNote);
+    if (hasBuddy || hasRival) {
+      relWrap.style.display = "flex";
+      $("rel-buddy").textContent = buddyName || "";
+      $("rel-buddy").style.display = buddyName ? "block" : "none";
+      $("rel-buddy-note").textContent = c.buddyNote ? L(c.buddyNote) : "";
+      $("rel-rival").textContent = rivalName || "";
+      $("rel-rival").style.display = rivalName ? "block" : "none";
+      $("rel-rival-note").textContent = c.rivalNote ? L(c.rivalNote) : "";
+    } else {
+      relWrap.style.display = "none";
+    }
+
+    // シェアQR（動的SVG）
+    renderQR();
+  }
+
+  /* ---------- シェアQR ---------- */
+  function renderQR() {
+    var box = $("shareQrBox");
+    box.innerHTML = "";
+    if (window.BS_QR && window.BS_QR.render) {
+      try { window.BS_QR.render(box, GAME_URL); return; } catch (e) {}
+    }
+    if (window.qrcode) {
+      try {
+        var qr = window.qrcode(0, "M"); qr.addData(GAME_URL); qr.make();
+        box.innerHTML = qr.createSvgTag({ scalable: true, margin: 0 });
+        return;
+      } catch (e) {}
+    }
+    // フォールバック：URLテキスト
+    var d = document.createElement("div"); d.className = "urlfb"; d.textContent = GAME_URL;
+    box.appendChild(d);
+  }
+
+  /* ---------- シェア文コピー ---------- */
+  function shareText() {
+    var c = CHARS[state.result];
+    var lines = [t("share_head")];
+    lines.push("⚽ " + L(c.pos) + " → 🎸 " + L(c.band));
+    lines.push("「" + L(c.catch) + "」");
+    lines.push(GAME_URL);
+    lines.push("#深圳轻音部 #BASSSHOW #你是乐队哪个位置");
+    return lines.join("\n");
+  }
+  function copyShare() {
+    var txt = shareText();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function () { toast(t("copy_done")); },
+        function () { fallbackCopy(txt); });
+    } else { fallbackCopy(txt); }
+  }
+  function fallbackCopy(txt) {
+    var ta = document.createElement("textarea"); ta.value = txt;
+    ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta);
+    ta.select(); try { document.execCommand("copy"); toast(t("copy_done")); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  /* ---------- toast ---------- */
+  var toastTimer = null;
+  function toast(msg) {
+    var el = $("toast"); el.textContent = msg; el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.classList.remove("show"); }, 1800);
+  }
+
+  /* ---------- 言語切替 ---------- */
+  function setLang(lang) {
+    window.BS_LANG = lang;
+    document.querySelectorAll("#bs-lang-switch button").forEach(function (b) {
+      b.classList.toggle("active", b.getAttribute("data-lang") === lang);
+    });
+    applyStatic();
+    // 表示中画面の動的テキストを引き直し
+    if ($("screen-play").classList.contains("active")) renderQuestion();
+    if ($("screen-result").classList.contains("active")) renderResult();
+  }
+
+  /* ---------- 初期化 ---------- */
+  function init() {
+    applyStatic();
+    $("btn-start").addEventListener("click", startGame);
+    $("choice-a").addEventListener("click", function () { answer("a"); });
+    $("choice-b").addEventListener("click", function () { answer("b"); });
+    $("btn-copy").addEventListener("click", copyShare);
+    $("btn-screenshot").addEventListener("click", function () { toast(t("shot_tip")); });
+    $("btn-again").addEventListener("click", goHome);
+    // 三段導線：本番は実リンク（<a href>）＋公众号QRトグルで配線（配線ブロック側）。ここではダミー遷移を張らない。
+    [].forEach(function (id) {
+      var el = $(id); if (el) el.addEventListener("click", function () { toast(L({ zh: "(演示版：链接占位)", ja: "(デモ版：リンク仮)", en: "(Demo: link placeholder)" })); });
+    });
+    document.querySelectorAll("#bs-lang-switch button").forEach(function (b) {
+      b.addEventListener("click", function () { setLang(b.getAttribute("data-lang")); });
+    });
+    setLang(window.BS_LANG);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+  if (typeof module !== "undefined") {
+    module.exports = { judge: judge, nearest: nearest, judgeFace: judgeFace };
+  }
+})();
+
+</script>
+
+<!-- ══════════════════════════════════════════════════════════
+     配線ブロック（追加のみ・データ/ロジックは未改変）
+     ・共通アセット注入：赤バナー／中央キャラ／フッターアイコン／4リンクのBSロゴ
+     ・ゲームアイコンは shared-assets.js の BS_ASSETS.ICON_SOCCER を参照（差し替え1箇所で全反映）
+     ・公众号QRトグル（gzh-card）
+     ══════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  var A = window.BS_ASSETS || {};
+  // 中央キャラ／フッター用アイコン：ICON_SOCCER が無ければ既存の暫定にフォールバック
+  var ICON = A.ICON_SOCCER || A.ICON_FINGER || A.LOGO_BANNER || "";
+  function setImg(id, src){ var n=document.getElementById(id); if(n && src){ n.src=src; } }
+  // 赤バナー（Top＋結果カード）
+  setImg("bs-banner-start", A.LOGO_BANNER);
+  setImg("bs-banner-res",   A.LOGO_BANNER);
+  // 中央キャラ（Top hero）＋ 結果カード フッターの共通アイコン
+  var hero = document.getElementById("bs-hero-soccer");
+  if(hero){ if(ICON){ hero.src=ICON; } else { hero.style.display="none"; } }
+  var footIcon = document.getElementById("bs-share-game-icon");
+  if(footIcon && ICON){ footIcon.innerHTML = '<img src="'+ICON+'" alt="">'; }
+  // 4リンク：プラットフォーム／小游戏合集カードのBSロゴアイコン
+  setImg("bs-promo-platform-icon", A.LOGO_BANNER);
+  setImg("bs-promo-games-icon",    A.LOGO_BANNER);
+  // 公众号QR（固定・shared-assets.js から）
+  setImg("gzhQrImg", A.GZH_QR);
+
+  // 公众号QRトグル（PartTest/Finger と同挙動）
+  var gzhCard = document.getElementById("gzh-card");
+  var gzhWrap = document.getElementById("gzh-qr-wrap");
+  var gzhArrow = document.getElementById("gzh-arrow");
+  if(gzhCard && gzhWrap){
+    gzhCard.addEventListener("click", function(){
+      var open = gzhWrap.classList.toggle("show");
+      if(gzhArrow) gzhArrow.textContent = open ? "⌄" : "›";
+    });
+  }
+})();
+</script>
+</body>
+</html>
