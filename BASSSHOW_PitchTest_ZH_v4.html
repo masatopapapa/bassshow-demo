@@ -66,6 +66,33 @@ body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;backgroun
 .intro-emoji{font-size:18px;line-height:1.4;flex-shrink:0;}
 .intro-tt{font-size:12px;font-weight:800;color:var(--text);letter-spacing:.5px;margin-bottom:3px;}
 .intro-bd{font-size:12px;color:var(--text2);line-height:1.7;}
+/* ─── 度数早見表カード（度数速查表 / Degree Chart） ─── */
+.dchart-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;}
+.dchart-head{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+.dchart-head .intro-emoji{font-size:18px;line-height:1.4;flex-shrink:0;}
+.dchart-head .dchart-tt-wrap{flex:1;min-width:0;}
+.dchart-toggle{font-size:12px;color:var(--text3);flex-shrink:0;transition:transform .2s;}
+.dchart-card.open .dchart-toggle{transform:rotate(180deg);}
+.dchart-body{display:none;margin-top:12px;padding-top:12px;border-top:0.5px solid var(--border);}
+.dchart-card.open .dchart-body{display:block;}
+.dchart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:10px -4px 0;padding:0 4px 2px;}
+/* 早見表（半音→度数） */
+table.dchart-tbl{border-collapse:collapse;width:100%;font-size:11px;}
+table.dchart-tbl th,table.dchart-tbl td{border:0.5px solid var(--border);padding:4px 6px;text-align:center;color:var(--text2);white-space:nowrap;}
+table.dchart-tbl th{background:var(--bg3);color:var(--text3);font-weight:700;}
+table.dchart-tbl td.dc-abbr{color:var(--text);font-weight:800;}
+/* 指板グリッド */
+table.dchart-fb{border-collapse:collapse;margin-top:6px;font-size:10px;}
+table.dchart-fb th,table.dchart-fb td{border:0.5px solid var(--border);padding:4px 5px;text-align:center;color:var(--text2);white-space:nowrap;min-width:22px;}
+table.dchart-fb th{background:var(--bg3);color:var(--text3);font-weight:700;}
+table.dchart-fb th.dc-str{color:var(--text);font-weight:800;background:var(--bg3);}
+table.dchart-fb td.dc-cell{color:var(--text2);background:var(--bg3);}
+table.dchart-fb td.dc-root{color:#fff;font-weight:800;background:var(--accent);border-color:var(--accent);}
+table.dchart-fb td.dc-p5{color:var(--bg);font-weight:800;background:var(--amber);border-color:var(--amber);}
+table.dchart-fb td.dc-p4{color:var(--amber);font-weight:800;background:rgba(239,159,39,0.16);}
+.dchart-marks{display:flex;margin-top:2px;font-size:9px;color:var(--text3);}
+.dchart-note{font-size:11px;color:var(--text2);line-height:1.6;margin-top:10px;}
+.dchart-tip{font-size:11px;color:var(--text3);line-height:1.6;margin-top:8px;}
 .diff-label{font-size:11px;color:var(--text3);letter-spacing:2px;text-align:center;margin-bottom:10px;}
 .diff-cards{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
 .diff-card{display:flex;align-items:center;gap:14px;border:0.5px solid var(--border2);background:var(--bg2);
@@ -195,6 +222,24 @@ body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;backgroun
         <div class="intro-tt" data-i18n="howtoTitle">玩法</div>
         <div class="intro-bd" data-i18n="howtoBody">先播放基准音（根音），再播放第二个音。听出两音的「音程（度数）」，四选一作答。根音一定先响，新手也友好。</div>
       </div>
+    </div>
+  </div>
+
+  <!-- 度数早見表カード（初心者向け参考資料・折りたたみ式） -->
+  <div class="dchart-card" id="dchart-card">
+    <div class="dchart-head" id="dchart-head">
+      <div class="intro-emoji">🎼</div>
+      <div class="dchart-tt-wrap">
+        <div class="intro-tt" data-i18n="degreeChartTitle">指板度数速查表</div>
+      </div>
+      <div class="dchart-toggle" id="dchart-toggle">▼</div>
+    </div>
+    <div class="dchart-body">
+      <div class="intro-bd" data-i18n="degreeChartBody">同一根弦上：品数＝半音数＝度数。从根音所在品开始数格子即可。听音程时可以在贝斯上实际弹出来对照。</div>
+      <div class="dchart-scroll" id="dchart-tbl-wrap"></div>
+      <div class="dchart-scroll" id="dchart-fb-wrap"></div>
+      <div class="dchart-note" data-i18n="degreeChartMoveNote">根音的位置每题都会变，但贝斯是四度定弦，这个形状（指法）可以在指板上任意平移，形状不变。</div>
+      <div class="dchart-tip" data-i18n="degreeChartTip">小提示：贝斯是四度定弦（E-A-D-G）。上一根弦的同一品，音高比原来高5个半音（纯四度）。</div>
     </div>
   </div>
 
@@ -1069,6 +1114,16 @@ var BS_I18N={
   tipBody:{zh:"戴上耳机会更容易听清音高。如果光靠耳朵很难判断，不妨实际拿起乐器把音找出来——这也是很好的训练。",
            ja:"イヤホンを付けて聴くと音程が聞き取りやすくなります。耳だけで判断が難しいときは、実際に楽器を鳴らして音を探してみるのも良いトレーニングになります。",
            en:"Listening with earphones makes the pitch much easier to catch. When your ears alone aren't enough, try finding the note on your instrument — that's great training too."},
+  degreeChartTitle:{zh:"指板度数速查表",ja:"ベース指板 度数早見表",en:"Bass Fretboard Degree Chart"},
+  degreeChartBody:{zh:"同一根弦上：品数（品格）＝半音数＝度数。从根音所在品开始数格子即可。听音程时可以在贝斯上实际弹出来对照。",
+                   ja:"同じ弦の上なら「フレット数＝半音数＝度数」がそのまま一致する。ルートのフレットから数えるだけでOK。迷ったら実際にベースで鳴らして確認しよう。",
+                   en:"On the same string, fret distance = semitone count = interval. Just count frets from the root. When unsure, play it on your bass to check."},
+  degreeChartMoveNote:{zh:"根音的位置每题都会变，但贝斯是四度定弦，这个「形状（指法）」可以在指板上任意平移，形状始终不变。",
+                       ja:"ルートの位置は出題ごとに変わるが、ベースは4度チューニングなので、この「形（パターン）」は指板上のどこでも同じ形のまま平行移動できる。",
+                       en:"The root position changes every question, but because the bass is tuned in fourths, this shape (pattern) shifts anywhere on the fretboard while staying identical."},
+  degreeChartTip:{zh:"小提示：贝斯是四度定弦（E-A-D-G）。上一根弦的同一品，音高比原来高5个半音（纯四度）。",
+                  ja:"豆知識：ベースは4度チューニング（E-A-D-G）。1本上の弦の同じフレットは、元の音より+5半音（完全4度）高い。",
+                  en:"Tip: Bass is tuned in fourths (E-A-D-G). The same fret on the next string up is +5 semitones (a perfect 4th) higher."},
   timeLeft:{zh:"剩余",ja:"残り",en:"Time left"},
   timeUnit:{zh:"秒",ja:"秒",en:"s"},
   diff_label:{zh:"选择难度",ja:"難易度をえらぶ",en:"Choose difficulty"},
@@ -1126,6 +1181,75 @@ function t(k){
   if(!d) return k;
   return d[lang]||d.zh;
 }
+// ── 度数早見表：INTERVALS を参照して表・指板図を生成（二重管理を避ける） ──
+function dcAbbr(semi){
+  // 指板セル用の略号。ルート(0/12)は "R"、他は INTERVALS[semi].en を使用
+  var s=((semi%12)+12)%12;
+  if(s===0) return "R";
+  return (INTERVALS[s]&&INTERVALS[s].en)||"";
+}
+function renderDegreeChart(){
+  var lang=window.BS_LANG||'zh';
+  // (1) 半音→度数 早見表：0〜12 を INTERVALS から生成
+  var tw=document.getElementById('dchart-tbl-wrap');
+  if(tw){
+    var thSemi={zh:"半音",ja:"半音",en:"Semi"};
+    var thName={zh:"度数",ja:"度数",en:"Interval"};
+    var thAbbr={zh:"略号",ja:"略号",en:"Abbr"};
+    var thFret={zh:"同弦品差",ja:"同弦フレット差",en:"Frets"};
+    var h='<table class="dchart-tbl"><thead><tr>'
+      +'<th>'+thSemi[lang]+'</th><th>'+thName[lang]+'</th><th>'+thAbbr[lang]+'</th><th>'+thFret[lang]+'</th>'
+      +'</tr></thead><tbody>';
+    for(var n=0;n<=12;n++){
+      var iv=INTERVALS[n]; if(!iv) continue;
+      h+='<tr><td>'+n+'</td><td>'+(iv[lang]||iv.zh)+'</td><td class="dc-abbr">'+iv.en+'</td><td>'+n+'</td></tr>';
+    }
+    h+='</tbody></table>';
+    tw.innerHTML=h;
+  }
+  // (2) 指板グリッド：4弦(G/D/A/E) × 0〜12フレット。E弦0=R基準。
+  //     半音 = (フレット + 5×弦index) % 12  （E=0,A=1,D=2,G=3）。略号は dcAbbr()＝INTERVALS参照。
+  var fw=document.getElementById('dchart-fb-wrap');
+  if(fw){
+    var strings=[{lbl:"G",idx:3},{lbl:"D",idx:2},{lbl:"A",idx:1},{lbl:"E",idx:0}]; // 上=G(高音)→下=E(低音)
+    var thFretL={zh:"品",ja:"品",en:"Fr"};
+    var f='<table class="dchart-fb"><thead><tr><th>'+thFretL[lang]+'</th>';
+    for(var c=0;c<=12;c++) f+='<th>'+c+'</th>';
+    f+='</tr></thead><tbody>';
+    for(var si=0;si<strings.length;si++){
+      var st=strings[si];
+      f+='<tr><th class="dc-str">'+st.lbl+'</th>';
+      for(var fr=0;fr<=12;fr++){
+        var semi=(fr+5*st.idx)%12;
+        var ab=dcAbbr(semi);
+        var cls="dc-cell";
+        if(semi===0) cls="dc-root";
+        else if(semi===7) cls="dc-p5";
+        else if(semi===5) cls="dc-p4";
+        f+='<td class="'+cls+'">'+ab+'</td>';
+      }
+      f+='</tr>';
+    }
+    f+='</tbody></table>';
+    // ポジションマーク（3・5・7・9・12。12は2点）
+    var marks='<div class="dchart-marks"><span style="min-width:26px"></span>';
+    for(var m=0;m<=12;m++){
+      var dot=(m===12)?'••':((m===3||m===5||m===7||m===9)?'•':'');
+      marks+='<span style="min-width:22px;text-align:center;display:inline-block">'+dot+'</span>';
+    }
+    marks+='</div>';
+    fw.innerHTML=f+marks;
+  }
+}
+(function(){
+  // 折りたたみトグル（初期は閉じた状態）
+  var card=document.getElementById('dchart-card');
+  var head=document.getElementById('dchart-head');
+  if(card&&head){
+    head.addEventListener('click',function(){ card.classList.toggle('open'); });
+  }
+})();
+
 function bsApplyLang(lang){
   window.BS_LANG=lang;
   document.querySelectorAll('[data-i18n]').forEach(function(el){
@@ -1137,6 +1261,8 @@ function bsApplyLang(lang){
     b.classList.toggle('active', b.getAttribute('data-lang')===lang);
   });
   document.documentElement.lang=(lang==='zh'?'zh-CN':lang);
+  // 度数早見表（表・指板図）を言語に合わせて再生成（INTERVALS参照）
+  renderDegreeChart();
   // 再生ボタン表示も言語追従（再生中でなければreplay表記）
   if(!playing) setPlayBtn(false);
   // クイズ進行中：難易度バッジ・選択肢ラベルを言語追従
