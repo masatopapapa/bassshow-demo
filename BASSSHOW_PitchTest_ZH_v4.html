@@ -918,6 +918,9 @@ function finish(){
       revealEls: ['res-comment', 'color-bar']
     });
   }
+  if(window.BS_ANALYTICS){
+    BS_ANALYTICS.trackResult({ score: score, resultLabel: titleOf(s.diff, score) });
+  }
 }
 
 function renderResult(){

@@ -808,6 +808,9 @@ function finishGame() {
       revealEls: ['res-lv-num', 'res-comment', 'color-bar']
     });
   }
+  if (window.BS_ANALYTICS) {
+    BS_ANALYTICS.trackResult({ score: fScore, resultLabel: rank.name[window.BS_LANG || 'zh'] || rank.name.zh });
+  }
 }
 
 // 共有QR：GAME_URL（入口HTML経由の新ドメイン）から動的SVG生成

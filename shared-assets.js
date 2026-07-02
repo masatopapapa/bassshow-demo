@@ -2794,3 +2794,103 @@ var qrcode = function() {
     gradeFor: gradeFor
   };
 })(typeof window !== 'undefined' ? window : this);
+
+/* =========================================================================
+ * BS_ANALYTICS  —  GA4 共通計測モジュール
+ * 追加日: 2026-07-02
+ *
+ * 目的:
+ *   各ゲームHTMLで <script src="shared-assets.js"> を読み込むだけで、
+ *   自動的にGA4計測（gtag.js）が有効になり、かつ全イベントに
+ *   「どのゲームか(game_id)」が付与された状態でGA4に送られるようにする。
+ *   新規ゲームを量産しても、このファイルを参照する限り追加実装は不要。
+ *
+ * game_id の決め方:
+ *   各ゲーム入口HTMLは既存テンプレート規約により GAME_URL
+ *   （例: https://bassshow.rocks/finger.html）をこのscriptより前に
+ *   定義済み想定。そのファイル名（拡張子除く）を game_id として使う。
+ *   GAME_URL 未定義の場合は現在のURLパスから自動推定する。
+ *
+ * 使い方:
+ *   1) 何もしなくても gtag 初期化とページビュー計測は自動で走る。
+ *   2) 結果が出た瞬間に呼ぶ（各ゲームに1行追加するだけ）:
+ *        BS_ANALYTICS.trackResult({ score: 183, resultLabel: '超越段' });
+ *      → GA4に "game_result" イベントとして送信。game_id は自動付与。
+ *
+ * GA4管理画面での追加設定（MASATOが手動で実施済み/実施予定・Code対応不要）:
+ *   管理 > カスタム定義 > カスタムディメンション: game_id, result_label（イベントスコープ）
+ * ========================================================================= */
+(function (global) {
+  'use strict';
+
+  var GA_MEASUREMENT_ID = 'G-BP6FCGGZHV'; // bassshow.rocks 共通プロパティ
+
+  function _deriveGameId() {
+    try {
+      var url = (typeof global.GAME_URL === 'string' && global.GAME_URL) ||
+                 (global.location && global.location.href) || '';
+      var path = url.split('?')[0].split('#')[0];
+      var file = path.substring(path.lastIndexOf('/') + 1);
+      file = file.replace(/\.[^.]+$/, ''); // 拡張子除去
+      return file || 'unknown_game';
+    } catch (e) {
+      return 'unknown_game';
+    }
+  }
+
+  var GAME_ID = _deriveGameId();
+
+  function _loadGtagScript(cb) {
+    if (global.document.getElementById('bs-ga4-script')) { cb(); return; }
+    var s = global.document.createElement('script');
+    s.id = 'bs-ga4-script';
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_MEASUREMENT_ID;
+    s.onload = cb;
+    s.onerror = function () {
+      // ネットワーク遮断環境（中国本土など）ではgtag.jsが読み込めないことがある。
+      // その場合は計測をスキップし、ゲーム動作自体には影響させない。
+      global.console && global.console.warn && global.console.warn('[BS_ANALYTICS] gtag.js load failed (blocked network?)');
+    };
+    global.document.head.appendChild(s);
+  }
+
+  function _initGtag() {
+    global.dataLayer = global.dataLayer || [];
+    global.gtag = global.gtag || function () { global.dataLayer.push(arguments); };
+    global.gtag('js', new Date());
+    // 全イベント共通パラメータとして game_id を付与（page_viewにも自動で乗る）
+    global.gtag('config', GA_MEASUREMENT_ID, { game_id: GAME_ID });
+  }
+
+  function _init() {
+    if (global.__BS_ANALYTICS_INITED__) return;
+    global.__BS_ANALYTICS_INITED__ = true;
+    _initGtag();
+    _loadGtagScript(function () {});
+  }
+
+  function trackEvent(eventName, params) {
+    if (typeof global.gtag !== 'function') return;
+    var payload = Object.assign({ game_id: GAME_ID }, params || {});
+    global.gtag('event', eventName, payload);
+  }
+
+  function trackResult(o) {
+    o = o || {};
+    trackEvent('game_result', {
+      score: o.score,
+      result_label: o.resultLabel || o.label || '',
+      value: typeof o.score === 'number' ? o.score : undefined
+    });
+  }
+
+  // shared-assets.js 読み込み時点で自動初期化（各ゲームでの追加コード不要）
+  _init();
+
+  global.BS_ANALYTICS = {
+    gameId: GAME_ID,
+    trackEvent: trackEvent,
+    trackResult: trackResult
+  };
+})(typeof window !== 'undefined' ? window : this);

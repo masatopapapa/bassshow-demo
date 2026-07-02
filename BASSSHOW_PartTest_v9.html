@@ -765,6 +765,9 @@ function finish(){
       revealEls: ['rEmoji','rTag','rRare','rBody','rBars']
     });
   }
+  if(window.BS_ANALYTICS){
+    BS_ANALYTICS.trackResult({ resultLabel: resultKey });
+  }
 }
 
 function renderResult(){

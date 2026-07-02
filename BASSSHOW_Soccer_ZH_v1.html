@@ -820,6 +820,9 @@ if (typeof module !== "undefined") module.exports = { QUESTION_POOL:QUESTION_POO
     var overlay = $("res-overlay");
     var c = CHARS[state.result];
     var isRare = !!c.rare;
+    if (window.BS_ANALYTICS) {
+      BS_ANALYTICS.trackResult({ resultLabel: state.result });
+    }
     overlay.classList.remove("hidden");
     // BS_RESULT があれば revealBadge を使用（テンプレ§14）。無ければ簡易フォールバック。
     var delay = isRare ? 2000 + 0 : 1600;

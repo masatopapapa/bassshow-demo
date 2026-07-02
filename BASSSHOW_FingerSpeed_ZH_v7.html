@@ -667,6 +667,9 @@
         revealEls: ['r-main','r-lv-comment','color-bar']
       });
     }
+    if(window.BS_ANALYTICS){
+      BS_ANALYTICS.trackResult({ score: bpm, resultLabel: $('r-rank').textContent });
+    }
   }
 
   // 段階に応じてLvバッジ・コメント・カラーバー・カード演出を適用

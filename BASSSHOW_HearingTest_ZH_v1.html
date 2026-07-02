@@ -1055,6 +1055,12 @@
     show('s-result');
     renderQR();
     saveLast();
+    // GA4計測：結果確定時に1回のみ送信（showResultは言語切替で再実行されるためガード）
+    if(window.BS_ANALYTICS && !showResult._tracked){
+      showResult._tracked = true;
+      var _label = testedHi ? ('hi:'+HI_AGE[state.reachHi]) : (testedLo ? ('lo:'+state.reachLo) : '—');
+      BS_ANALYTICS.trackResult({ resultLabel: _label });
+    }
   }
 
   // 答え合わせ：再生周波数とテキスト
@@ -1308,6 +1314,7 @@
     card.addEventListener('click', function(){
       getCtx();
       var axis = card.getAttribute('data-axis');
+      showResult._tracked = false; // 新規プレイ開始：GA4計測ガードをリセット（再プレイも計測）
       state.reachHi=0; state.reachLo=0;
       if(axis==='hi'){ testedHi=true; testedLo=false; state.queue=[]; startAxis('hi'); }
       else if(axis==='lo'){ testedHi=false; testedLo=true; state.queue=[]; startAxis('lo'); }
