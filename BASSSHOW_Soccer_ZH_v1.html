@@ -71,7 +71,8 @@
   .bs-banner-res img{height:26px;width:auto;display:block;margin:0 auto;max-width:100%;}
   .bs-res-title{text-align:center;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:8px;}
   .res-finalcry{text-align:center;font-size:12px;color:var(--text3);letter-spacing:1px;margin-bottom:6px;font-weight:700;}
-  .res-emoji{width:150px;height:150px;margin:0 auto 8px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:70px;overflow:hidden;
+  .res-hero-row{display:flex;align-items:center;justify-content:center;gap:12px;margin:6px 0 12px;}
+  .res-emoji{width:118px;height:118px;flex-shrink:0;margin:0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:56px;overflow:hidden;
     background:radial-gradient(circle at 50% 35%,var(--field-green2),var(--field-green));}
   .res-emoji img{width:100%;height:100%;object-fit:contain;border-radius:16px;display:block;}
   .res-emoji.rare{background:radial-gradient(circle at 50% 35%,#caa23a,#7a5a10);box-shadow:0 0 24px rgba(255,210,74,.5);}
@@ -82,11 +83,13 @@
   .res-rare-tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2px;color:#1a1205;background:var(--gold);border-radius:20px;padding:3px 12px;}
   .res-catch{text-align:center;font-size:15px;font-weight:800;color:var(--gold);margin:6px 0 4px;}
   .res-detail{margin:16px 0 6px;}
-  .res-desc{font-size:13px;color:var(--text2);line-height:1.75;margin-bottom:10px;}
+  .res-desc{font-size:13px;color:var(--text);line-height:1.75;margin-bottom:10px;}
   .res-link{font-size:13px;color:var(--text);line-height:1.7;margin-bottom:12px;
     background:linear-gradient(90deg,rgba(42,138,64,.14),rgba(255,45,45,.10));
     border:0.5px solid var(--border);border-radius:8px;padding:11px 13px;font-weight:600;}
-  .res-voice{font-size:12.5px;color:var(--text);background:var(--bg3);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 12px;line-height:1.6;margin-bottom:12px;}
+  .res-voice{position:relative;flex:1;max-width:200px;background:#fff;color:#1a1a1a;border:2px solid #141414;border-radius:18px;padding:12px 14px;font-size:12.5px;line-height:1.55;font-weight:700;margin:0;}
+  .res-voice::before{content:"";position:absolute;top:50%;transform:translateY(-50%);left:-14px;border:9px solid transparent;border-right-color:#141414;}
+  .res-voice::after{content:"";position:absolute;top:50%;transform:translateY(-50%);left:-10px;border:8px solid transparent;border-right-color:#fff;}
   .res-rel{display:flex;gap:8px;font-size:11.5px;}
   .res-rel .cell{flex:1;background:var(--bg3);border-radius:8px;padding:10px 9px;text-align:center;}
   .res-rel .cell .k{color:var(--text3);font-size:10px;letter-spacing:1px;display:block;margin-bottom:4px;}
@@ -107,8 +110,8 @@
   .sc-qrbox{width:80px;height:80px;background:#fff;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:visible;padding:4px;box-sizing:border-box;}
   .sc-qrbox svg{width:100%;height:100%;}
   .sc-qrbox .urlfb{font-size:6px;color:#333;word-break:break-all;padding:2px;line-height:1.1;}
-  .share-btn-row{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
-  .share-btn{width:100%;background:var(--bg3);border:0.5px solid var(--border2);color:var(--text);border-radius:var(--r);font-size:14px;font-weight:700;padding:13px;cursor:pointer;}
+  .share-btn-row{display:flex;flex-direction:row;gap:8px;margin-bottom:14px;}
+  .share-btn{flex:1;background:var(--bg3);border:0.5px solid var(--border2);color:var(--text);border-radius:var(--r);font-size:13.5px;font-weight:700;padding:12px 6px;cursor:pointer;}
   .share-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
   /* ===== 三段導線（4カード・全アイコン付き） ===== */
   .promo-section{margin-bottom:14px;margin-top:6px;}
@@ -133,6 +136,35 @@
   .gzh-qr-wrap p{font-size:11px;color:var(--text2);text-align:center;line-height:1.6;margin:0;}
   .toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#000;color:#fff;font-size:13px;padding:10px 18px;border-radius:24px;opacity:0;transition:opacity .25s;z-index:50;pointer-events:none;max-width:90%;text-align:center;}
   .toast.show{opacity:.92;}
+
+  /* ===== 開閉式サッカーポジション図＋戦術切替 ===== */
+  .pos-acc{margin:14px 0 4px;border:1.5px solid var(--accent);border-radius:12px;overflow:hidden;animation:posPulse 2s ease-in-out infinite;}
+  .pos-acc[open]{animation:none;}
+  @keyframes posPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,45,45,0);}50%{box-shadow:0 0 0 4px rgba(255,45,45,.18);}}
+  .pos-acc>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:13px 14px;background:linear-gradient(90deg,rgba(255,45,45,.14),rgba(42,138,64,.10));}
+  .pos-acc>summary::-webkit-details-marker{display:none;}
+  .pos-acc>summary .pos-ico{font-size:20px;color:var(--accent);}
+  .pos-acc>summary .pos-ttl{flex:1;}
+  .pos-acc>summary .pos-ttl b{display:block;font-size:14px;font-weight:800;color:var(--text);}
+  .pos-acc>summary .pos-ttl span{font-size:11px;color:var(--text2);}
+  .pos-acc>summary .pos-cta{background:var(--accent);color:#fff;font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;white-space:nowrap;}
+  .pos-body{padding:12px;}
+  .tac-row{display:flex;gap:6px;margin-bottom:8px;}
+  .tac-row button{flex:1;font-size:12px;font-weight:700;padding:7px 4px;border:0.5px solid var(--border2);border-radius:8px;background:var(--bg3);color:var(--text);cursor:pointer;}
+  .tac-row button.on{background:var(--gold);border-color:var(--gold);color:#1a1205;}
+  .tac-desc{font-size:11.5px;color:var(--text2);line-height:1.5;margin-bottom:8px;min-height:30px;}
+  .tac-desc b{color:var(--text);font-weight:700;}
+  .pos-more{margin-top:12px;padding-top:10px;border-top:0.5px solid var(--border);}
+  .pos-more .h{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+  .pos-more .b{font-size:12px;color:var(--text2);line-height:1.65;}
+  .pos-more .b b{color:var(--text);font-weight:700;}
+  .pitch-svg{width:100%;display:block;border-radius:10px;background:#14612e;}
+  .pos-cap{text-align:center;font-size:12.5px;font-weight:700;color:var(--gold);margin-top:8px;}
+  #pitch-dots g{transition:transform .38s cubic-bezier(.4,0,.2,1);}
+
+  /* ===== Topページ：結果画面の案内 ===== */
+  .intro-tip{display:flex;align-items:center;gap:8px;margin:12px 0;padding:10px 12px;font-size:12.5px;line-height:1.5;color:var(--text);background:linear-gradient(90deg,rgba(255,45,45,.12),rgba(42,138,64,.10));border:0.5px solid var(--border);border-radius:10px;}
+  .intro-tip .intro-tip-ico{font-size:18px;color:var(--accent);flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -150,6 +182,10 @@
     <img class="bs-hero" id="bs-hero-soccer" alt="">
     <h1 class="bs-game-title" data-i18n="title">你是乐队哪个位置？</h1>
     <p class="lead" data-i18n="lead">lead</p>
+    <div class="intro-tip">
+      <span class="intro-tip-ico" aria-hidden="true">⚽</span>
+      <span data-i18n="intro_tip">诊断结果里，还能用真实阵型图＋战术看你的位置在哪，记得看看！</span>
+    </div>
     <button class="btn" id="btn-start" data-i18n="btn_start">⚽ 开赛 · 开始诊断</button>
     <p class="lead" style="margin-top:14px;font-size:11.5px" data-i18n="intro_note">note</p>
   </section>
@@ -176,7 +212,10 @@
       <div class="bs-res-title" data-i18n="result_sub">足球位置 × 乐队角色 诊断</div>
       <div class="res-finalcry" id="res-finalcry" data-i18n="final_cry">🏆 决赛胜出！你的位置是——</div>
 
-      <div class="res-emoji" id="res-emoji">⚽</div>
+      <div class="res-hero-row">
+        <div class="res-emoji" id="res-emoji">⚽</div>
+        <div class="res-voice" id="res-voice">—</div>
+      </div>
       <div id="res-raretag-wrap" style="text-align:center;margin-bottom:6px;display:none;">
         <span class="res-rare-tag" id="res-raretag">★ 隐藏稀有</span>
       </div>
@@ -201,7 +240,6 @@
     <div class="res-detail">
       <div class="res-desc" id="res-desc">—</div>
       <div class="res-link" id="res-link">—</div>
-      <div class="res-voice" id="res-voice">—</div>
       <div class="res-rel" id="res-rel">
         <div class="cell"><span class="k" data-i18n="rel_buddy">最佳搭档</span><span class="v" id="rel-buddy">—</span><span class="note" id="rel-buddy-note">—</span></div>
         <div class="cell"><span class="k" data-i18n="rel_rival">死对头</span><span class="v" id="rel-rival">—</span><span class="note" id="rel-rival-note">—</span></div>
@@ -213,6 +251,38 @@
       <button class="share-btn primary" id="btn-screenshot" data-i18n="btn_screenshot">截图分享给朋友</button>
       <button class="share-btn" id="btn-copy" data-i18n="btn_copy">复制文字</button>
     </div>
+
+    <details class="pos-acc" id="pos-acc">
+      <summary>
+        <span class="pos-ico">⚽</span>
+        <span class="pos-ttl"><b data-i18n="pos_toggle">我在球场上的位置</b><span data-i18n="pos_toggle_sub">点击查看不同战术下的站位</span></span>
+        <span class="pos-cta" data-i18n="pos_cta">查看 ▾</span>
+      </summary>
+      <div class="pos-body">
+        <div class="tac-row" id="tac-row">
+          <button data-f="f442">4-4-2</button>
+          <button data-f="f433">4-3-3</button>
+          <button data-f="f4231" class="on">4-2-3-1</button>
+        </div>
+        <div class="tac-desc" id="tac-desc"></div>
+        <svg class="pitch-svg" viewBox="0 0 320 470">
+          <rect x="16" y="26" width="288" height="366" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
+          <line x1="16" y1="209" x2="304" y2="209" stroke="rgba(255,255,255,.5)" stroke-width="1.2"/>
+          <circle cx="160" cy="209" r="34" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="1.2"/>
+          <rect x="96" y="26" width="128" height="46" fill="none" stroke="rgba(255,255,255,.4)"/>
+          <rect x="96" y="346" width="128" height="46" fill="none" stroke="rgba(255,255,255,.4)"/>
+          <rect x="16" y="398" width="288" height="60" rx="6" fill="#0c2a17"/>
+          <text x="160" y="414" text-anchor="middle" fill="rgba(255,255,255,.45)" font-size="10" data-i18n="pos_bench">场外 · 替补席 / 看台</text>
+          <g id="pitch-dots"></g>
+        </svg>
+        <div class="pos-cap" id="pos-cap"></div>
+        <div style="text-align:center;font-size:10.5px;color:var(--text3);margin-top:4px;" data-i18n="pos_note">金色＝あなたの位置</div>
+        <div class="pos-more">
+          <div class="h" data-i18n="tac_more_title">💡 战术不止这三种</div>
+          <div class="b" data-i18n="tac_more_body">教练会根据对手和比赛……</div>
+        </div>
+      </div>
+    </details>
 
     <div class="promo-section">
       <div class="promo-title" data-i18n="promo_title">加入深圳轻音部 · BASS SHOW</div>
@@ -611,11 +681,36 @@ var KANTOKU_FACES = {
 
 /* ---- UI i18n ---- */
 var UI = {
+  pos_toggle:{zh:"我在球场上的位置",ja:"ピッチ上での自分の位置",en:"My spot on the pitch"},
+  pos_toggle_sub:{zh:"点击查看不同战术下的站位",ja:"タップして戦術ごとの配置を見る",en:"Tap to see it across tactics"},
+  pos_cta:{zh:"查看 ▾",ja:"見る ▾",en:"View ▾"},
+  pos_bench:{zh:"场外 · 替补席 / 看台",ja:"場外 · ベンチ / 看台",en:"Off-pitch · bench / stands"},
+  pos_note:{zh:"金色＝你的位置",ja:"金色＝あなたの位置",en:"Gold = your spot"},
+  pos_cap_you:{zh:"你的位置：",ja:"あなたの位置：",en:"Your spot:"},
+  pos_cap_two:{zh:"左右2处",ja:"左右2か所",en:"×2 both sides"},
+  tac_f442:{
+    zh:"<b>4-4-2 · 经典均衡型</b><br>双前锋、中场4人、后卫4人。攻守平衡，擅长防守反击与边路进攻，是最基础的阵形。",
+    ja:"<b>4-4-2 · 古典的でバランス型</b><br>2トップ・中盤4・DF4。攻守のバランスが良く、カウンターやサイド攻撃に向く基本形。",
+    en:"<b>4-4-2 · classic and balanced</b><br>Two strikers, four in midfield, four at the back. Well-balanced; strong on counters and wing play."},
+  tac_f433:{
+    zh:"<b>4-3-3 · 进攻边路型</b><br>中锋＋两翼共三前锋。拉开宽度、高位逼抢、快速射门。现代足球的主流。",
+    ja:"<b>4-3-3 · 攻撃的なウイング型</b><br>CF＋2ウイングの3トップ。幅広く使い、高い位置で奪って素早くゴールを狙う。現代の主流。",
+    en:"<b>4-3-3 · attacking wing style</b><br>A front three of CF plus two wingers. Uses width, wins the ball high, strikes fast. The modern mainstream."},
+  tac_f4231:{
+    zh:"<b>4-2-3-1 · 现代全能型</b><br>单前锋身后3名攻击型中场，再后方2名后腰。兼顾防守稳定与进攻厚度。",
+    ja:"<b>4-2-3-1 · 現代の万能型</b><br>1トップの下に攻撃的MF3人、背後に2ボランチ。守備の安定と攻撃の厚みを両立。",
+    en:"<b>4-2-3-1 · modern all-rounder</b><br>Three attacking mids behind a lone striker, two holders behind them. Balances a solid defense with attacking depth."},
+  tac_more_title:{zh:"💡 战术不止这三种",ja:"💡 戦術はこの3つだけじゃない",en:"💡 There's more than these three"},
+  tac_more_body:{
+    zh:"教练会根据对手和比赛节奏，从无数阵形中选择，甚至在比赛中变形——例如「可变体系」（边卫内收进中场）、或高位逼抢的「高压」与收缩防守的「低位防守」的切换。本质是<b>“在哪里制造空间、在哪里封锁空间”的地盘博弈</b>。这样看，抢球就变成了「阵地的博弈」，观赛会更有意思。",
+    ja:"監督は相手や試合の流れに合わせて、無数の形から戦術を選び、試合中に形を変えることも——例えば「可変システム」（SBが中盤に入る）、高い位置で奪う「ハイプレス」と自陣を固める「ローブロック」の使い分けなど。本質は<b>“どこにスペースを作り、どこを消すか”という陣取り</b>。そう見ると、ボールの奪い合いが「陣地の駆け引き」に見えてきて、観戦がぐっと面白くなります。",
+    en:"Coaches pick from countless shapes to match the opponent and the flow, and even shift shape mid-game — like a \"positional switch\" (a full-back stepping into midfield), or choosing between a high press and a deep low block. At its core it's <b>a battle over space: where to create it, and where to shut it down</b>. Seen that way, chasing the ball becomes a contest for territory — and watching gets a lot more fun."},
   demo_ribbon:{zh:"DEMO \u00b7 \u4e16\u754c\u676f\u7279\u522b\u7248 \u00b7 \u8db3\u7403\u4f4d\u7f6e \u00d7 \u4e50\u961f\u89d2\u8272",ja:"DEMO \u00b7 W\u676f\u7279\u5225\u7248 \u00b7 \u30b5\u30c3\u30ab\u30fc\u4f4d\u7f6e \u00d7 \u30d0\u30f3\u30c9\u30d1\u30fc\u30c8",en:"DEMO \u00b7 World Cup Edition \u00b7 Position \u00d7 Band Role"},
   title:{zh:"\u4f60\u662f\u4e50\u961f\u54ea\u4e2a\u4f4d\u7f6e\uFF1F",ja:"\u3042\u306a\u305f\u306f\u30d0\u30f3\u30c9\u306e\u3069\u306e\u4f4d\u7f6e\uFF1F",en:"Which position are you in the band?"},
   lead:{zh:"<b>\u53f8\u4ee4\u5854\u3001\u524d\u950b\u3001\u8fd8\u662f\u95e8\u5c06\uff1f</b><br>\u8db3\u7403\u573a\u4e0a\u7684\u4f4d\u7f6e\uff0c\u85cf\u7740\u4f60\u5728<b>\u4e50\u961f\u91cc\u7684\u89d2\u8272</b>\u30029 \u9053\u9898\uff0c\u4ece\u5c0f\u7ec4\u8d5b\u4e00\u8def\u8e22\u5230\u51b3\u8d5b\u2014\u2014\u770b\u770b\u4f60\u4f1a\u7ad9\u4e0a\u54ea\u4e2a\u4f4d\u7f6e\u3002",ja:"<b>\u53f8\u4ee4\u5854\u304b\u3001\u70b9\u53d6\u308a\u5c4b\u304b\u3001\u6700\u5f8c\u306e\u7826\u304b\u3002</b><br>\u30b5\u30c3\u30ab\u30fc\u306e\u30dd\u30b8\u30b7\u30e7\u30f3\u306b\u306f\u3001\u3042\u306a\u305f\u306e<b>\u30d0\u30f3\u30c9\u3067\u306e\u5f79\u5272</b>\u304c\u96a0\u308c\u3066\u3044\u308b\u30029\u554f\u3001\u30b0\u30eb\u30fc\u30d7\u30ea\u30fc\u30b0\u304b\u3089\u6c7a\u52dd\u307e\u3067\u52dd\u3061\u4e0a\u304c\u3063\u3066\u3001\u6700\u5f8c\u306b\u7acb\u3064\u30dd\u30b8\u30b7\u30e7\u30f3\u3092\u898b\u3064\u3051\u3088\u3046\u3002",en:"<b>Playmaker, striker, or last line of defense?</b><br>Your position on the pitch reveals your <b>role in the band</b>. 9 questions, from the group stage to the final."},
   btn_start:{zh:"\u26BD \u5f00\u8d5b \u00b7 \u5f00\u59cb\u8bca\u65ad",ja:"\u26BD \u30ad\u30c3\u30af\u30aa\u30d5 \u00b7 \u8a3a\u65ad\u30b9\u30bf\u30fc\u30c8",en:"\u26BD Kick Off \u00b7 Start"},
   intro_note:{zh:"\u26bd \u4e16\u754c\u676f\u5b63\u6700\u5e94\u666f\u7684\u8bca\u65ad \xb7 \u4e0d\u61c2\u8db3\u7403\u4e5f\u80fd\u73a9\uff0c\u9898\u76ee\u90fd\u662f\u65e5\u5e38\u611f\u89c9\u7684\u9009\u62e9\u3002",ja:"\u26bd W\u676f\u30b7\u30fc\u30ba\u30f3\u306b\u3074\u3063\u305f\u308a\u306e\u8a3a\u65ad \xb7 \u30b5\u30c3\u30ab\u30fc\u672a\u7d4c\u9a13\u3067\u3082\u3001\u65e5\u5e38\u611f\u899a\u306e\u4e8c\u629e\u3060\u3051\u3067\u697d\u3057\u3081\u308b\u3002",en:"\u26bd The perfect diagnosis for World Cup season \u2014 no football needed, just everyday gut-feel choices."},
+  intro_tip:{zh:"\u8bca\u65ad\u7ed3\u679c\u91cc\uff0c\u8fd8\u80fd\u7528\u771f\u5b9e\u9635\u578b\u56fe\uff0b\u6218\u672f\u770b\u4f60\u7684\u4f4d\u7f6e\u5728\u54ea\uff0c\u8bb0\u5f97\u770b\u770b\uff01",ja:"\u8a3a\u65ad\u7d50\u679c\u3067\u306f\u3001\u672c\u683c\u7684\u306a\u30d4\u30c3\u30c1\u56f3\uff0b\u6226\u8853\u3067\u3042\u306a\u305f\u306e\u4f4d\u7f6e\u307e\u3067\u30c1\u30a7\u30c3\u30af\u3067\u304d\u307e\u3059\uff01",en:"Your result also shows where you play \u2014 on a real formation with tactics. Take a look!"},
   stage_group:{zh:"\u5c0f\u7ec4\u8d5b \u00b7 GROUP STAGE",ja:"\u30b0\u30eb\u30fc\u30d7\u30ea\u30fc\u30b0 \u00b7 GROUP STAGE",en:"GROUP STAGE"},
   stage_knockout:{zh:"\u6dd8\u6c70\u8d5b \u00b7 KNOCKOUT",ja:"\u6c7a\u52dd\u30c8\u30fc\u30ca\u30e1\u30f3\u30c8 \u00b7 KNOCKOUT",en:"KNOCKOUT"},
   side_a:{zh:"A",ja:"A",en:"A"}, side_b:{zh:"B",ja:"B",en:"B"},
@@ -844,6 +939,49 @@ if (typeof module !== "undefined") module.exports = { QUESTION_POOL:QUESTION_POO
     setTimeout(function () { overlay.classList.add("hidden"); }, delay);
   }
 
+  /* ---------- 開閉式ポジション図＋戦術切替 ---------- */
+  var PT_AB={cf:'CF',wing:'WG',toptan:'AM',shadow:'SS',volante:'DM',b2b:'CM',cb:'CB',sb:'SB',gk:'GK',shushin:'REF',kantoku:'MGR',supporter:'FAN'};
+  var PT_IDX=['cf','wing','toptan','shadow','volante','b2b','cb','cb','sb','sb','gk','shushin','kantoku','supporter'];
+  var PT_FIX={12:[60,430],13:[240,430]}; // MGR/FAN は戦術で動かず固定
+  var PT_REF={f4231:[208,209],f442:[208,209],f433:[160,209]}; // REFは戦術別。4-3-3はAMが中央寄りなのでREFを中央へ
+  var PT_FORM={
+    f4231:[[160,94],[54,182],[160,190],[266,182],[120,254],[200,254],[124,330],[196,330],[56,318],[264,318],[160,372]],
+    f442 :[[122,104],[52,236],[198,104],[268,236],[120,244],[200,244],[122,330],[198,330],[54,322],[266,322],[160,372]],
+    f433 :[[160,90],[54,118],[212,214],[266,118],[160,258],[108,214],[122,330],[198,330],[54,320],[266,320],[160,372]]
+  };
+  var _ptBuilt=false, _ptForm='f4231', _ptHL=null;
+  function _ptBuild(){
+    if(_ptBuilt)return; _ptBuilt=true;
+    var g=document.getElementById('pitch-dots'), ns='http://www.w3.org/2000/svg';
+    PT_IDX.forEach(function(k,i){
+      var ref=k==='shushin', r=ref?11:15;
+      var grp=document.createElementNS(ns,'g'); grp.setAttribute('id','pt'+i);
+      var c=document.createElementNS(ns,'circle'); c.setAttribute('r',r); c.setAttribute('fill',ref?'#111':'#0d3d1e'); c.setAttribute('stroke','rgba(255,255,255,.55)'); c.setAttribute('stroke-width','1.3');
+      var t=document.createElementNS(ns,'text'); t.setAttribute('text-anchor','middle'); t.setAttribute('y',ref?3.5:4); t.setAttribute('fill','#fff'); t.setAttribute('font-size',ref?'9':'11'); t.setAttribute('font-weight','500'); t.textContent=PT_AB[k];
+      grp.appendChild(c); grp.appendChild(t); g.appendChild(grp);
+    });
+    document.querySelectorAll('#tac-row button').forEach(function(b){
+      b.addEventListener('click',function(){
+        _ptForm=b.getAttribute('data-f');
+        document.querySelectorAll('#tac-row button').forEach(function(x){x.classList.toggle('on',x===b);});
+        _ptPlace(); _ptDesc();
+      });
+    });
+  }
+  function _ptPlace(){ PT_IDX.forEach(function(k,i){ var p=(i<11)?PT_FORM[_ptForm][i]:(i===11?PT_REF[_ptForm]:PT_FIX[i]); document.getElementById('pt'+i).setAttribute('transform','translate('+p[0]+','+p[1]+')'); }); }
+  function _ptDesc(){ document.getElementById('tac-desc').innerHTML = t('tac_'+_ptForm); }
+  function _ptPaint(){
+    var cnt=0;
+    PT_IDX.forEach(function(k,i){
+      var grp=document.getElementById('pt'+i), c=grp.querySelector('circle'), tx=grp.querySelector('text'), ref=k==='shushin', base=ref?11:15, on=k===_ptHL;
+      if(on){cnt++;c.setAttribute('r',base+3);c.setAttribute('fill','#ffd24a');c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','2.5');tx.setAttribute('fill','#1a1205');}
+      else{c.setAttribute('r',base);c.setAttribute('fill',ref?'#111':'#0d3d1e');c.setAttribute('stroke','rgba(255,255,255,.5)');c.setAttribute('stroke-width','1.3');tx.setAttribute('fill','rgba(255,255,255,.8)');}
+    });
+    var cap=document.getElementById('pos-cap');
+    if(cap) cap.textContent = t('pos_cap_you')+' '+PT_AB[_ptHL]+(cnt>1?' ('+t('pos_cap_two')+')':'');
+  }
+  function initPitch(resultKey){ _ptBuild(); _ptHL=resultKey; _ptForm='f4231'; document.querySelectorAll('#tac-row button').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-f')==='f4231');}); _ptPlace(); _ptPaint(); _ptDesc(); }
+
   /* ---------- 結果描画 ---------- */
   function renderResult() {
     var c = CHARS[state.result];
@@ -897,6 +1035,9 @@ if (typeof module !== "undefined") module.exports = { QUESTION_POOL:QUESTION_POO
 
     // シェアQR（動的SVG）
     renderQR();
+
+    // 開閉式ポジション図（戦術初期=4-2-3-1、結果ポジションを金色ハイライト）
+    initPitch(state.result);
   }
 
   /* ---------- シェアQR ---------- */
