@@ -690,7 +690,8 @@ function setLogos(){
   const hero=el("bs-hero-part"); if(hero && A.ICON_PARTTEST) hero.src=A.ICON_PARTTEST;
   const sIco=el("shareIcon"); if(sIco && A.ICON_PARTTEST) sIco.src=A.ICON_PARTTEST;
   // 4リンク：プラットフォーム／小游戏合集カードのBSロゴアイコン（Finger v5基準）
-  ["bs-promo-platform-icon","bs-promo-games-icon"].forEach(id=>{const n=el(id);if(n && LOGO_SRC)n.src=LOGO_SRC;});
+  {const p=el("bs-promo-platform-icon");if(p && LOGO_SRC)p.src=LOGO_SRC;
+   const g=el("bs-promo-games-icon");if(g && A.ICON_GAMES)g.src=A.ICON_GAMES;}
 }
 function renderParts(){
   const icos=["\ud83c\udfa4","\ud83c\udfb8","\ud83c\udfb8","\ud83e\udd41","\ud83c\udfb9"];  // ギターとベースは同じ外形、色で差別化

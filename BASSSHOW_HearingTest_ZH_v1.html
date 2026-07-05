@@ -411,7 +411,7 @@
           <div class="promo-arrow">›</div>
         </div>
         <div class="promo-card" onclick="window.open('https://bassshow.rocks/minigames.html','_blank')">
-          <div class="promo-icon promo-icon-games">🎮</div>
+          <div class="promo-icon promo-icon-games"><img id="bs-promo-games-icon" alt="BASS SHOW 小游戏"></div>
           <div class="promo-text">
             <div class="promo-name" data-i18n="games_name">BASS SHOW 小游戏合集</div>
             <div class="promo-desc" data-i18n="games_desc">更多贝斯手测试 · 性格诊断・实力训练</div>
@@ -1378,6 +1378,7 @@
     // BASS SHOW プラットフォーム枠のロゴ（他ゲーム共通アセット LOGO を流用）
     var A=window.BS_ASSETS||{};
     document.querySelectorAll('.bs-logo-asset').forEach(function(n){ if(A.LOGO) n.src=A.LOGO; });
+  (function(){ var g=document.getElementById('bs-promo-games-icon'); if(g && A.ICON_GAMES) g.src=A.ICON_GAMES; })();
   })();
 
   (function(){

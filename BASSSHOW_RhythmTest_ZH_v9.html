@@ -331,7 +331,7 @@ body{font-family:-apple-system,"PingFang SC","Noto Sans SC",sans-serif;backgroun
         <div class="promo-arrow">›</div>
       </div>
       <div class="promo-card" onclick="window.open('https://bassshow.rocks/minigames.html','_blank')">
-        <div class="promo-icon promo-icon-games"><img class="bs-logo-asset" alt="BASS SHOW 小游戏"></div>
+        <div class="promo-icon promo-icon-games"><img id="bs-promo-games-icon" alt="BASS SHOW 小游戏"></div>
         <div class="promo-text">
           <div class="promo-name" data-i18n="promo_games_name">BASS SHOW 小游戏合集</div>
           <div class="promo-desc" data-i18n="promo_games_desc">更多贝斯手测试 · 性格诊断・实力训练</div>
@@ -990,6 +990,7 @@ var gq = document.getElementById('gzhQrImg'); if(gq) gq.src = window.BS_ASSETS.G
   // 結果カード下部のシェアアイコンはゲーム識別用にICON_RHYTHMのまま
   var shareIcon=document.getElementById('bs-share-game-icon'); if(shareIcon && A.ICON_RHYTHM) shareIcon.src=A.ICON_RHYTHM;
   document.querySelectorAll('.bs-logo-asset').forEach(function(n){ if(A.LOGO) n.src=A.LOGO; });
+  (function(){ var g=document.getElementById('bs-promo-games-icon'); if(g && A.ICON_GAMES) g.src=A.ICON_GAMES; })();
 })();
 
 /* ===== 言語切替（zh/ja/en・主要テキスト。結果称号は今後追加） ===== */
