@@ -802,6 +802,7 @@ if (typeof module !== "undefined") module.exports = { QUESTION_POOL:QUESTION_POO
 
   /* ---------- ゲーム開始 ---------- */
   function startGame() {
+    if (window.BS_ANALYTICS) { BS_ANALYTICS.trackStart(); }
     if (window.BS_RESULT && window.BS_RESULT.stop) window.BS_RESULT.stop();
     state.questions = pickQuestions();           // 層化抽出9問
     state.questions.forEach(function (q) { delete q._swap; }); // A/B入替を毎回引き直す
@@ -1070,6 +1071,7 @@ if (typeof module !== "undefined") module.exports = { QUESTION_POOL:QUESTION_POO
     return lines.join("\n");
   }
   function copyShare() {
+    if (window.BS_ANALYTICS) { BS_ANALYTICS.trackShare('copy'); }
     var txt = shareText();
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(txt).then(function () { toast(t("copy_done")); },
@@ -1110,8 +1112,8 @@ if (typeof module !== "undefined") module.exports = { QUESTION_POOL:QUESTION_POO
     $("choice-a").addEventListener("click", function () { answer("a"); });
     $("choice-b").addEventListener("click", function () { answer("b"); });
     $("btn-copy").addEventListener("click", copyShare);
-    $("btn-screenshot").addEventListener("click", function () { toast(t("shot_tip")); });
-    $("btn-again").addEventListener("click", goHome);
+    $("btn-screenshot").addEventListener("click", function () { if (window.BS_ANALYTICS) { BS_ANALYTICS.trackShare('screenshot'); } toast(t("shot_tip")); });
+    $("btn-again").addEventListener("click", function () { if (window.BS_ANALYTICS) { BS_ANALYTICS.trackReplay(); } goHome(); });
     // 三段導線：本番は実リンク（<a href>）＋公众号QRトグルで配線（配線ブロック側）。ここではダミー遷移を張らない。
     [].forEach(function (id) {
       var el = $(id); if (el) el.addEventListener("click", function () { toast(L({ zh: "(演示版：链接占位)", ja: "(デモ版：リンク仮)", en: "(Demo: link placeholder)" })); });

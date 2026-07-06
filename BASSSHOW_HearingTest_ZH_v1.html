@@ -1315,6 +1315,7 @@
       getCtx();
       var axis = card.getAttribute('data-axis');
       showResult._tracked = false; // 新規プレイ開始：GA4計測ガードをリセット（再プレイも計測）
+      if(window.BS_ANALYTICS){ BS_ANALYTICS.trackStart(); }
       state.reachHi=0; state.reachLo=0;
       if(axis==='hi'){ testedHi=true; testedLo=false; state.queue=[]; startAxis('hi'); }
       else if(axis==='lo'){ testedHi=false; testedLo=true; state.queue=[]; startAxis('lo'); }
@@ -1327,9 +1328,9 @@
   $('btn-replay').addEventListener('click', function(){ if(!$('btn-replay').disabled) runTrial(true); });
 
   $('btn-reveal').addEventListener('click', function(){ playRealBass(revealPlayFreq); });
-  $('btn-copy').addEventListener('click', function(){ copyText(buildShareText()); });
-  $('btn-screenshot').addEventListener('click', function(){ toast(bsL('toast_shot')); });
-  $('btn-again').addEventListener('click', function(){ stopActive(); show('s-select'); });
+  $('btn-copy').addEventListener('click', function(){ if(window.BS_ANALYTICS){ BS_ANALYTICS.trackShare('copy'); } copyText(buildShareText()); });
+  $('btn-screenshot').addEventListener('click', function(){ if(window.BS_ANALYTICS){ BS_ANALYTICS.trackShare('screenshot'); } toast(bsL('toast_shot')); });
+  $('btn-again').addEventListener('click', function(){ if(window.BS_ANALYTICS){ BS_ANALYTICS.trackReplay(); } stopActive(); show('s-select'); });
   // 中間ページ：低音テスト開始ボタン
   $('btn-to-low').addEventListener('click', function(){
     getCtx();

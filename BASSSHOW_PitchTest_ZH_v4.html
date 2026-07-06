@@ -855,6 +855,7 @@ function showScreen(name){
 }
 
 function startGame(diff){
+  if(window.BS_ANALYTICS){ BS_ANALYTICS.trackStart(); }
   stopTimer();   // 前回のタイマーを確実に破棄（リトライ・難易度再選択の多重発火防止）
   // v4：ユーザー操作起点でAudioContextを先に起動し、PeriodicWaveも事前生成しておく。
   //   START_LEAD(1秒)の間に state を 'running' へ移行させ、初回出題の頭クリックを防ぐ。
@@ -1023,10 +1024,12 @@ function renderQR(){
 // シェアボタン
 // ══════════════════════════════════════════
 document.getElementById('btn-screenshot').addEventListener('click', function(){
+  if(window.BS_ANALYTICS){ BS_ANALYTICS.trackShare('screenshot'); }
   alert(t('screenshot_hint'));
 });
 document.getElementById('btn-copy-text').addEventListener('click', function(){
   var g=window.gameResult; if(!g) return;
+  if(window.BS_ANALYTICS){ BS_ANALYTICS.trackShare('copy'); }
   var lang=window.BS_LANG||'zh';
   var rname=titleOf(g.diff,g.score);
   var text=t('share_head')+'\n'+
@@ -1058,7 +1061,7 @@ function fallbackCopy(text){
 // ══════════════════════════════════════════
 document.getElementById("btn-next").onclick=function(){ stopAll(); state.idx++; nextQuestion(); };
 document.getElementById("btn-play").onclick=function(){ if(state&&state.cur) playQuestion(state.cur); };
-document.getElementById("btn-again").onclick=function(){ if(window.BS_RESULT) BS_RESULT.stop(); stopAll(); if(window.gameResult) startGame(window.gameResult.diff); };
+document.getElementById("btn-again").onclick=function(){ if(window.BS_ANALYTICS){ BS_ANALYTICS.trackReplay(); } if(window.BS_RESULT) BS_RESULT.stop(); stopAll(); if(window.gameResult) startGame(window.gameResult.diff); };
 document.getElementById("btn-home").onclick=function(){ if(window.BS_RESULT) BS_RESULT.stop(); stopTimer(); stopAll(); showScreen('start'); };
 document.querySelectorAll(".diff-card").forEach(function(c){ c.onclick=function(){ startGame(c.dataset.diff); }; });
 

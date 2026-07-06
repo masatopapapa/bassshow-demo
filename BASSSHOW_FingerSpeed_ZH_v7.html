@@ -600,6 +600,7 @@
   }
 
   function startGame(){
+    if(window.BS_ANALYTICS){ BS_ANALYTICS.trackStart(); }
     buildPads();show(scPlay);
     running=false;lastFinger=-1;validCount=0;totalCount=0;lastTapAt=[];
     bigN.textContent='0';cntEl.textContent=bsL('hud_valid')+' 0';
@@ -731,6 +732,7 @@
   function rankFor_unused(){}
 
   $('btn-share').addEventListener('pointerdown',function(){
+    if(window.BS_ANALYTICS){ BS_ANALYTICS.trackShare('copy'); }
     var s=showResult.last;if(!s)return;
     var mode=bsL(s.fingers===2?'mode_2':'mode_3');
     var lvLabel=(s.tier==='machine')?'Lv.∞':(s.tier==='transcend'?'Lv.10⁺':'Lv.'+s.rank);
@@ -739,7 +741,7 @@
   });
   // 截图ボタン：機能なし＝手動スクショ案内（html2canvas不採用・WeChatで不確実なため）
   var btnShot=$('btn-screenshot');
-  if(btnShot) btnShot.addEventListener('pointerdown',function(){ toast(bsL('toast_shot')); });
+  if(btnShot) btnShot.addEventListener('pointerdown',function(){ if(window.BS_ANALYTICS){ BS_ANALYTICS.trackShare('screenshot'); } toast(bsL('toast_shot')); });
   function copyText(t){
     if(navigator.clipboard&&navigator.clipboard.writeText){
       navigator.clipboard.writeText(t).then(function(){toast(bsL('toast_copied'));},function(){fallbackCopy(t);});
@@ -758,7 +760,7 @@
   }
 
   $('btn-start').addEventListener('pointerdown',startGame);
-  $('btn-again').addEventListener('pointerdown',function(){if(window.BS_RESULT)BS_RESULT.stop();show(scStart);});
+  $('btn-again').addEventListener('pointerdown',function(){if(window.BS_ANALYTICS){BS_ANALYTICS.trackReplay();}if(window.BS_RESULT)BS_RESULT.stop();show(scStart);});
 
   // gzh QR toggle (from v8)
   $('gzh-card').addEventListener('click',function(){

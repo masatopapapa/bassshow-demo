@@ -820,13 +820,14 @@ function renderQR(){
   const hq=el("hideQrBox"); if(hq) hq.innerHTML=svg;
 }
 function copyShare(){
+  if(window.BS_ANALYTICS){BS_ANALYTICS.trackShare('copy');}
   const txt=el("rShare").textContent, done=()=>toast(T[lang].copied);
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done).catch(()=>fb(txt,done));}
   else fb(txt,done);
 }
 function fb(txt,cb){const ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();try{document.execCommand("copy");}catch(e){}document.body.removeChild(ta);cb&&cb();}
 function toast(m){const t=el("toast");t.textContent=m;t.classList.add("on");setTimeout(()=>t.classList.remove("on"),1600);}
-function startQuiz(){buildQuiz();idx=0;score={spot:0,tech:0,free:0,voc:0};resultKey=null;renderQ();show("s-quiz");}
+function startQuiz(){if(window.BS_ANALYTICS){BS_ANALYTICS.trackStart();}buildQuiz();idx=0;score={spot:0,tech:0,free:0,voc:0};resultKey=null;renderQ();show("s-quiz");}
 function retry(){startQuiz();}
 
 // 3言語スイッチ（中/日/EN）：選択言語へ切替し全画面を再描画
@@ -835,9 +836,9 @@ document.querySelectorAll("#bs-lang-switch button").forEach(b=>{
 });
 el("startBtn").onclick=startQuiz;
 el("copyBtn").onclick=copyShare;
-el("retryBtn").onclick=function(){if(window.BS_RESULT)BS_RESULT.stop();retry();};
+el("retryBtn").onclick=function(){if(window.BS_ANALYTICS){BS_ANALYTICS.trackReplay();}if(window.BS_RESULT)BS_RESULT.stop();retry();};
 // 截图分享：機能なし＝手動スクショ案内（html2canvas不採用・WeChatで不確実なため）
-{const bs=el("btn-screenshot"); if(bs) bs.onclick=()=>toast(T[lang].toastShot);}
+{const bs=el("btn-screenshot"); if(bs) bs.onclick=()=>{if(window.BS_ANALYTICS){BS_ANALYTICS.trackShare('screenshot');}toast(T[lang].toastShot);};}
 el("togOpen").onclick=()=>{shareMode="open";applyShareMode();};
 el("togHide").onclick=()=>{shareMode="hide";applyShareMode();};
 el("gzhCard").onclick=()=>{const w=el("gzhQrWrap");const open=w.classList.toggle("show");el("gzhArrow").textContent=open?"⌄":"›";};

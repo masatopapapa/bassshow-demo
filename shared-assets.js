@@ -2891,12 +2891,27 @@ var qrcode = function() {
     });
   }
 
+  function trackStart() {
+    trackEvent('game_start', {});
+  }
+
+  function trackShare(shareType) {
+    trackEvent('game_share', { share_type: shareType || 'unknown' });
+  }
+
+  function trackReplay() {
+    trackEvent('game_replay', {});
+  }
+
   // shared-assets.js 読み込み時点で自動初期化（各ゲームでの追加コード不要）
   _init();
 
   global.BS_ANALYTICS = {
     gameId: GAME_ID,
     trackEvent: trackEvent,
-    trackResult: trackResult
+    trackResult: trackResult,
+    trackStart: trackStart,
+    trackShare: trackShare,
+    trackReplay: trackReplay
   };
 })(typeof window !== 'undefined' ? window : this);
