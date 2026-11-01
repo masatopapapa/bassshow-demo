@@ -109,7 +109,7 @@
   .copyright{text-align:center;font-size:11px;color:var(--muted);margin-top:18px;}
 .card.reaction-teaser{border-color:#665035;background:linear-gradient(155deg,#222027,#16181f)}.card.reaction-teaser .thumb img{filter:grayscale(1) brightness(.7)}.card.reaction-teaser .badge{color:#ffb02e;border-color:#79572a;background:#211b14}.card.reaction-teaser .c-title{opacity:1}.card.reaction-teaser .c-desc{opacity:1;color:#b4b6c0}.card.reaction-teaser .coming-overlay{align-items:flex-end;padding:10px 4px}.card.reaction-teaser .coming-overlay span{font-size:12px;letter-spacing:.3px;padding:5px 9px;background:rgba(0,0,0,.9);border-color:#b6b6b6}
 </style>
-<script src="shared-assets.js?v=hearing-20261101"></script>
+<script src="shared-assets.js?v=fretboard-icons-20261101"></script>
 </head>
 <body>
 
@@ -251,8 +251,9 @@ var GAMES = [
     category:"training",
     entry:"#",
     status:"coming",
-    thumbImg:IMG_COMING,
-    title:{zh:"指板记忆测试",ja:"フレットボード記憶テスト",en:"Fretboard Memory Test"},
+    teaser:true,
+    thumbImg:(window.BS_ASSETS && window.BS_ASSETS.ICON_FRETBOARD) || IMG_COMING,
+    title:{zh:"指板记忆对战",ja:"指板記憶バトル",en:"Fretboard Battle"},
     desc:{zh:"快速找出指板上的音，练熟你的地图",ja:"指板上の音を素早く特定する記憶トレ",en:"Locate notes on the fretboard fast"}
   },
   {
